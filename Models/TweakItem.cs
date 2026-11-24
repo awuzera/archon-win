@@ -1,4 +1,3 @@
-cat << 'EOF' > Models/TweakItem.cs
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -63,4 +62,3 @@ namespace Archon.Models
         public Dictionary<string, bool> TweakStates { get; set; } = new();
     }
 }
-EOF

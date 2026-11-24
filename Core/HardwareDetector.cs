@@ -1,4 +1,3 @@
-cat << 'EOF' > Core/HardwareDetector.cs
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -176,4 +175,3 @@ namespace Archon.Core
         }
     }
 }
-EOF

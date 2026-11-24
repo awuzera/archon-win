@@ -1,4 +1,3 @@
-cat << 'EOF' > MainWindow.xaml.cs
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -305,4 +304,3 @@ namespace Archon
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
     }
 }
-EOF
