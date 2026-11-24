@@ -25,6 +25,7 @@ namespace Archon.Models
         public string Category { get; set; } = string.Empty;
         public TweakRisk Risk { get; set; } = TweakRisk.Safe;
         public string TechnicalDetail { get; set; } = string.Empty;
+        public Func<bool>? DetectCurrentState { get; set; }
         public Action? ApplyAction { get; set; }
         public Action? RevertAction { get; set; }
 
