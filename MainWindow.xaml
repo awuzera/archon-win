@@ -4,7 +4,7 @@
         Title="ARCHON v1.0"
         Height="660" Width="1020"
         WindowStartupLocation="CenterScreen"
-        Background="#0D0D10"
+        Background="#0B0B0E"
         Foreground="#F3F3F6"
         FontFamily="Segoe UI Variable Text, Segoe UI"
         WindowStyle="None"
@@ -15,14 +15,14 @@
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
-        <SolidColorBrush x:Key="BgMain" Color="#0D0D10"/>
-        <SolidColorBrush x:Key="BgSurface" Color="#141419"/>
-        <SolidColorBrush x:Key="BgSurfaceHover" Color="#1C1C23"/>
-        <SolidColorBrush x:Key="LineSubtle" Color="#22222A"/>
+        <SolidColorBrush x:Key="BgSurface" Color="#B315151C"/>
+        <SolidColorBrush x:Key="BgSurfaceHover" Color="#CC1E1E27"/>
+        <SolidColorBrush x:Key="BorderGlass" Color="#1AFFFFFF"/>
+        <SolidColorBrush x:Key="LineSubtle" Color="#1FFFFFFF"/>
         <SolidColorBrush x:Key="AccentPrimary" Color="#C93B44"/>
         <SolidColorBrush x:Key="AccentPrimaryHover" Color="#DC4851"/>
-        <SolidColorBrush x:Key="TextSecondary" Color="#A0A0AB"/>
-        <SolidColorBrush x:Key="TextMuted" Color="#6E6E7A"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#A6A6B2"/>
+        <SolidColorBrush x:Key="TextMuted" Color="#727280"/>
 
         <!-- SCROLLBAR MODERNO OSCURO -->
         <Style TargetType="ScrollBar">
@@ -41,7 +41,7 @@
                                     <Thumb>
                                         <Thumb.Template>
                                             <ControlTemplate TargetType="Thumb">
-                                                <Border Background="#2E2E38" CornerRadius="3"/>
+                                                <Border Background="#33FFFFFF" CornerRadius="3"/>
                                             </ControlTemplate>
                                         </Thumb.Template>
                                     </Thumb>
@@ -56,10 +56,10 @@
             </Setter>
         </Style>
 
-        <!-- BOTONES DE BARRA DE TÍTULO SIN DESTELLO CELESTE -->
+        <!-- BOTONES DE BARRA DE TÍTULO -->
         <Style x:Key="WindowControlButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#A0A0AB"/>
+            <Setter Property="Foreground" Value="#A6A6B2"/>
             <Setter Property="Width" Value="44"/>
             <Setter Property="Height" Value="44"/>
             <Setter Property="FontSize" Value="13"/>
@@ -72,7 +72,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#1E1E26"/>
+                                <Setter TargetName="bd" Property="Background" Value="#1FFFFFFF"/>
                                 <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -111,7 +111,8 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" Background="{TemplateBinding Background}"
-                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                BorderBrush="#33FFFFFF" BorderThickness="1"
+                                CornerRadius="9" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                         </Border>
@@ -128,7 +129,7 @@
             </Setter>
         </Style>
 
-        <!-- BOTÓN SUAVE / TARJETA INTERACTIVA -->
+        <!-- TARJETA / BOTÓN TRASLÚCIDO -->
         <Style x:Key="SoftCardButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource BgSurface}"/>
             <Setter Property="Foreground" Value="#F3F3F6"/>
@@ -139,6 +140,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{StaticResource BorderGlass}" BorderThickness="1"
                                 CornerRadius="10" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
@@ -146,6 +148,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{StaticResource BgSurfaceHover}"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#2EFFFFFF"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="border" Property="Opacity" Value="0.45"/>
@@ -156,7 +159,7 @@
             </Setter>
         </Style>
 
-        <!-- BOTÓN DE TEXTO / ENLACE DISCRETO -->
+        <!-- BOTÓN DISCRETO -->
         <Style x:Key="GhostButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
@@ -167,13 +170,13 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" Background="{TemplateBinding Background}"
-                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                CornerRadius="7" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#18181F"/>
+                                <Setter TargetName="border" Property="Background" Value="#16FFFFFF"/>
                                 <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -182,14 +185,14 @@
             </Setter>
         </Style>
 
-        <!-- SWITCH REDONDEADO LIMPIO -->
+        <!-- SWITCH MODERNO -->
         <Style x:Key="ModernSwitchStyle" TargetType="CheckBox">
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
-                        <Border x:Name="Track" Width="46" Height="24" CornerRadius="12" Background="#23232C">
-                            <Ellipse x:Name="Thumb" Width="18" Height="18" Margin="3,0" HorizontalAlignment="Left" Fill="#8E8E9A"/>
+                        <Border x:Name="Track" Width="46" Height="24" CornerRadius="12" Background="#262630">
+                            <Ellipse x:Name="Thumb" Width="18" Height="18" Margin="3,0" HorizontalAlignment="Left" Fill="#9A9AA6"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
@@ -204,20 +207,75 @@
         </Style>
     </Window.Resources>
 
-    <Border BorderBrush="#1C1C22" BorderThickness="1">
+    <Border BorderBrush="#22222B" BorderThickness="1">
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#0A0A0E" Offset="0"/>
+                <GradientStop Color="#0F0F15" Offset="0.55"/>
+                <GradientStop Color="#0B0B10" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.Background>
+
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="44"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- BARRA SUPERIOR MINIMALISTA -->
-            <Grid Grid.Row="0" Background="#0D0D10">
+            <!-- CAPA DE FONDO DIFUMINADO (GLOW AMBIENTAL) -->
+            <Grid Grid.RowSpan="2" IsHitTestVisible="False" ClipToBounds="True">
+                <!-- Resplandor superior central cálido -->
+                <Ellipse Width="640" Height="380" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-110,0,0">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#36C93B44" Offset="0"/>
+                            <GradientStop Color="#14C93B44" Offset="0.5"/>
+                            <GradientStop Color="#00C93B44" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                    <Ellipse.Effect>
+                        <BlurEffect Radius="85"/>
+                    </Ellipse.Effect>
+                </Ellipse>
+
+                <!-- Resplandor secundario frío abajo a la derecha -->
+                <Ellipse Width="560" Height="360" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-120,-100">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#244B5596" Offset="0"/>
+                            <GradientStop Color="#0C4B5596" Offset="0.55"/>
+                            <GradientStop Color="#004B5596" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                    <Ellipse.Effect>
+                        <BlurEffect Radius="95"/>
+                    </Ellipse.Effect>
+                </Ellipse>
+
+                <!-- Sutil luz de profundidad abajo a la izquierda -->
+                <Ellipse Width="420" Height="280" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-90,0,0,-80">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#1AC93B44" Offset="0"/>
+                            <GradientStop Color="#00C93B44" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                    <Ellipse.Effect>
+                        <BlurEffect Radius="80"/>
+                    </Ellipse.Effect>
+                </Ellipse>
+            </Grid>
+
+            <!-- BARRA SUPERIOR CON LOGO VECTORIAL -->
+            <Grid Grid.Row="0" Background="Transparent">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
-                    <!-- ESPACIO RESERVADO PARA FUTURO ÍCONO -->
-                    <Border Width="20" Height="20" CornerRadius="5" Background="{StaticResource AccentPrimary}" Margin="0,0,10,0">
-                        <TextBlock Text="A" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
+                    <Viewbox Width="22" Height="22" Margin="0,0,10,0">
+                        <Canvas Width="64" Height="64">
+                            <Path Data="M32,4 L58,18 L58,46 L32,60 L6,46 L6,18 Z" Fill="#241518" Stroke="#C93B44" StrokeThickness="3"/>
+                            <Path Data="M32,14 L48,48 L40,48 L32,30 L24,48 L16,48 Z" Fill="#FFFFFF"/>
+                            <Polygon Points="32,37 37,46 27,46" Fill="#C93B44"/>
+                        </Canvas>
+                    </Viewbox>
                     <TextBlock Text="Archon" FontWeight="SemiBold" FontSize="14.5" Foreground="#F3F3F6" VerticalAlignment="Center"/>
                     <TextBlock Text="v1.0" FontSize="12.5" Foreground="{StaticResource TextMuted}" Margin="6,1,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
@@ -228,15 +286,38 @@
                 </StackPanel>
             </Grid>
 
-            <!-- VISTA 1: PRESENTACIÓN E INTERACCIÓN DE HARDWARE -->
+            <!-- VISTA 1: PRESENTACIÓN CON LOGO CENTRAL E INTERACCIÓN DE HARDWARE -->
             <ScrollViewer x:Name="WelcomeView" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel MaxWidth="680" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="32,28,32,36">
+                <StackPanel MaxWidth="680" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="32,20,32,36">
+
+                    <!-- EMBLEMA PRINCIPAL CON HALO DIFUMINADO -->
+                    <Grid Width="92" Height="92" HorizontalAlignment="Center" Margin="0,0,0,16">
+                        <Ellipse Width="84" Height="84" Fill="#45C93B44">
+                            <Ellipse.Effect>
+                                <BlurEffect Radius="26"/>
+                            </Ellipse.Effect>
+                        </Ellipse>
+                        <Viewbox Width="74" Height="74">
+                            <Canvas Width="64" Height="64">
+                                <Path Data="M32,3 L59,18 L59,46 L32,61 L5,46 L5,18 Z" Stroke="#33FFFFFF" StrokeThickness="2">
+                                    <Path.Fill>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#26161A" Offset="0"/>
+                                            <GradientStop Color="#14141B" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Path.Fill>
+                                </Path>
+                                <Path Data="M32,12 L50,49 L41.5,49 L32,28.5 L22.5,49 L14,49 Z" Fill="#FFFFFF"/>
+                                <Polygon Points="32,36 38,48 26,48" Fill="#D9414B"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Grid>
 
                     <TextBlock Text="Archon" FontSize="38" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,10"/>
 
                     <TextBlock Text="Preparación limpia de controladores, respaldo preventivo y ajuste fino para Windows sin procesos innecesarios."
                                FontSize="15.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"
-                               TextAlignment="Center" LineHeight="24" Margin="0,0,0,30"/>
+                               TextAlignment="Center" LineHeight="24" Margin="0,0,0,28"/>
 
                     <!-- ACCIONES PRINCIPALES DE INICIO -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,26">
@@ -250,7 +331,8 @@
                     </StackPanel>
 
                     <!-- PANEL DESPLEGABLE INTERACTIVO DE HARDWARE -->
-                    <Border x:Name="HardwareListPanel" Visibility="Collapsed" Background="{StaticResource BgSurface}" CornerRadius="12" Padding="24,20" Margin="0,4,0,0">
+                    <Border x:Name="HardwareListPanel" Visibility="Collapsed" Background="{StaticResource BgSurface}"
+                            BorderBrush="{StaticResource BorderGlass}" BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,4,0,0">
                         <StackPanel>
                             <TextBlock Text="Componentes detectados en tu equipo" FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,14"/>
 
@@ -293,7 +375,7 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- VISTA 2: PASO 0 (LIMPIO, SIN CORCHETES NI CAJAS DURAS) -->
+            <!-- VISTA 2: PASO 0 -->
             <ScrollViewer x:Name="StepZeroView" Grid.Row="1" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel MaxWidth="720" HorizontalAlignment="Center" Margin="32,12,32,40">
 
@@ -308,14 +390,14 @@
                                TextAlignment="Center" LineHeight="23" Margin="0,0,0,24"/>
 
                     <!-- AVISO SUTIL DE SOFTWARE DE FABRICANTE -->
-                    <Border x:Name="BloatAlertBox" Visibility="Collapsed" Background="#1D1417" CornerRadius="10" Padding="18,13" Margin="0,0,0,20">
+                    <Border x:Name="BloatAlertBox" Visibility="Collapsed" Background="#B3221519" BorderBrush="#33C93B44" BorderThickness="1" CornerRadius="10" Padding="18,13" Margin="0,0,0,20">
                         <StackPanel>
                             <TextBlock Text="Software adicional de fabricante detectado" FontSize="13.5" FontWeight="SemiBold" Foreground="#E5737B" Margin="0,0,0,3"/>
                             <TextBlock x:Name="TxtDetectedBloatList" Text="" FontSize="13.5" Foreground="#D4D4DC" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
 
-                    <!-- OPCIÓN A (DISEÑO SUAVE, NO INVASIVO) -->
+                    <!-- OPCIÓN A -->
                     <Button x:Name="BtnFreshInstall" Style="{StaticResource SoftCardButtonStyle}"
                             HorizontalContentAlignment="Stretch" Padding="24,20" Margin="0,0,0,14" Click="BtnFreshInstall_Click">
                         <Grid>
@@ -328,7 +410,7 @@
                                 <TextBlock Text="No instalé controladores todavía. Crear un punto de seguridad e instalar únicamente los drivers esenciales sin telemetría."
                                            FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
                             </StackPanel>
-                            <Border Grid.Column="1" Background="#24181C" CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
+                            <Border Grid.Column="1" Background="#29181D" CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
                                 <TextBlock Text="Opción A" FontSize="12" FontWeight="SemiBold" Foreground="#E5737B"/>
                             </Border>
                         </Grid>
@@ -347,7 +429,7 @@
                                 <TextBlock Text="Limpiar controladores anteriores y utilidades como Armoury Crate o GeForce Experience, reiniciar y dejar la base limpia."
                                            FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
                             </StackPanel>
-                            <Border Grid.Column="1" Background="#1D1D25" CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
+                            <Border Grid.Column="1" Background="#1E1E28" CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
                                 <TextBlock Text="Opción B" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
                             </Border>
                         </Grid>
@@ -358,7 +440,7 @@
                         <TextBlock x:Name="TxtStepZeroStatus" Text="Listo para comenzar"
                                    FontSize="13.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,10"/>
                         <ProgressBar x:Name="StepZeroProgress" Height="6" Minimum="0" Maximum="100" Value="0"
-                                     Background="#1A1A22" Foreground="{StaticResource AccentPrimary}" BorderThickness="0"/>
+                                     Background="#1E1E28" Foreground="{StaticResource AccentPrimary}" BorderThickness="0"/>
                     </StackPanel>
 
                     <!-- ACCESO DIRECTO AL PANEL DE AJUSTES -->
@@ -367,7 +449,7 @@
                         <TextBlock Text="Continuar al panel de ajustes →" FontSize="14.5" FontWeight="SemiBold" Foreground="#E2E2EA"/>
                     </Button>
 
-                    <!-- SECCIÓN INFERIOR AL SCROLLEAR: EXPLICACIÓN SIN CAJAS -->
+                    <!-- EXPLICACIÓN INFERIOR -->
                     <Separator Background="{StaticResource LineSubtle}" Margin="0,34,0,28"/>
 
                     <StackPanel Margin="4,0">
@@ -394,7 +476,7 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- VISTA 3: PANEL DE OPTIMIZACIÓN (LIMPIO, SIN CABECERA DE HARDWARE NI ETIQUETAS) -->
+            <!-- VISTA 3: PANEL DE OPTIMIZACIÓN -->
             <Grid x:Name="MainOptimizerView" Grid.Row="1" Visibility="Collapsed" Margin="20,10,20,20">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="210"/>
@@ -426,7 +508,7 @@
                     </Grid.RowDefinitions>
 
                     <!-- BUSCADOR LIMPIO -->
-                    <Border Grid.Row="0" Background="{StaticResource BgSurface}" CornerRadius="8" Margin="0,0,0,14">
+                    <Border Grid.Row="0" Background="{StaticResource BgSurface}" BorderBrush="{StaticResource BorderGlass}" BorderThickness="1" CornerRadius="8" Margin="0,0,0,14">
                         <Grid>
                             <TextBox x:Name="TxtSearch" Background="Transparent" Foreground="#FFFFFF"
                                      CaretBrush="#FFFFFF" BorderThickness="0"
@@ -447,12 +529,12 @@
                         </Grid>
                     </Border>
 
-                    <!-- LISTA DE AJUSTES (SIN ETIQUETAS SEGURO/RECOMENDADO NI CAJAS DURAS) -->
+                    <!-- LISTA DE AJUSTES -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                         <ItemsControl x:Name="TweaksItemsControl">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{StaticResource BgSurface}" CornerRadius="9" Padding="18,14" Margin="0,0,0,8">
+                                    <Border Background="{StaticResource BgSurface}" BorderBrush="{StaticResource BorderGlass}" BorderThickness="1" CornerRadius="9" Padding="18,14" Margin="0,0,0,8">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
@@ -475,7 +557,7 @@
                     </ScrollViewer>
 
                     <!-- INSPECTOR DE DETALLE -->
-                    <Border x:Name="InspectorPanel" Grid.Row="2" Visibility="Collapsed" Background="#16161D" CornerRadius="10" Padding="18,14" Margin="0,10,0,6">
+                    <Border x:Name="InspectorPanel" Grid.Row="2" Visibility="Collapsed" Background="#CC16161F" BorderBrush="{StaticResource BorderGlass}" BorderThickness="1" CornerRadius="10" Padding="18,14" Margin="0,10,0,6">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
