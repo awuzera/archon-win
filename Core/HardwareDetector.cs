@@ -1,123 +1,179 @@
+cat << 'EOF' > Core/HardwareDetector.cs
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Management;
-using Microsoft.Win32;
+using System.Text.RegularExpressions;
+using Archon.Models;
 
 namespace Archon.Core
 {
-    public class SystemHardwareProfile
-    {
-        public string CpuName { get; set; } = "Detectando...";
-        public bool IsAmdCpu => CpuName.Contains("AMD", StringComparison.OrdinalIgnoreCase);
-        public bool IsIntelCpu => CpuName.Contains("Intel", StringComparison.OrdinalIgnoreCase);
-
-        public List<string> GpuNames { get; set; } = new();
-        public string PrimaryGpu => GpuNames.FirstOrDefault() ?? "Adaptador Básico";
-        public bool HasNvidiaGpu => GpuNames.Any(g => g.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase));
-        public bool HasAmdGpu => GpuNames.Any(g => g.Contains("AMD", StringComparison.OrdinalIgnoreCase) || g.Contains("Radeon", StringComparison.OrdinalIgnoreCase));
-
-        public string Motherboard { get; set; } = "Desconocida";
-        public string TotalRamGb { get; set; } = "0 GB";
-        public string WindowsVersion { get; set; } = "Windows";
-        public List<string> DetectedBloatware { get; set; } = new();
-    }
-
     public static class HardwareDetector
     {
-        private static readonly string[] TargetBloatKeywords =
-        {
-            "Armoury Crate",
-            "NVIDIA GeForce Experience",
-            "NVIDIA App",
-            "AMD Software",
-            "MSI Center",
-            "Gigabyte Control Center",
-            "Aura Service"
-        };
-
         public static SystemHardwareProfile ScanSystem()
         {
             var profile = new SystemHardwareProfile();
 
-            using (var cpuSearcher = new ManagementObjectSearcher("SELECT Name FROM Win32_Processor"))
+            try
             {
-                foreach (var obj in cpuSearcher.Get())
+                using var cpuSearcher = new ManagementObjectSearcher("SELECT Name FROM Win32_Processor");
+                foreach (ManagementObject obj in cpuSearcher.Get())
                 {
-                    profile.CpuName = obj["Name"]?.ToString()?.Trim() ?? "Desconocido";
+                    string rawCpu = obj["Name"]?.ToString() ?? "CPU Desconocido";
+                    profile.CpuName = Regex.Replace(rawCpu, @"\s+", " ").Trim();
+                    profile.IsAmdCpu = profile.CpuName.Contains("AMD", StringComparison.OrdinalIgnoreCase) ||
+                                       profile.CpuName.Contains("Ryzen", StringComparison.OrdinalIgnoreCase);
                     break;
                 }
             }
+            catch { }
 
-            using (var gpuSearcher = new ManagementObjectSearcher("SELECT Name FROM Win32_VideoController"))
+            try
             {
-                foreach (var obj in gpuSearcher.Get())
+                using var moboSearcher = new ManagementObjectSearcher("SELECT Manufacturer, Product FROM Win32_BaseBoard");
+                foreach (ManagementObject obj in moboSearcher.Get())
                 {
-                    var name = obj["Name"]?.ToString()?.Trim();
-                    if (!string.IsNullOrEmpty(name) && !name.Contains("Microsoft Basic", StringComparison.OrdinalIgnoreCase))
+                    string mfg = CleanManufacturer(obj["Manufacturer"]?.ToString() ?? "");
+                    string prod = (obj["Product"]?.ToString() ?? "").Trim();
+                    string combined = $"{mfg} {prod}".Trim();
+                    if (!string.IsNullOrWhiteSpace(combined))
+                        profile.MotherboardName = combined;
+                    break;
+                }
+            }
+            catch { }
+
+            try
+            {
+                var gpus = new List<string>();
+                using var gpuSearcher = new ManagementObjectSearcher("SELECT Name FROM Win32_VideoController");
+                foreach (ManagementObject obj in gpuSearcher.Get())
+                {
+                    string name = (obj["Name"]?.ToString() ?? "").Trim();
+                    if (!string.IsNullOrEmpty(name) &&
+                        !name.Contains("Microsoft Basic", StringComparison.OrdinalIgnoreCase) &&
+                        !name.Contains("Parsec", StringComparison.OrdinalIgnoreCase))
                     {
-                        profile.GpuNames.Add(name);
+                        gpus.Add(name);
                     }
                 }
-            }
 
-            using (var moboSearcher = new ManagementObjectSearcher("SELECT Manufacturer, Product FROM Win32_BaseBoard"))
-            {
-                foreach (var obj in moboSearcher.Get())
-                {
-                    profile.Motherboard = $"{obj["Manufacturer"]} {obj["Product"]}".Trim();
-                    break;
-                }
-            }
+                string? dedicatedGpu = gpus.FirstOrDefault(g =>
+                    g.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) ||
+                    g.Contains("RTX", StringComparison.OrdinalIgnoreCase) ||
+                    g.Contains("GTX", StringComparison.OrdinalIgnoreCase) ||
+                    g.Contains("Radeon RX", StringComparison.OrdinalIgnoreCase) ||
+                    g.Contains("Arc", StringComparison.OrdinalIgnoreCase));
 
-            using (var ramSearcher = new ManagementObjectSearcher("SELECT TotalPhysicalMemory FROM Win32_ComputerSystem"))
+                profile.PrimaryGpu = dedicatedGpu ?? gpus.FirstOrDefault() ?? "GPU Desconocida";
+                profile.HasNvidiaGpu = gpus.Any(g => g.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase));
+                profile.HasAmdGpu = !profile.HasNvidiaGpu &&
+                                    gpus.Any(g => g.Contains("AMD", StringComparison.OrdinalIgnoreCase) ||
+                                                  g.Contains("Radeon", StringComparison.OrdinalIgnoreCase));
+            }
+            catch { }
+
+            try
             {
-                foreach (var obj in ramSearcher.Get())
+                double totalGb = 0;
+                using var csSearcher = new ManagementObjectSearcher("SELECT TotalPhysicalMemory FROM Win32_ComputerSystem");
+                foreach (ManagementObject obj in csSearcher.Get())
                 {
                     if (ulong.TryParse(obj["TotalPhysicalMemory"]?.ToString(), out ulong bytes))
+                        totalGb = Math.Round(bytes / (1024.0 * 1024.0 * 1024.0));
+                    break;
+                }
+
+                uint speedMhz = 0;
+                using var memSearcher = new ManagementObjectSearcher("SELECT ConfiguredClockSpeed, Speed FROM Win32_PhysicalMemory");
+                foreach (ManagementObject obj in memSearcher.Get())
+                {
+                    if (uint.TryParse(obj["ConfiguredClockSpeed"]?.ToString(), out uint cfgSpeed) && cfgSpeed > 0)
+                        speedMhz = cfgSpeed;
+                    else if (uint.TryParse(obj["Speed"]?.ToString(), out uint spd) && spd > 0)
+                        speedMhz = spd;
+                    if (speedMhz > 0) break;
+                }
+
+                profile.TotalRamGb = speedMhz > 0 ? $"{totalGb} GB @ {speedMhz} MHz" : $"{totalGb} GB";
+            }
+            catch { }
+
+            try
+            {
+                using var diskSearcher = new ManagementObjectSearcher("SELECT Model, Size, MediaType FROM Win32_DiskDrive");
+                foreach (ManagementObject obj in diskSearcher.Get())
+                {
+                    string media = obj["MediaType"]?.ToString() ?? "";
+                    if (media.Contains("Removable", StringComparison.OrdinalIgnoreCase) ||
+                        media.Contains("External", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    string model = (obj["Model"]?.ToString() ?? "Disco Principal").Trim();
+                    if (ulong.TryParse(obj["Size"]?.ToString(), out ulong diskBytes) && diskBytes > 0)
                     {
-                        double gb = Math.Round(bytes / (1024.0 * 1024.0 * 1024.0));
-                        profile.TotalRamGb = $"{gb} GB";
+                        double gb = Math.Round(diskBytes / (1000.0 * 1000.0 * 1000.0));
+                        string cap = gb >= 1000 ? $"{Math.Round(gb / 1000.0, 1)} TB" : $"{gb} GB";
+                        profile.PrimaryStorage = $"{model} ({cap})";
+                    }
+                    else
+                    {
+                        profile.PrimaryStorage = model;
                     }
                     break;
                 }
             }
+            catch { }
 
-            int build = Environment.OSVersion.Version.Build;
-            profile.WindowsVersion = build >= 22000 ? $"Windows 11 (Build {build})" : $"Windows 10 (Build {build})";
-            profile.DetectedBloatware = ScanInstalledBloat();
+            try
+            {
+                using var osSearcher = new ManagementObjectSearcher("SELECT Caption, BuildNumber FROM Win32_OperatingSystem");
+                foreach (ManagementObject obj in osSearcher.Get())
+                {
+                    string caption = (obj["Caption"]?.ToString() ?? "Windows").Replace("Microsoft ", "").Trim();
+                    string build = obj["BuildNumber"]?.ToString() ?? "";
+                    profile.WindowsVersion = string.IsNullOrEmpty(build) ? caption : $"{caption} (Build {build})";
+                    break;
+                }
+            }
+            catch { }
 
+            profile.DetectedBloatware = DetectManufacturerBloat();
             return profile;
         }
 
-        private static List<string> ScanInstalledBloat()
+        private static string CleanManufacturer(string raw)
         {
-            var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            string[] registryPaths =
-            {
-                @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
-                @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
-            };
+            if (raw.Contains("ASUSTeK", StringComparison.OrdinalIgnoreCase)) return "ASUS";
+            if (raw.Contains("Micro-Star", StringComparison.OrdinalIgnoreCase)) return "MSI";
+            if (raw.Contains("Gigabyte", StringComparison.OrdinalIgnoreCase)) return "GIGABYTE";
+            if (raw.Contains("ASRock", StringComparison.OrdinalIgnoreCase)) return "ASRock";
+            return raw.Trim();
+        }
 
-            foreach (var path in registryPaths)
-            {
-                using var baseKey = Registry.LocalMachine.OpenSubKey(path);
-                if (baseKey == null) continue;
+        private static List<string> DetectManufacturerBloat()
+        {
+            var found = new List<string>();
+            string pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string pf86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
 
-                foreach (var subKeyName in baseKey.GetSubKeyNames())
-                {
-                    using var subKey = baseKey.OpenSubKey(subKeyName);
-                    var displayName = subKey?.GetValue("DisplayName")?.ToString();
-                    if (string.IsNullOrWhiteSpace(displayName)) continue;
+            if (Directory.Exists(Path.Combine(pf, "ASUS", "ARMOURY CRATE Service")) ||
+                Directory.Exists(Path.Combine(pf86, "ASUS", "ArmouryDevice")))
+                found.Add("ASUS Armoury Crate");
 
-                    if (TargetBloatKeywords.Any(k => displayName.Contains(k, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        found.Add(displayName);
-                    }
-                }
-            }
+            if (Directory.Exists(Path.Combine(pf, "NVIDIA Corporation", "NVIDIA GeForce Experience")) ||
+                Directory.Exists(Path.Combine(pf, "NVIDIA Corporation", "NVIDIA App")))
+                found.Add("NVIDIA GeForce Experience / App");
 
-            return found.ToList();
+            if (Directory.Exists(Path.Combine(pf86, "MSI", "MSI Center")))
+                found.Add("MSI Center");
+
+            if (Directory.Exists(Path.Combine(pf86, "Razer", "Synapse3")))
+                found.Add("Razer Synapse");
+
+            return found;
         }
     }
 }
+EOF

@@ -1,3 +1,4 @@
+cat << 'EOF' > MainWindow.xaml.cs
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,7 +18,7 @@ namespace Archon
         private SystemHardwareProfile _hardware = new();
         private OptimizerState _state = new();
         private List<TweakItem> _allTweaks = new();
-        private string _activeCategory = "Gaming y Energía";
+        private string _activeCategory = "Instalador Día 0";
 
         public MainWindow()
         {
@@ -31,8 +32,10 @@ namespace Archon
             _hardware = await Task.Run(() => HardwareDetector.ScanSystem());
 
             TxtCpuBadge.Text = $"[ CPU: {_hardware.CpuName} ]";
+            TxtMotherBadge.Text = $"[ MOTHER: {_hardware.MotherboardName} ]";
             TxtGpuBadge.Text = $"[ GPU: {_hardware.PrimaryGpu} ]";
             TxtRamBadge.Text = $"[ RAM: {_hardware.TotalRamGb} ]";
+            TxtStorageBadge.Text = $"[ DISCO: {_hardware.PrimaryStorage} ]";
             TxtOsBadge.Text = $"[ {_hardware.WindowsVersion} ]";
 
             if (_hardware.DetectedBloatware.Count > 0)
@@ -47,8 +50,22 @@ namespace Archon
             }
             else if (_state.StepZeroCompleted)
             {
-                UnlockMainOptimizer();
+                TxtStepZeroStatus.Text = "ESTADO: Base preparada previamente. Podés volver a ejecutar una opción o ir al optimizador.";
+                StepZeroProgress.Value = 100;
             }
+        }
+
+        private void BtnBackToStepZero_Click(object sender, RoutedEventArgs e)
+        {
+            MainOptimizerView.Visibility = Visibility.Collapsed;
+            StepZeroView.Visibility = Visibility.Visible;
+            StepZeroView.ScrollToTop();
+            ToggleStepZeroButtons(true);
+            StepZeroProgress.IsIndeterminate = false;
+            StepZeroProgress.Value = _state.StepZeroCompleted ? 100 : 0;
+            TxtStepZeroStatus.Text = _state.StepZeroCompleted
+                ? "ESTADO: Base preparada previamente. Podés volver a ejecutar una opción o ir al optimizador."
+                : "ESTADO: Esperando selección...";
         }
 
         private async void BtnFreshInstall_Click(object sender, RoutedEventArgs e)
@@ -77,6 +94,7 @@ namespace Archon
 
             TxtStepZeroStatus.Text = "ESTADO: Listo para reiniciar y completar drivers limpios.";
             StepZeroProgress.Value = 100;
+            ToggleStepZeroButtons(true);
         }
 
         private async void BtnSkipDrivers_Click(object sender, RoutedEventArgs e)
@@ -154,7 +172,10 @@ namespace Archon
         {
             StepZeroView.Visibility = Visibility.Collapsed;
             MainOptimizerView.Visibility = Visibility.Visible;
-            InitOptimizerCatalog();
+            if (_allTweaks.Count == 0)
+                InitOptimizerCatalog();
+            else
+                RefreshDisplayedTweaks();
         }
 
         private void ToggleStepZeroButtons(bool enabled)
@@ -191,12 +212,12 @@ namespace Archon
         private void CategoryBtn_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not Button clickedBtn) return;
-            _activeCategory = clickedBtn.Tag?.ToString() ?? "Gaming y Energía";
+            _activeCategory = clickedBtn.Tag?.ToString() ?? "Instalador Día 0";
             TxtSearch.Text = string.Empty;
 
             foreach (var child in SidebarMenu.Children)
             {
-                if (child is Button btn)
+                if (child is Button btn && btn != BtnBackToStepZero)
                 {
                     btn.Style = btn == clickedBtn
                         ? (Style)FindResource("PrimaryRedButtonStyle")
@@ -284,3 +305,4 @@ namespace Archon
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
     }
 }
+EOF
