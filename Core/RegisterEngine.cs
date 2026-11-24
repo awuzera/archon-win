@@ -5,7 +5,7 @@ using System.IO;
 using System.Text.Json;
 using Microsoft.Win32;
 
-namespace OptimizadorFrankenn.Core
+namespace Archon.Core
 {
     public class RegistryBackupEntry
     {
@@ -21,7 +21,7 @@ namespace OptimizadorFrankenn.Core
     {
         private static readonly string BackupFile = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-            "OptimizadorFrankenn",
+            "Archon",
             "registry_backup.json");
 
         private static Dictionary<string, RegistryBackupEntry> _backups = LoadBackups();

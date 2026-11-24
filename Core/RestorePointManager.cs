@@ -4,13 +4,13 @@ using System.Management;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 
-namespace OptimizadorFrankenn.Core
+namespace Archon.Core
 {
     public static class RestorePointManager
     {
         private const string SystemRestoreRegPath = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore";
 
-        public static async Task<bool> CreateMandatoryRestorePointAsync(string description = "OptimizadorFrankenn - Punto Pre-Optimizacion")
+        public static async Task<bool> CreateMandatoryRestorePointAsync(string description = "Archon - Punto Pre-Optimizacion")
         {
             return await Task.Run(() =>
             {

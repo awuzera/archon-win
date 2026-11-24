@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 
-namespace OptimizadorFrankenn.Core
+namespace Archon.Core
 {
     public class OptimizerState
     {
@@ -19,7 +19,7 @@ namespace OptimizadorFrankenn.Core
     {
         private static readonly string StateDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-            "OptimizadorFrankenn");
+            "Archon");
 
         private static readonly string StateFile = Path.Combine(StateDir, "state.json");
 
@@ -55,7 +55,7 @@ namespace OptimizadorFrankenn.Core
             if (string.IsNullOrEmpty(exePath)) return;
 
             using var runOnce = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\RunOnce", writable: true);
-            runOnce?.SetValue("OptimizadorFrankennResume", $"\"{exePath}\" --resume-step0", RegistryValueKind.String);
+            runOnce?.SetValue("ArchonResume", $"\"{exePath}\" --resume-step0", RegistryValueKind.String);
         }
 
         public static async Task<int> RunSilentProcessAsync(string fileName, string arguments)

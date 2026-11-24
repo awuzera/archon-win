@@ -8,8 +8,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <AssemblyName>OptimizadorFrankenn</AssemblyName>
-    <RootNamespace>OptimizadorFrankenn</RootNamespace>
+    <AssemblyName>Archon</AssemblyName>
+    <RootNamespace>Archon</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,7 +1,7 @@
-<Window x:Class="OptimizadorFrankenn.MainWindow"
+<Window x:Class="Archon.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="OPTIMIZADOR FRANKENN v1.0"
+        Title="ARCHON v1.0"
         Height="700" Width="1120"
         MinHeight="620" MinWidth="960"
         WindowStartupLocation="CenterScreen"
@@ -27,7 +27,7 @@
             <Grid Margin="14,0">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Rectangle Width="10" Height="10" Fill="{StaticResource AccentRedBrush}" Margin="0,0,10,0"/>
-                    <TextBlock Text="OPTIMIZADOR FRANKENN v1.0" FontFamily="Consolas" FontWeight="Bold" FontSize="13"/>
+                    <TextBlock Text="ARCHON v1.0" FontFamily="Consolas" FontWeight="Bold" FontSize="13"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" WindowChrome.IsHitTestVisibleInChrome="True">

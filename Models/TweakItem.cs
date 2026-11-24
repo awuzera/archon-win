@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace OptimizadorFrankenn.Models
+namespace Archon.Models
 {
     public enum TweakRisk
     {
@@ -57,7 +57,7 @@ namespace OptimizadorFrankenn.Models
 
     public class UserProfileConfig
     {
-        public string ProfileName { get; set; } = "Perfil Frankenn Personalizado";
+        public string ProfileName { get; set; } = "Perfil Archon Personalizado";
         public DateTime ExportedAt { get; set; } = DateTime.UtcNow;
         public Dictionary<string, bool> TweakStates { get; set; } = new();
     }

@@ -4,7 +4,7 @@ using System.Windows;
 
 [assembly: SupportedOSPlatform("windows")]
 
-namespace OptimizadorFrankenn
+namespace Archon
 {
     public partial class App : Application
     {

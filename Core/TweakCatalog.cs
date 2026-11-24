@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using OptimizadorFrankenn.Models;
+using Archon.Models;
 using Microsoft.Win32;
 
-namespace OptimizadorFrankenn.Core
+namespace Archon.Core
 {
     public static class TweakCatalog
     {

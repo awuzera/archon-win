@@ -4,7 +4,7 @@ using System.Linq;
 using System.Management;
 using Microsoft.Win32;
 
-namespace OptimizadorFrankenn.Core
+namespace Archon.Core
 {
     public class SystemHardwareProfile
     {
