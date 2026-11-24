@@ -50,13 +50,6 @@ namespace Archon.Models
         public List<string> DetectedBloatware { get; set; } = new();
     }
 
-    public class OptimizerState
-    {
-        public bool RestorePointCreated { get; set; }
-        public bool StepZeroCompleted { get; set; }
-        public bool PendingPostRebootInstall { get; set; }
-    }
-
     public class UserProfileConfig
     {
         public Dictionary<string, bool> TweakStates { get; set; } = new();
