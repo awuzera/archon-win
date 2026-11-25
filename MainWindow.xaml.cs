@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
+using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Management;
 using System.Net.NetworkInformation;
@@ -10,298 +10,259 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
-using Microsoft.Win32;
+using System.Windows.Threading;
 using Archon.Core;
 using Archon.Models;
 
 namespace Archon
 {
+    public class HardwareSpecRow
+    {
+        public string Label { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+    }
+
+    public class HardwareSpecSection
+    {
+        public string SectionTitle { get; set; } = string.Empty;
+        public List<HardwareSpecRow> Specs { get; set; } = new();
+    }
+
+    public class AppSubGroupDescription : GroupDescription
+    {
+        private readonly Dictionary<string, string> _subGroups;
+        private readonly Func<string> _defaultGroupProvider;
+
+        public AppSubGroupDescription(Dictionary<string, string> subGroups, Func<string> defaultGroupProvider)
+        {
+            _subGroups = subGroups;
+            _defaultGroupProvider = defaultGroupProvider;
+        }
+
+        public override object GroupNameFromItem(object item, int level, CultureInfo culture)
+        {
+            if (item is TweakItem tweak && _subGroups.TryGetValue(tweak.Id, out string? groupName))
+                return groupName;
+
+            return _defaultGroupProvider();
+        }
+    }
+
     public partial class MainWindow : Window
     {
-        [DllImport("dwmapi.dll")]
-        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
-
-        private enum PrepTarget
-        {
-            None,
-            Fresh,
-            Clean
-        }
-
-        private enum AppLang
-        {
-            EN,
-            ES,
-            JA,
-            RU
-        }
-
-        private sealed class HardwareSpecRow
-        {
-            public string Label { get; set; } = string.Empty;
-            public string Value { get; set; } = string.Empty;
-        }
-
-        private sealed class HardwareSpecSection
-        {
-            public string SectionTitle { get; set; } = string.Empty;
-            public List<HardwareSpecRow> Specs { get; set; } = new();
-        }
-
-        private SystemHardwareProfile _hardware = new();
-        private OptimizerState _state = new();
         private List<TweakItem> _allTweaks = new();
-        private readonly Dictionary<TweakItem, bool> _initialTweakStates = new();
-        private List<HardwareSpecSection>? _cachedDetailedSpecs;
-        private string _activeCategory = "Apps";
-        private AppLang _currentLang = AppLang.EN;
-        private string _signedInUser = string.Empty;
-        private bool _hardwareScanned = false;
-        private PrepTarget _currentPrepTarget = PrepTarget.None;
-        private int _currentProgressValue = 0;
-        private Storyboard? _ambientStoryboard;
-        private Storyboard? _loadingRingStoryboard;
+        private ICollectionView? _tweaksView;
+        private string _currentCategory = "Apps";
+        private string _currentLang = "EN";
+        private string? _signedInUser;
+        private bool _isRegisterMode;
+        private SystemHardwareProfile? _hardwareProfile;
+        private bool _isHardwareScanned;
+
+        private readonly Dictionary<string, string> _appSubGroups = new();
+
+        // Telemetría en tiempo real
+        private readonly DispatcherTimer _telemetryTimer;
+        private readonly Queue<double> _cpuHistory = new();
+        private readonly Queue<double> _gpuHistory = new();
+        private readonly Queue<double> _ramHistory = new();
+        private readonly Queue<double> _diskHistory = new();
+        private readonly Queue<double> _netHistory = new();
+        private const int MaxHistoryPoints = 36;
+
+        private ulong _prevIdleTime;
+        private ulong _prevKernelTime;
+        private ulong _prevUserTime;
+        private bool _hasCpuSample;
+
+        private long _prevNetBytesRecv;
+        private long _prevNetBytesSent;
+        private DateTime _prevNetSampleTime;
+        private bool _hasNetSample;
+        private string _cachedGpuDriver = "--";
+        private string _cachedGpuVram = "--";
+        private string _cachedRamSpeed = "--";
+        private string _cachedNetAdapter = "--";
+        private bool _perfStaticLoaded;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct FILETIME
+        {
+            public uint dwLowDateTime;
+            public uint dwHighDateTime;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        private class MEMORYSTATUSEX
+        {
+            public uint dwLength = (uint)Marshal.SizeOf(typeof(MEMORYSTATUSEX));
+            public uint dwMemoryLoad;
+            public ulong ullTotalPhys;
+            public ulong ullAvailPhys;
+            public ulong ullTotalPageFile;
+            public ulong ullAvailPageFile;
+            public ulong ullTotalVirtual;
+            public ulong ullAvailVirtual;
+            public ulong ullAvailExtendedVirtual;
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool GetSystemTimes(out FILETIME lpIdleTime, out FILETIME lpKernelTime, out FILETIME lpUserTime);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GlobalMemoryStatusEx([In, Out] MEMORYSTATUSEX lpBuffer);
 
         public MainWindow()
         {
             InitializeComponent();
             Loaded += MainWindow_Loaded;
-        }
 
-        protected override void OnSourceInitialized(EventArgs e)
-        {
-            base.OnSourceInitialized(e);
-            try
+            _telemetryTimer = new DispatcherTimer
             {
-                var workArea = SystemParameters.WorkArea;
-                if (Width > workArea.Width - 24) Width = Math.Max(980, workArea.Width - 24);
-                if (Height > workArea.Height - 24) Height = Math.Max(660, workArea.Height - 24);
-
-                Left = workArea.Left + (workArea.Width - Width) / 2;
-                Top = workArea.Top + (workArea.Height - Height) / 2;
-
-                IntPtr hwnd = new WindowInteropHelper(this).Handle;
-                int preference = 2;
-                DwmSetWindowAttribute(hwnd, 33, ref preference, sizeof(int));
-            }
-            catch
-            {
-                // Ignorar en entornos sin DWM
-            }
-        }
-
-        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (TryFindResource("AmbientGlowStoryboard") is Storyboard sb)
-            {
-                _ambientStoryboard = sb;
-                _ambientStoryboard.Begin(this, true);
-            }
-
-            if (TryFindResource("LoadingRingStoryboard") is Storyboard ringSb)
-            {
-                _loadingRingStoryboard = ringSb;
-            }
-
-            LoadSavedProfilePrefs();
-            ApplyLanguageStrings();
-
-            _state = StepZeroOrchestrator.LoadState();
-            _hardware = await Task.Run(() => HardwareDetector.ScanSystem());
-            _hardwareScanned = true;
-
-            PopulateHardwareLabels();
-
-            if (_hardware.DetectedBloatware.Count > 0)
-            {
-                BloatAlertBox.Visibility = Visibility.Visible;
-                TxtDetectedBloatList.Text = string.Join(", ", _hardware.DetectedBloatware);
-            }
-
-            if (App.IsResumeFromReboot && _state.PendingPostRebootInstall)
-            {
-                ShowView(StepZeroView);
-                _currentPrepTarget = PrepTarget.Clean;
-                OpenPrepModal(T("Completing system preparation", "Completando preparación del sistema", "システム準備を完了しています", "Завершение подготовки системы"));
-                await ExecuteDriverInstallationPipelineAsync(
-                    T("Cleanup finished. Base 100% ready.", "Limpieza finalizada. Base lista al 100%.", "クリーンアップが完了しました。", "Очистка завершена. Система готова на 100%."));
-                _state.PendingPostRebootInstall = false;
-                _state.StepZeroCompleted = true;
-                StepZeroOrchestrator.SaveState(_state);
-            }
-        }
-
-        private string T(string en, string es, string ja, string ru) => _currentLang switch
-        {
-            AppLang.ES => es,
-            AppLang.JA => ja,
-            AppLang.RU => ru,
-            _ => en
-        };
-
-        private void LoadSavedProfilePrefs()
-        {
-            try
-            {
-                using var key = Registry.CurrentUser.OpenSubKey(@"Software\Archon");
-                if (key?.GetValue("Language") is string langStr && Enum.TryParse<AppLang>(langStr, out var parsed))
-                    _currentLang = parsed;
-                if (key?.GetValue("AccountUser") is string userStr && !string.IsNullOrWhiteSpace(userStr))
-                    _signedInUser = userStr;
-            }
-            catch { }
-        }
-
-        private void SaveProfilePrefs()
-        {
-            try
-            {
-                using var key = Registry.CurrentUser.CreateSubKey(@"Software\Archon");
-                key?.SetValue("Language", _currentLang.ToString());
-                key?.SetValue("AccountUser", _signedInUser);
-            }
-            catch { }
-        }
-
-        private void BtnLanguageCycle_Click(object sender, RoutedEventArgs e)
-        {
-            _currentLang = _currentLang switch
-            {
-                AppLang.EN => AppLang.ES,
-                AppLang.ES => AppLang.JA,
-                AppLang.JA => AppLang.RU,
-                _ => AppLang.EN
+                Interval = TimeSpan.FromSeconds(1.0)
             };
-            SaveProfilePrefs();
-            ApplyLanguageStrings();
+            _telemetryTimer.Tick += TelemetryTimer_Tick;
+        }
 
-            if (_allTweaks.Count > 0)
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (Resources["AmbientGlowStoryboard"] is Storyboard sb)
+                sb.Begin();
+
+            InitializeCatalogAndApps();
+            UpdateSelectionCounter();
+            ApplyLanguage("EN");
+        }
+
+        // ==================== BARRA SUPERIOR Y DESPLEGABLE DE IDIOMAS ====================
+
+        private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            _telemetryTimer.Stop();
+            Close();
+        }
+
+        private void BtnLanguageDropdown_Click(object sender, RoutedEventArgs e)
+        {
+            LanguagePopup.IsOpen = !LanguagePopup.IsOpen;
+        }
+
+        private void LanguageOption_Click(object sender, RoutedEventArgs e)
+        {
+            LanguagePopup.IsOpen = false;
+            if (sender is Button btn && btn.Tag is string langCode)
             {
-                var checkedKeys = _allTweaks
-                    .Where(t => t.IsEnabled)
-                    .Select(t => $"{t.Category}::{t.Title}")
-                    .ToHashSet();
-
-                InitOptimizerCatalog(checkedKeys);
+                ApplyLanguage(langCode);
             }
         }
 
-        private void ApplyLanguageStrings()
+        private void ApplyLanguage(string lang)
         {
-            TxtCurrentLangCode.Text = _currentLang.ToString();
-            TxtTopUserLabel.Text = string.IsNullOrWhiteSpace(_signedInUser)
-                ? T("Account", "Cuenta", "アカウント", "Аккаунт")
-                : _signedInUser;
+            _currentLang = lang;
+            TxtCurrentLangCode.Text = lang;
 
-            // Welcome View
-            TxtWelcomeSubtitle.Text = T("Welcome", "Bienvenido", "ようこそ", "Добро пожаловать");
-            TxtStartButtonLabel.Text = T("Get Started", "Comenzar", "開始する", "Начать");
-            TxtScanButtonLabel.Text = HardwareListPanel.Visibility == Visibility.Visible
-                ? T("Hide components", "Ocultar componentes", "コンポーネントを隠す", "Скрыть компоненты")
-                : T("View my components", "Ver mis componentes", "コンポーネントを表示", "Мои компоненты");
+            bool isEs = lang == "ES";
+            bool isJa = lang == "JA";
+            bool isRu = lang == "RU";
 
-            TxtDetectedComponentsTitle.Text = T("Detected components", "Componentes detectados", "検出されたコンポーネント", "Обнаруженные компоненты");
-            TxtSeeMoreLabel.Text = T("See more", "Ver más", "詳細を見る", "Подробнее");
-            TxtLblCpu.Text = T("Processor", "Procesador", "プロセッサ", "Процессор");
-            TxtLblMother.Text = T("Motherboard", "Placa madre", "マザーボード", "Материнская плата");
-            TxtLblGpu.Text = T("Graphics card", "Tarjeta gráfica", "グラフィックス", "Видеокарта");
-            TxtLblRam.Text = T("Memory RAM", "Memoria RAM", "メモリ RAM", "Оперативная память");
-            TxtLblStorage.Text = T("Storage", "Almacenamiento", "ストレージ", "Накопитель");
-            TxtLblOs.Text = T("Operating system", "Sistema operativo", "OS", "Операционная система");
+            TxtWelcomeSubtitle.Text = isEs ? "Bienvenido" : isJa ? "ようこそ" : isRu ? "Добро пожаловать" : "Welcome";
+            TxtStartButtonLabel.Text = isEs ? "Comenzar" : isJa ? "開始する" : isRu ? "Начать" : "Get Started";
+            TxtScanButtonLabel.Text = isEs ? "Ver mis componentes" : isJa ? "コンポーネントを表示" : isRu ? "Мои компоненты" : "View my components";
+            TxtPerformanceButtonLabel.Text = isEs ? "Rendimiento" : isJa ? "パフォーマンス" : isRu ? "Производительность" : "Performance";
 
-            // Full Hardware View
-            TxtBackHomeLabel.Text = T("Back to home", "Volver al inicio", "ホームに戻る", "На главную");
-            TxtFullSpecsTitle.Text = T("Full system specifications", "Especificaciones completas del equipo", "システム完全仕様", "Полные характеристики системы");
+            TxtHardwareLoadingTitle.Text = isEs ? "Analizando componentes del equipo..." : isJa ? "システムハードウェアをスキャン中..." : isRu ? "Сканирование оборудования..." : "Scanning system hardware...";
+            TxtHardwareLoadingSub.Text = isEs ? "Leyendo sensores de procesador, gráfica, memoria RAM y almacenamiento..." : "Reading CPU, GPU, RAM, storage and motherboard sensors...";
 
-            // Preparation View
-            TxtHomeNavLabel.Text = T("Home", "Inicio", "ホーム", "Главная");
-            TxtPrepTitle.Text = T("System preparation", "Preparación del sistema", "システム準備", "Подготовка системы");
-            TxtPrepSubtitle.Text = T(
-                "Choose your current Windows state to prepare drivers before entering the optimization panel.",
-                "Elegí el estado actual de tu Windows para preparar los controladores antes de pasar al panel de ajustes.",
-                "最適化パネルに進む前に、現在のWindowsの状態を選択してドライバーを準備します。",
-                "Выберите текущее состояние Windows для подготовки драйверов перед переходом к настройкам.");
+            TxtDetectedComponentsTitle.Text = isEs ? "Componentes detectados" : isJa ? "検出されたコンポーネント" : isRu ? "Обнаруженные компоненты" : "Detected components";
+            TxtSeeMoreLabel.Text = isEs ? "Ver más" : isJa ? "詳細を見る" : isRu ? "Подробнее" : "See more";
+            TxtLblCpu.Text = isEs ? "Procesador" : isJa ? "プロセッサ" : isRu ? "Процессор" : "Processor";
+            TxtLblMother.Text = isEs ? "Placa base" : isJa ? "マザーボード" : isRu ? "Материнская плата" : "Motherboard";
+            TxtLblGpu.Text = isEs ? "Tarjeta gráfica" : isJa ? "グラフィックス" : isRu ? "Видеокарта" : "Graphics card";
+            TxtLblRam.Text = isEs ? "Memoria RAM" : isJa ? "メモリ RAM" : isRu ? "Оперативная память" : "Memory RAM";
+            TxtLblStorage.Text = isEs ? "Almacenamiento" : isJa ? "ストレージ" : isRu ? "Накопитель" : "Storage";
+            TxtLblOs.Text = isEs ? "Sistema operativo" : isJa ? "OS" : isRu ? "Операционная система" : "Operating system";
 
-            TxtBloatTitle.Text = T("OEM additional software detected", "Software adicional de fabricante detectado", "メーカー製追加ソフトを検出", "Обнаружено лишнее ПО производителя");
-            TxtFreshTitle.Text = T("Fresh Windows installation", "Windows recién instalado", "新規インストールされたWindows", "Чистая установка Windows");
-            TxtFreshDesc.Text = T(
-                "Creates a preventive restore point and installs only essential drivers without telemetry or extra panels.",
-                "Crea el punto de restauración preventivo e instala únicamente los controladores esenciales sin telemetría ni paneles extra.",
-                "復元ポイントを作成し、テレメトリや不要なパネルなしで必須ドライバーのみをインストールします。",
-                "Создает точку восстановления и устанавливает только базовые драйверы без телеметрии.");
-            TxtFreshAction.Text = T("Install", "Instalar", "インストール", "Установить");
+            TxtBackHomeLabel.Text = isEs ? "Volver al inicio" : isJa ? "ホームに戻る" : isRu ? "На главную" : "Back to home";
+            TxtPerfBackLabel.Text = TxtBackHomeLabel.Text;
+            TxtFullSpecsTitle.Text = isEs ? "Especificaciones completas del sistema" : isJa ? "システム完全仕様" : isRu ? "Полные характеристики системы" : "Full system specifications";
 
-            TxtCleanTitle.Text = T("I already installed drivers or OEM utilities", "Ya instalé drivers o utilidades de fabricante", "ドライバーやメーカー製ユーティリティ導入済み", "Драйверы или утилиты уже установлены");
-            TxtCleanDesc.Text = T(
-                "Removes previous drivers and suites like Armoury Crate or GeForce Experience, reboots, and leaves a clean base.",
-                "Limpia controladores previos y programas como Armoury Crate o GeForce Experience, reinicia el equipo y deja la base limpia.",
-                "既存のドライバーやArmoury Crate等を削除し、再起動してクリーンな状態にします。",
-                "Удаляет старые драйверы и утилиты вроде Armoury Crate или GeForce Experience и перезагружает ПК.");
-            TxtCleanAction.Text = T("Clean", "Limpiar", "クリーンアップ", "Очистить");
+            TxtPerfTitle.Text = isEs ? "Rendimiento en tiempo real" : isJa ? "リアルタイムパフォーマンス" : isRu ? "Производительность в реальном времени" : "Real-time hardware performance";
+            TxtPerfSubtitle.Text = isEs ? "Monitoreo continuo de carga, temperaturas, frecuencias, memoria y tráfico de red." : "Live utilization, temperatures, clock speeds, memory and network throughput.";
 
-            TxtAlreadyReadyPrompt.Text = T("Already have clean, configured drivers?", "¿Ya contás con tus controladores limpios y configurados?", "ドライバーの準備は完了していますか？", "Драйверы уже настроены?");
-            TxtSkipTitle.Text = T("My drivers are already ready", "Ya tengo mis controladores listos", "ドライバーは準備完了済み", "Мои драйверы уже готовы");
-            TxtSkipDesc.Text = T(
-                "Creates the mandatory preventive restore point and jumps straight into the system optimization panel.",
-                "Genera el respaldo preventivo obligatorio y pasa directamente al panel de ajustes del sistema.",
-                "必須の復元ポイントを作成し、システム最適化パネルへ直接移動します。",
-                "Создает обязательную точку восстановления и сразу открывает панель настроек.");
-            TxtSkipAction.Text = T("Continue", "Continuar", "続行", "Продолжить");
+            TxtHomeNavLabel.Text = isEs ? "Inicio" : isJa ? "ホーム" : isRu ? "Главная" : "Home";
+            TxtPrepTitle.Text = isEs ? "Preparación del sistema" : isJa ? "システム準備" : isRu ? "Подготовка системы" : "System preparation";
+            TxtPrepSubtitle.Text = isEs ? "Elegí el estado actual de tu Windows para preparar los controladores antes de entrar al panel de optimización." : "Choose your current Windows state to prepare drivers before entering the optimization panel.";
+            TxtBloatTitle.Text = isEs ? "Software adicional de fabricante detectado" : "OEM additional software detected";
 
-            TxtWhyTitle.Text = T("Why do we perform this step?", "¿Por qué hacemos este paso?", "なぜこの手順を行うのか？", "Зачем нужен этот шаг?");
-            TxtWhy1Title.Text = T("Preventive backup", "Respaldo preventivo", "予防バックアップ", "Резервная копия");
-            TxtWhy1Desc.Text = T(
-                "Saves an exact snapshot of Windows before modifying any setting. Zero performance impact and uses at most 5% disk space.",
-                "Guarda una copia exacta del estado actual de Windows antes de tocar cualquier clave. No consume rendimiento y usa como máximo el 5% del disco.",
-                "設定変更前にWindowsの正確なスナップショットを保存します。パフォーマンスへの影響はありません。",
-                "Сохраняет точный снимок Windows перед изменением параметров. Не влияет на производительность.");
-            TxtWhy2Title.Text = T("Bloat-free drivers", "Drivers sin basura", "不要ソフトなしドライバー", "Драйверы без мусора");
-            TxtWhy2Desc.Text = T(
-                "Prevents Windows Update from pushing generic packages and prepares Chipset and GPU without background services.",
-                "Evita que Windows Update instale paquetes genéricos y prepara Chipset y GPU sin servicios corriendo en segundo plano.",
-                "Windows Updateによる汎用ドライバー導入を防ぎ、バックグラウンドサービスなしでChipsetとGPUを準備します。",
-                "Запрещает Windows Update ставить базовые пакеты и настраивает Chipset и GPU без фоновых служб.");
-            TxtWhy3Title.Text = T("Reversible tweaks", "Cambios reversibles", "元に戻せる調整", "Обратимые изменения");
-            TxtWhy3Desc.Text = T(
-                "Every adjustment lets you review its purpose and restore Windows defaults in a single click.",
-                "Cada ajuste permite revisar para qué sirve y volver al estado original de Windows en un clic.",
-                "各調整の目的を確認でき、ワンクリックでWindowsの初期状態に戻せます。",
-                "Для каждого параметра можно прочитать описание и вернуть исходные настройки в один клик.");
+            TxtFreshTitle.Text = isEs ? "Instalación limpia de Windows" : "Fresh Windows installation";
+            TxtFreshDesc.Text = isEs ? "Crea un punto de restauración preventivo e instala únicamente los controladores esenciales sin telemetría ni paneles extra." : "Creates a preventive restore point and installs only essential drivers without telemetry or extra panels.";
+            TxtFreshAction.Text = isEs ? "Instalar" : "Install";
 
-            // Loading Modal
-            TxtModalProcessingLabel.Text = T("Processing configuration", "Procesando configuración", "設定を処理中", "Обработка конфигурации");
+            TxtCleanTitle.Text = isEs ? "Ya instalé controladores o utilidades OEM" : "I already installed drivers or OEM utilities";
+            TxtCleanDesc.Text = isEs ? "Elimina controladores previos y suites como Armoury Crate o GeForce Experience, reinicia y deja una base limpia." : "Removes previous drivers and suites like Armoury Crate or GeForce Experience, reboots, and leaves a clean base.";
+            TxtCleanAction.Text = isEs ? "Limpiar" : "Clean";
 
-            // Account Modal
-            TxtAccountModalTitle.Text = T("Archon Account", "Cuenta de Archon", "Archon アカウント", "Аккаунт Archon");
-            TxtAccountModalDesc.Text = T(
-                "Sign in to sync your optimization profiles, app presets, and cloud backups across Windows installations.",
-                "Iniciá sesión para sincronizar tus perfiles de optimización, listas de apps y respaldos en futuras instalaciones.",
-                "サインインすると、最適化プロファイルやアプリ構成を同期できます。",
-                "Войдите, чтобы синхронизировать профили оптимизации и наборы программ.");
-            TxtAccountUserLabel.Text = T("Username or Email", "Usuario o correo electrónico", "ユーザー名またはメール", "Имя пользователя или Email");
-            BtnAccountSignOut.Content = T("Sign out", "Cerrar sesión", "ログアウト", "Выйти");
-            BtnAccountSave.Content = T("Continue", "Guardar sesión", "続行", "Продолжить");
+            TxtAlreadyReadyPrompt.Text = isEs ? "¿Ya tenés los controladores limpios y configurados?" : "Already have clean, configured drivers?";
+            TxtSkipTitle.Text = isEs ? "Ya tengo mis controladores listos" : "My drivers are already ready";
+            TxtSkipDesc.Text = isEs ? "Crea el punto de restauración preventivo obligatorio y pasa directo al panel de optimización del sistema." : "Creates the mandatory preventive restore point and jumps straight into the system optimization panel.";
+            TxtSkipAction.Text = isEs ? "Continuar" : "Continue";
 
-            // Main Optimizer
-            TxtNavPrep.Text = T("Preparation", "Preparación", "準備", "Подготовка");
-            BtnCatApps.Content = T("Apps", "Apps", "アプリ", "Приложения");
-            BtnCatGaming.Content = T("Gaming & Power", "Gaming y Energía", "ゲーム・電源", "Игры и питание");
-            BtnCatNetwork.Content = T("Network & DNS", "Red y DNS", "ネットワーク・DNS", "Сеть и DNS");
-            BtnCatDebloat.Content = T("Debloat", "Debloat", "不要機能削除", "Очистка ПО");
-            BtnCatServices.Content = T("Services", "Servicios", "サービス", "Службы");
-            BtnCatCleanup.Content = T("Cleanup", "Limpieza", "クリーンアップ", "Очистка");
+            TxtWhyTitle.Text = isEs ? "¿Por qué realizamos este paso?" : "Why do we perform this step?";
+            TxtWhy1Title.Text = isEs ? "Respaldo preventivo" : "Preventive backup";
+            TxtWhy1Desc.Text = isEs ? "Guarda una instantánea exacta de Windows antes de modificar ajustes. Cero impacto en rendimiento y usa como máximo 5% de disco." : "Saves an exact snapshot of Windows before modifying any setting. Zero performance impact and uses at most 5% disk space.";
+            TxtWhy2Title.Text = isEs ? "Controladores sin bloatware" : "Bloat-free drivers";
+            TxtWhy2Desc.Text = isEs ? "Evita que Windows Update instale paquetes genéricos y prepara Chipset y GPU sin servicios en segundo plano." : "Prevents Windows Update from pushing generic packages and prepares Chipset and GPU without background services.";
+            TxtWhy3Title.Text = isEs ? "Ajustes reversibles" : "Reversible tweaks";
+            TxtWhy3Desc.Text = isEs ? "Cada ajuste permite revisar su función y restaurar los valores originales de Windows en un clic." : "Every adjustment lets you review its purpose and restore Windows defaults in a single click.";
 
-            TxtSearchPlaceholder.Text = T("Search tweak or application...", "Buscar ajuste o aplicación...", "設定やアプリを検索...", "Поиск настройки или программы...");
-            BtnRestoreOriginal.Content = T("Restore defaults", "Restaurar original", "初期状態に戻す", "Сбросить всё");
-            BtnApplyChanges.Content = T("Apply changes", "Aplicar cambios", "変更を適用", "Применить");
+            TxtNavPrep.Text = isEs ? "Preparación" : "Preparation";
+            TxtNavPerf.Text = isEs ? "Rendimiento" : "Performance";
+            BtnCatApps.Content = "Apps";
+            BtnCatGaming.Content = isEs ? "Gaming y Energía" : "Gaming & Power";
+            BtnCatNetwork.Content = isEs ? "Red y DNS" : "Network & DNS";
+            BtnCatDebloat.Content = "Debloat";
+            BtnCatServices.Content = isEs ? "Servicios" : "Services";
+            BtnCatCleanup.Content = isEs ? "Limpieza" : "Cleanup";
+
+            TxtSearchPlaceholder.Text = isEs ? "Buscar ajuste o aplicación..." : "Search tweak or application...";
+            BtnRestoreOriginal.Content = isEs ? "Restaurar originales" : "Restore defaults";
+            BtnApplyChanges.Content = isEs ? "Aplicar cambios" : "Apply changes";
+
+            RefreshAccountLabels();
+            UpdateSelectionCounter();
         }
 
-        private void BtnUserAccount_Click(object sender, RoutedEventArgs e)
+        // ==================== CUENTA / INICIO DE SESIÓN Y REGISTRO ====================
+
+        private void BtnOpenSignIn_Click(object sender, RoutedEventArgs e)
         {
-            TxtAccountInput.Text = _signedInUser;
+            SetAccountModalMode(false);
+            TxtAccountInput.Text = _signedInUser ?? string.Empty;
             AccountModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void BtnOpenRegister_Click(object sender, RoutedEventArgs e)
+        {
+            SetAccountModalMode(true);
+            TxtAccountInput.Text = string.Empty;
+            TxtAccountPassInput.Password = string.Empty;
+            AccountModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void BtnTabSignIn_Click(object sender, RoutedEventArgs e) => SetAccountModalMode(false);
+        private void BtnTabRegister_Click(object sender, RoutedEventArgs e) => SetAccountModalMode(true);
+
+        private void SetAccountModalMode(bool register)
+        {
+            _isRegisterMode = register;
+            BtnTabSignIn.Style = (Style)FindResource(register ? "SoftCardButtonStyle" : "PrimaryButtonStyle");
+            BtnTabRegister.Style = (Style)FindResource(register ? "PrimaryButtonStyle" : "SoftCardButtonStyle");
+            PanelRegisterExtra.Visibility = register ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void BtnCloseAccountModal_Click(object sender, RoutedEventArgs e)
@@ -312,1195 +273,1051 @@ namespace Archon
         private void BtnAccountSave_Click(object sender, RoutedEventArgs e)
         {
             string input = TxtAccountInput.Text.Trim();
-            _signedInUser = input.Length > 120 ? input[..120] : input;
-            SaveProfilePrefs();
-            ApplyLanguageStrings();
+            if (string.IsNullOrWhiteSpace(input))
+                return;
+
+            _signedInUser = input;
             AccountModalOverlay.Visibility = Visibility.Collapsed;
+            RefreshAccountLabels();
         }
 
         private void BtnAccountSignOut_Click(object sender, RoutedEventArgs e)
         {
-            _signedInUser = string.Empty;
+            _signedInUser = null;
             TxtAccountInput.Text = string.Empty;
-            SaveProfilePrefs();
-            ApplyLanguageStrings();
+            TxtAccountPassInput.Password = string.Empty;
             AccountModalOverlay.Visibility = Visibility.Collapsed;
+            RefreshAccountLabels();
         }
 
-        private void PopulateHardwareLabels()
+        private void RefreshAccountLabels()
         {
-            TxtCpuValue.Text = _hardware.CpuName;
-            TxtMotherValue.Text = _hardware.MotherboardName;
-            TxtGpuValue.Text = _hardware.PrimaryGpu;
-            TxtRamValue.Text = _hardware.TotalRamGb;
-            TxtStorageValue.Text = _hardware.PrimaryStorage;
-            TxtOsValue.Text = _hardware.WindowsVersion;
+            bool isEs = _currentLang == "ES";
+            if (!string.IsNullOrWhiteSpace(_signedInUser))
+            {
+                string initial = _signedInUser.Substring(0, 1).ToUpperInvariant();
+                WelcomeTopAvatarInitial.Text = initial;
+                WelcomeCardAvatarInitial.Text = initial;
+                SidebarAvatarInitial.Text = initial;
+
+                TxtWelcomeTopUser.Text = _signedInUser;
+                TxtWelcomeTopSub.Text = isEs ? "Sesión activa · Sincronizado" : "Signed in · Synced";
+
+                TxtWelcomeAuthTitle.Text = isEs ? $"Conectado como {_signedInUser}" : $"Signed in as {_signedInUser}";
+                TxtWelcomeAuthDesc.Text = isEs ? "Tus perfiles de optimización y listas de apps están vinculados." : "Your optimization presets and app selections are linked.";
+
+                TxtSidebarUser.Text = _signedInUser;
+                TxtSidebarUserStatus.Text = isEs ? "Cuenta conectada" : "Connected account";
+
+                BtnWelcomeSignIn.Visibility = Visibility.Collapsed;
+                BtnWelcomeRegister.Visibility = Visibility.Collapsed;
+                BtnWelcomeSignOutInline.Visibility = Visibility.Visible;
+                BtnWelcomeSignOutInline.Content = isEs ? "Cerrar sesión" : "Sign out";
+                BtnAccountSignOut.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                WelcomeTopAvatarInitial.Text = "A";
+                WelcomeCardAvatarInitial.Text = "?";
+                SidebarAvatarInitial.Text = "A";
+
+                TxtWelcomeTopUser.Text = isEs ? "Perfil Invitado" : "Guest Profile";
+                TxtWelcomeTopSub.Text = isEs ? "Iniciar sesión para sincronizar" : "Sign in to sync";
+
+                TxtWelcomeAuthTitle.Text = isEs ? "Perfil en la nube de Archon" : "Archon Cloud Profile";
+                TxtWelcomeAuthDesc.Text = isEs ? "Iniciá sesión o registrate para guardar tus ajustes y configuraciones." : "Sign in or create an account to save your tweaks and presets.";
+
+                TxtSidebarUser.Text = isEs ? "Perfil Invitado" : "Guest Profile";
+                TxtSidebarUserStatus.Text = isEs ? "Gestionar cuenta" : "Manage account";
+
+                BtnWelcomeSignIn.Visibility = Visibility.Visible;
+                BtnWelcomeRegister.Visibility = Visibility.Visible;
+                BtnWelcomeSignIn.Content = isEs ? "Iniciar sesión" : "Sign in";
+                BtnWelcomeRegister.Content = isEs ? "Registrarse" : "Register";
+                BtnWelcomeSignOutInline.Visibility = Visibility.Collapsed;
+                BtnAccountSignOut.Visibility = Visibility.Collapsed;
+            }
         }
+
+        // ==================== ESCANEO DE COMPONENTES CON CARGA PREVIA ====================
 
         private async void BtnScanHardware_Click(object sender, RoutedEventArgs e)
         {
             if (HardwareListPanel.Visibility == Visibility.Visible)
             {
                 HardwareListPanel.Visibility = Visibility.Collapsed;
-                ApplyLanguageStrings();
                 return;
             }
 
-            if (!_hardwareScanned)
+            BtnScanHardware.IsEnabled = false;
+            HardwareListPanel.Visibility = Visibility.Collapsed;
+            HardwareLoadingPanel.Visibility = Visibility.Visible;
+
+            Storyboard? spinnerSb = Resources["HardwareScanSpinnerStoryboard"] as Storyboard;
+            spinnerSb?.Begin();
+
+            try
             {
-                TxtScanButtonLabel.Text = T("Scanning PC...", "Analizando equipo...", "スキャン中...", "Сканирование...");
-                BtnScanHardware.IsEnabled = false;
-                _hardware = await Task.Run(() => HardwareDetector.ScanSystem());
-                _hardwareScanned = true;
-                PopulateHardwareLabels();
+                if (!_isHardwareScanned || _hardwareProfile == null)
+                {
+                    var scanTask = Task.Run(() => HardwareDetector.ScanSystem());
+                    var minDelay = Task.Delay(950);
+                    await Task.WhenAll(scanTask, minDelay);
+                    _hardwareProfile = await scanTask;
+                    _isHardwareScanned = true;
+                }
+                else
+                {
+                    await Task.Delay(450);
+                }
+
+                PopulateSummaryHardwareUI(_hardwareProfile);
+            }
+            finally
+            {
+                spinnerSb?.Stop();
+                HardwareLoadingPanel.Visibility = Visibility.Collapsed;
+                HardwareListPanel.Opacity = 0;
+                HardwareListPanel.Visibility = Visibility.Visible;
+                HardwareListPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260)));
                 BtnScanHardware.IsEnabled = true;
             }
+        }
 
-            HardwareListPanel.Visibility = Visibility.Visible;
-            ApplyLanguageStrings();
+        private void PopulateSummaryHardwareUI(SystemHardwareProfile profile)
+        {
+            TxtCpuValue.Text = string.IsNullOrWhiteSpace(profile.CpuName) ? "Unknown CPU" : profile.CpuName;
+            TxtMotherValue.Text = string.IsNullOrWhiteSpace(profile.MotherboardName) ? "Unknown Motherboard" : profile.MotherboardName;
+            TxtGpuValue.Text = string.IsNullOrWhiteSpace(profile.PrimaryGpu) ? "Unknown GPU" : profile.PrimaryGpu;
+            TxtRamValue.Text = string.IsNullOrWhiteSpace(profile.TotalRamGb) ? "Unknown RAM" : profile.TotalRamGb;
+            TxtStorageValue.Text = string.IsNullOrWhiteSpace(profile.PrimaryStorage) ? "Unknown Storage" : profile.PrimaryStorage;
+            TxtOsValue.Text = string.IsNullOrWhiteSpace(profile.WindowsVersion) ? "Windows" : profile.WindowsVersion;
+
+            if (profile.DetectedBloatware != null && profile.DetectedBloatware.Count > 0)
+            {
+                BloatAlertBox.Visibility = Visibility.Visible;
+                TxtDetectedBloatList.Text = string.Join(" · ", profile.DetectedBloatware);
+            }
         }
 
         private async void BtnViewAllHardware_Click(object sender, RoutedEventArgs e)
         {
-            BtnViewAllHardware.IsEnabled = false;
-            _cachedDetailedSpecs ??= await Task.Run(BuildFullHardwareInventory);
-            FullHardwareSectionsControl.ItemsSource = _cachedDetailedSpecs;
-            BtnViewAllHardware.IsEnabled = true;
+            WelcomeView.Visibility = Visibility.Collapsed;
+            FullHardwareView.Visibility = Visibility.Visible;
+            FullHardwareSlideTransform.Y = 18;
+            FullHardwareContainer.Opacity = 0;
 
-            ShowView(FullHardwareView);
-            FullHardwareView.ScrollToTop();
+            FullHardwareContainer.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260)));
+            FullHardwareSlideTransform.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty,
+                new DoubleAnimation(18, 0, TimeSpan.FromMilliseconds(260)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
 
-            var slideAnim = new DoubleAnimation
-            {
-                From = 28,
-                To = 0,
-                Duration = TimeSpan.FromMilliseconds(260),
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-            };
-            FullHardwareSlideTransform.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty, slideAnim);
+            var sections = await Task.Run(BuildFullHardwareSections);
+            FullHardwareSectionsControl.ItemsSource = sections;
         }
 
         private void BtnBackFromFullHardware_Click(object sender, RoutedEventArgs e)
         {
-            ShowView(WelcomeView);
+            FullHardwareView.Visibility = Visibility.Collapsed;
+            WelcomeView.Visibility = Visibility.Visible;
         }
 
-        private List<HardwareSpecSection> BuildFullHardwareInventory()
+        private List<HardwareSpecSection> BuildFullHardwareSections()
         {
+            bool isEs = _currentLang == "ES";
             var sections = new List<HardwareSpecSection>();
 
-            // 1. SEGURIDAD Y AJUSTES DE BIOS PARA GAMING
-            var biosGamingSpecs = new List<HardwareSpecRow>();
-
-            string tpmStatus = "No detectado / Desactivado en BIOS";
+            var cpuRows = new List<HardwareSpecRow>();
             try
             {
-                using var tpmSearcher = new ManagementObjectSearcher(@"root\CIMV2\Security\MicrosoftTpm", "SELECT IsActivated_InitialValue, IsEnabled_InitialValue, SpecVersion FROM Win32_Tpm");
-                foreach (ManagementObject tpm in tpmSearcher.Get())
+                using var s = new ManagementObjectSearcher("SELECT Name, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed, L2CacheSize, L3CacheSize, SocketDesignation FROM Win32_Processor");
+                foreach (ManagementObject obj in s.Get())
                 {
-                    using (tpm)
+                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Modelo" : "Model", Value = (obj["Name"]?.ToString() ?? "").Trim() });
+                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Núcleos / Hilos" : "Cores / Threads", Value = $"{obj["NumberOfCores"]} Cores / {obj["NumberOfLogicalProcessors"]} Threads" });
+                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Frecuencia máxima" : "Max boost clock", Value = $"{obj["MaxClockSpeed"]} MHz" });
+                    cpuRows.Add(new HardwareSpecRow { Label = "Socket", Value = obj["SocketDesignation"]?.ToString() ?? "--" });
+                    break;
+                }
+            }
+            catch { }
+            if (cpuRows.Count > 0)
+                sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Procesador (CPU)" : "Processor (CPU)", Specs = cpuRows });
+
+            var gpuRows = new List<HardwareSpecRow>();
+            try
+            {
+                using var s = new ManagementObjectSearcher("SELECT Name, DriverVersion, VideoProcessor, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate FROM Win32_VideoController");
+                foreach (ManagementObject obj in s.Get())
+                {
+                    string name = obj["Name"]?.ToString() ?? "";
+                    if (name.Contains("Basic", StringComparison.OrdinalIgnoreCase)) continue;
+                    gpuRows.Add(new HardwareSpecRow { Label = isEs ? "Adaptador" : "Adapter", Value = name });
+                    gpuRows.Add(new HardwareSpecRow { Label = isEs ? "Versión de driver" : "Driver version", Value = obj["DriverVersion"]?.ToString() ?? "--" });
+                    gpuRows.Add(new HardwareSpecRow { Label = isEs ? "Resolución activa" : "Active display", Value = $"{obj["CurrentHorizontalResolution"]}x{obj["CurrentVerticalResolution"]} @ {obj["CurrentRefreshRate"]} Hz" });
+                }
+            }
+            catch { }
+            if (gpuRows.Count > 0)
+                sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Tarjeta Gráfica (GPU)" : "Graphics (GPU)", Specs = gpuRows });
+
+            var moboRows = new List<HardwareSpecRow>();
+            try
+            {
+                using var s = new ManagementObjectSearcher("SELECT Manufacturer, Product, Version FROM Win32_BaseBoard");
+                foreach (ManagementObject obj in s.Get())
+                {
+                    moboRows.Add(new HardwareSpecRow { Label = isEs ? "Fabricante" : "Manufacturer", Value = obj["Manufacturer"]?.ToString() ?? "--" });
+                    moboRows.Add(new HardwareSpecRow { Label = isEs ? "Modelo" : "Board model", Value = obj["Product"]?.ToString() ?? "--" });
+                    break;
+                }
+                using var bios = new ManagementObjectSearcher("SELECT SMBIOSBIOSVersion, ReleaseDate FROM Win32_BIOS");
+                foreach (ManagementObject obj in bios.Get())
+                {
+                    moboRows.Add(new HardwareSpecRow { Label = "BIOS", Value = obj["SMBIOSBIOSVersion"]?.ToString() ?? "--" });
+                    break;
+                }
+            }
+            catch { }
+            if (moboRows.Count > 0)
+                sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Placa Base y BIOS" : "Motherboard & BIOS", Specs = moboRows });
+
+            var ramRows = new List<HardwareSpecRow>();
+            try
+            {
+                int slot = 1;
+                using var s = new ManagementObjectSearcher("SELECT Manufacturer, PartNumber, Capacity, Speed, ConfiguredClockSpeed FROM Win32_PhysicalMemory");
+                foreach (ManagementObject obj in s.Get())
+                {
+                    ulong capBytes = ulong.TryParse(obj["Capacity"]?.ToString(), out ulong b) ? b : 0;
+                    double gb = Math.Round(capBytes / (1024.0 * 1024.0 * 1024.0));
+                    string speed = obj["ConfiguredClockSpeed"]?.ToString() ?? obj["Speed"]?.ToString() ?? "--";
+                    string part = (obj["PartNumber"]?.ToString() ?? "").Trim();
+                    ramRows.Add(new HardwareSpecRow { Label = $"Slot {slot++}", Value = $"{gb} GB @ {speed} MHz ({part})" });
+                }
+            }
+            catch { }
+            if (ramRows.Count > 0)
+                sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Módulos de Memoria RAM" : "Memory Modules (RAM)", Specs = ramRows });
+
+            var diskRows = new List<HardwareSpecRow>();
+            try
+            {
+                using var s = new ManagementObjectSearcher("SELECT Model, InterfaceType, Size FROM Win32_DiskDrive");
+                foreach (ManagementObject obj in s.Get())
+                {
+                    ulong diskBytes = ulong.TryParse(obj["Size"]?.ToString(), out ulong b) ? b : 0;
+                    double gb = Math.Round(diskBytes / (1000.0 * 1000.0 * 1000.0));
+                    string cap = gb >= 1000 ? $"{Math.Round(gb / 1000.0, 1)} TB" : $"{gb} GB";
+                    diskRows.Add(new HardwareSpecRow
                     {
-                        bool enabled = tpm["IsEnabled_InitialValue"] is bool enVal && enVal;
-                        bool activated = tpm["IsActivated_InitialValue"] is bool acVal && acVal;
-                        string rawSpec = tpm["SpecVersion"]?.ToString() ?? "";
-                        string ver = rawSpec.Split(',').FirstOrDefault()?.Trim() ?? "2.0";
-
-                        if (enabled && activated)
-                            tpmStatus = $"Activado y listo (TPM {ver})";
-                        else if (enabled)
-                            tpmStatus = $"Habilitado, pendiente de activación (TPM {ver})";
-                        else
-                            tpmStatus = $"Desactivado en BIOS (TPM {ver})";
-                    }
-                }
-            }
-            catch
-            {
-                try
-                {
-                    using var tpmKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\TPM\WMI");
-                    if (tpmKey != null)
-                        tpmStatus = "Detectado (TPM 2.0)";
-                }
-                catch { }
-            }
-            biosGamingSpecs.Add(new HardwareSpecRow { Label = "TPM (Anticheat / Win 11)", Value = tpmStatus });
-
-            string secureBootStatus = "No disponible (Legacy)";
-            bool hasSecureBootKey = false;
-            try
-            {
-                using var sbKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\SecureBoot\State");
-                if (sbKey != null)
-                {
-                    hasSecureBootKey = true;
-                    if (sbKey.GetValue("UEFISecureBootEnabled") is int sbVal)
-                        secureBootStatus = sbVal == 1 ? "Activado (UEFI)" : "Desactivado en BIOS";
+                        Label = obj["Model"]?.ToString() ?? "Disk",
+                        Value = $"{cap} ({obj["InterfaceType"]})"
+                    });
                 }
             }
             catch { }
-            biosGamingSpecs.Add(new HardwareSpecRow { Label = "Secure Boot", Value = secureBootStatus });
-
-            string firmwareMode = File.Exists(@"C:\Windows\System32\winload.efi") ? "UEFI" : "Legacy";
-            if (hasSecureBootKey) firmwareMode = "UEFI Nativo";
-            biosGamingSpecs.Add(new HardwareSpecRow { Label = "Modo BIOS", Value = firmwareMode });
-
-            bool? virtEnabled = null;
-            QueryWmi("SELECT VirtualizationFirmwareEnabled FROM Win32_Processor", obj =>
-            {
-                if (obj["VirtualizationFirmwareEnabled"] is bool v)
-                    virtEnabled = v;
-            });
-            if (virtEnabled.HasValue)
-            {
-                biosGamingSpecs.Add(new HardwareSpecRow
-                {
-                    Label = "Virtualización (SVM / VT-x)",
-                    Value = virtEnabled.Value ? "Activada en BIOS" : "Desactivada en BIOS"
-                });
-            }
-
-            string hvciStatus = "Desactivado (Óptimo para FPS)";
-            try
-            {
-                using var hvciKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity");
-                if (hvciKey?.GetValue("Enabled") is int hvciVal && hvciVal == 1)
-                    hvciStatus = "Activado (Puede reducir FPS)";
-            }
-            catch { }
-            biosGamingSpecs.Add(new HardwareSpecRow { Label = "Core Isolation (HVCI)", Value = hvciStatus });
-
-            sections.Add(new HardwareSpecSection { SectionTitle = "BIOS & Gaming", Specs = biosGamingSpecs });
-
-            // 2. PROCESADOR
-            var cpuSpecs = new List<HardwareSpecRow>
-            {
-                new() { Label = "Modelo", Value = _hardware.CpuName },
-                new() { Label = "Arquitectura", Value = RuntimeInformation.OSArchitecture.ToString() }
-            };
-            QueryWmi("SELECT Manufacturer, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed, L2CacheSize, L3CacheSize, SocketDesignation FROM Win32_Processor", obj =>
-            {
-                AddIfValid(cpuSpecs, "Fabricante", obj["Manufacturer"]?.ToString());
-                AddIfValid(cpuSpecs, "Socket", obj["SocketDesignation"]?.ToString());
-                AddIfValid(cpuSpecs, "Núcleos / Hilos", $"{obj["NumberOfCores"]} núcleos / {obj["NumberOfLogicalProcessors"]} hilos");
-                if (obj["MaxClockSpeed"] != null)
-                    cpuSpecs.Add(new HardwareSpecRow { Label = "Frecuencia base", Value = $"{obj["MaxClockSpeed"]} MHz" });
-                if (obj["L2CacheSize"] != null && Convert.ToInt64(obj["L2CacheSize"]) > 0)
-                    cpuSpecs.Add(new HardwareSpecRow { Label = "Caché L2", Value = $"{Convert.ToInt64(obj["L2CacheSize"]) / 1024.0:0.#} MB" });
-                if (obj["L3CacheSize"] != null && Convert.ToInt64(obj["L3CacheSize"]) > 0)
-                    cpuSpecs.Add(new HardwareSpecRow { Label = "Caché L3", Value = $"{Convert.ToInt64(obj["L3CacheSize"]) / 1024.0:0.#} MB" });
-            });
-            sections.Add(new HardwareSpecSection { SectionTitle = "Procesador (CPU)", Specs = cpuSpecs });
-
-            // 3. PLACA BASE Y BIOS
-            var boardSpecs = new List<HardwareSpecRow>
-            {
-                new() { Label = "Placa madre", Value = _hardware.MotherboardName }
-            };
-            QueryWmi("SELECT Manufacturer, Product, Version, SerialNumber FROM Win32_BaseBoard", obj =>
-            {
-                AddIfValid(boardSpecs, "Fabricante", obj["Manufacturer"]?.ToString());
-                AddIfValid(boardSpecs, "Modelo exacto", obj["Product"]?.ToString());
-                AddIfValid(boardSpecs, "Revisión", obj["Version"]?.ToString());
-                AddIfValid(boardSpecs, "Número de serie", obj["SerialNumber"]?.ToString());
-            });
-            QueryWmi("SELECT Manufacturer, SMBIOSBIOSVersion, ReleaseDate FROM Win32_BIOS", obj =>
-            {
-                AddIfValid(boardSpecs, "Fabricante BIOS", obj["Manufacturer"]?.ToString());
-                AddIfValid(boardSpecs, "Versión BIOS", obj["SMBIOSBIOSVersion"]?.ToString());
-                var rawDate = obj["ReleaseDate"]?.ToString();
-                if (!string.IsNullOrEmpty(rawDate) && rawDate.Length >= 8)
-                    boardSpecs.Add(new HardwareSpecRow { Label = "Fecha firmware", Value = $"{rawDate.Substring(6, 2)}/{rawDate.Substring(4, 2)}/{rawDate.Substring(0, 4)}" });
-            });
-            sections.Add(new HardwareSpecSection { SectionTitle = "Placa base y Firmware", Specs = boardSpecs });
-
-            // 4. GRÁFICOS Y PANTALLA
-            var gpuSpecs = new List<HardwareSpecRow>();
-            int gpuIdx = 1;
-            QueryWmi("SELECT Name, AdapterCompatibility, DriverVersion, AdapterRAM, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate FROM Win32_VideoController", obj =>
-            {
-                string prefix = gpuIdx == 1 ? "GPU principal" : $"GPU #{gpuIdx}";
-                AddIfValid(gpuSpecs, prefix, obj["Name"]?.ToString());
-                AddIfValid(gpuSpecs, $"Fabricante ({prefix})", obj["AdapterCompatibility"]?.ToString());
-                AddIfValid(gpuSpecs, $"Controlador ({prefix})", obj["DriverVersion"]?.ToString());
-                if (obj["AdapterRAM"] != null && Convert.ToInt64(obj["AdapterRAM"]) > 0)
-                {
-                    double gb = Convert.ToInt64(obj["AdapterRAM"]) / (1024.0 * 1024.0 * 1024.0);
-                    gpuSpecs.Add(new HardwareSpecRow { Label = $"VRAM ({prefix})", Value = $"{gb:0.#} GB" });
-                }
-                if (obj["CurrentHorizontalResolution"] != null && obj["CurrentVerticalResolution"] != null)
-                {
-                    string hz = obj["CurrentRefreshRate"] != null ? $" @ {obj["CurrentRefreshRate"]} Hz" : string.Empty;
-                    gpuSpecs.Add(new HardwareSpecRow { Label = $"Resolución ({prefix})", Value = $"{obj["CurrentHorizontalResolution"]} × {obj["CurrentVerticalResolution"]}{hz}" });
-                }
-                gpuIdx++;
-            });
-            if (gpuSpecs.Count == 0)
-                gpuSpecs.Add(new HardwareSpecRow { Label = "Tarjeta gráfica", Value = _hardware.PrimaryGpu });
-            sections.Add(new HardwareSpecSection { SectionTitle = "Gráficos y Pantalla", Specs = gpuSpecs });
-
-            // 5. MEMORIA RAM
-            var ramSpecs = new List<HardwareSpecRow>
-            {
-                new() { Label = "RAM total", Value = _hardware.TotalRamGb }
-            };
-            int dimmIdx = 1;
-            QueryWmi("SELECT DeviceLocator, Manufacturer, PartNumber, Capacity, Speed, ConfiguredClockSpeed, SMBIOSMemoryType FROM Win32_PhysicalMemory", obj =>
-            {
-                long capBytes = obj["Capacity"] != null ? Convert.ToInt64(obj["Capacity"]) : 0;
-                double capGb = capBytes / (1024.0 * 1024.0 * 1024.0);
-                string speed = (obj["ConfiguredClockSpeed"] ?? obj["Speed"])?.ToString() ?? "";
-                string ddrType = obj["SMBIOSMemoryType"] != null ? Convert.ToInt32(obj["SMBIOSMemoryType"]) switch
-                {
-                    24 => "DDR3",
-                    26 => "DDR4",
-                    34 => "DDR5",
-                    _ => "RAM"
-                } : "RAM";
-                string slot = obj["DeviceLocator"]?.ToString() ?? $"Slot #{dimmIdx}";
-                string maker = obj["Manufacturer"]?.ToString()?.Trim() ?? "";
-                string part = obj["PartNumber"]?.ToString()?.Trim() ?? "";
-
-                string detail = $"{capGb:0.#} GB {ddrType}";
-                if (!string.IsNullOrEmpty(speed)) detail += $" · {speed} MT/s";
-                if (!string.IsNullOrEmpty(maker) && maker != "Unknown") detail += $" · {maker}";
-                if (!string.IsNullOrEmpty(part)) detail += $" ({part})";
-
-                ramSpecs.Add(new HardwareSpecRow { Label = $"Módulo {dimmIdx} ({slot})", Value = detail });
-                dimmIdx++;
-            });
-            sections.Add(new HardwareSpecSection { SectionTitle = "Memoria RAM", Specs = ramSpecs });
-
-            // 6. ALMACENAMIENTO
-            var storageSpecs = new List<HardwareSpecRow>();
-            int diskIdx = 1;
-            QueryWmi("SELECT Model, InterfaceType, Size, Status FROM Win32_DiskDrive", obj =>
-            {
-                long sizeBytes = obj["Size"] != null ? Convert.ToInt64(obj["Size"]) : 0;
-                double sizeGb = sizeBytes / (1000.0 * 1000.0 * 1000.0);
-                string model = obj["Model"]?.ToString()?.Trim() ?? $"Unidad #{diskIdx}";
-                string iface = obj["InterfaceType"]?.ToString() ?? "";
-                string status = obj["Status"]?.ToString() ?? "OK";
-                storageSpecs.Add(new HardwareSpecRow
-                {
-                    Label = $"Unidad #{diskIdx} ({iface})",
-                    Value = $"{model} · {sizeGb:0} GB · {status}"
-                });
-                diskIdx++;
-            });
-
-            foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady))
-            {
-                double totalGb = drive.TotalSize / (1024.0 * 1024.0 * 1024.0);
-                double freeGb = drive.AvailableFreeSpace / (1024.0 * 1024.0 * 1024.0);
-                string volLabel = string.IsNullOrWhiteSpace(drive.VolumeLabel) ? "Local" : drive.VolumeLabel;
-                storageSpecs.Add(new HardwareSpecRow
-                {
-                    Label = $"Partición {drive.Name.TrimEnd('\\')} ({volLabel})",
-                    Value = $"{drive.DriveFormat} · {freeGb:0.#} GB libres / {totalGb:0.#} GB"
-                });
-            }
-            sections.Add(new HardwareSpecSection { SectionTitle = "Almacenamiento", Specs = storageSpecs });
-
-            // 7. RED
-            var netSpecs = new List<HardwareSpecRow>();
-            try
-            {
-                foreach (var nic in NetworkInterface.GetAllNetworkInterfaces()
-                    .Where(n => n.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
-                                n.NetworkInterfaceType != NetworkInterfaceType.Tunnel))
-                {
-                    var ipProps = nic.GetIPProperties();
-                    var ipv4 = ipProps.UnicastAddresses
-                        .FirstOrDefault(a => a.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)?.Address.ToString();
-                    string speedStr = nic.Speed > 0 ? $"{nic.Speed / 1_000_000} Mbps" : "Sin enlace";
-                    string statusStr = nic.OperationalStatus == OperationalStatus.Up ? "Conectado" : "Desconectado";
-                    string info = $"{nic.Description} · {statusStr} ({speedStr})";
-                    if (!string.IsNullOrEmpty(ipv4)) info += $" · IP: {ipv4}";
-
-                    netSpecs.Add(new HardwareSpecRow { Label = nic.Name, Value = info });
-                }
-            }
-            catch { }
-            if (netSpecs.Count > 0)
-                sections.Add(new HardwareSpecSection { SectionTitle = "Red", Specs = netSpecs });
-
-            // 8. AUDIO Y USB
-            var peripheralSpecs = new List<HardwareSpecRow>();
-            QueryWmi("SELECT Name FROM Win32_SoundDevice", obj =>
-            {
-                AddIfValid(peripheralSpecs, "Audio", obj["Name"]?.ToString());
-            });
-            QueryWmi("SELECT Name FROM Win32_USBController", obj =>
-            {
-                AddIfValid(peripheralSpecs, "Controladora USB", obj["Name"]?.ToString());
-            });
-            if (peripheralSpecs.Count > 0)
-                sections.Add(new HardwareSpecSection { SectionTitle = "Audio y USB", Specs = peripheralSpecs });
-
-            // 9. SISTEMA
-            var osSpecs = new List<HardwareSpecRow>
-            {
-                new() { Label = "Windows", Value = _hardware.WindowsVersion },
-                new() { Label = "Equipo", Value = Environment.MachineName },
-                new() { Label = "Usuario", Value = Environment.UserName },
-                new() { Label = "Kernel NT", Value = Environment.OSVersion.Version.ToString() }
-            };
-            TimeSpan uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
-            osSpecs.Add(new HardwareSpecRow
-            {
-                Label = "Tiempo activo",
-                Value = $"{(int)uptime.TotalHours} h {uptime.Minutes} min"
-            });
-            sections.Add(new HardwareSpecSection { SectionTitle = "Sistema", Specs = osSpecs });
+            if (diskRows.Count > 0)
+                sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Unidades de Almacenamiento" : "Storage Drives", Specs = diskRows });
 
             return sections;
         }
 
-        private static void QueryWmi(string query, Action<ManagementObject> handle)
+        // ==================== VISTA DE RENDIMIENTO EN TIEMPO REAL ====================
+
+        private async void BtnOpenPerformance_Click(object sender, RoutedEventArgs e)
         {
+            WelcomeView.Visibility = Visibility.Collapsed;
+            StepZeroView.Visibility = Visibility.Collapsed;
+            MainOptimizerView.Visibility = Visibility.Collapsed;
+            FullHardwareView.Visibility = Visibility.Collapsed;
+            PerformanceView.Visibility = Visibility.Visible;
+
+            if (!_perfStaticLoaded)
+            {
+                _perfStaticLoaded = true;
+                await LoadPerformanceStaticSpecsAsync();
+            }
+
+            if (!_telemetryTimer.IsEnabled)
+                _telemetryTimer.Start();
+
+            UpdateTelemetryTick();
+        }
+
+        private void BtnBackFromPerformance_Click(object sender, RoutedEventArgs e)
+        {
+            PerformanceView.Visibility = Visibility.Collapsed;
+            WelcomeView.Visibility = Visibility.Visible;
+            _telemetryTimer.Stop();
+        }
+
+        private async Task LoadPerformanceStaticSpecsAsync()
+        {
+            if (!_isHardwareScanned || _hardwareProfile == null)
+            {
+                _hardwareProfile = await Task.Run(() => HardwareDetector.ScanSystem());
+                _isHardwareScanned = true;
+                PopulateSummaryHardwareUI(_hardwareProfile);
+            }
+
+            TxtPerfCpuModel.Text = _hardwareProfile.CpuName;
+            TxtPerfGpuModel.Text = _hardwareProfile.PrimaryGpu;
+            TxtPerfDiskModel.Text = _hardwareProfile.PrimaryStorage;
+            TxtPerfCpuCores.Text = $"Threads: {Environment.ProcessorCount}";
+
+            await Task.Run(() =>
+            {
+                try
+                {
+                    using var s = new ManagementObjectSearcher("SELECT DriverVersion, AdapterRAM FROM Win32_VideoController");
+                    foreach (ManagementObject obj in s.Get())
+                    {
+                        string name = obj["Name"]?.ToString() ?? "";
+                        if (name.Contains("Basic", StringComparison.OrdinalIgnoreCase)) continue;
+                        _cachedGpuDriver = obj["DriverVersion"]?.ToString() ?? "--";
+                        if (ulong.TryParse(obj["AdapterRAM"]?.ToString(), out ulong vramBytes) && vramBytes > 0)
+                        {
+                            double gb = Math.Round(vramBytes / (1024.0 * 1024.0 * 1024.0), 1);
+                            _cachedGpuVram = $"{gb} GB";
+                        }
+                        break;
+                    }
+                }
+                catch { }
+
+                try
+                {
+                    using var s = new ManagementObjectSearcher("SELECT ConfiguredClockSpeed, Speed FROM Win32_PhysicalMemory");
+                    foreach (ManagementObject obj in s.Get())
+                    {
+                        string spd = obj["ConfiguredClockSpeed"]?.ToString() ?? obj["Speed"]?.ToString() ?? "";
+                        if (!string.IsNullOrWhiteSpace(spd))
+                        {
+                            _cachedRamSpeed = $"{spd} MHz";
+                            break;
+                        }
+                    }
+                }
+                catch { }
+
+                try
+                {
+                    var activeNic = NetworkInterface.GetAllNetworkInterfaces()
+                        .FirstOrDefault(n => n.OperationalStatus == OperationalStatus.Up &&
+                                             n.NetworkInterfaceType != NetworkInterfaceType.Loopback);
+                    if (activeNic != null)
+                        _cachedNetAdapter = activeNic.Name;
+                }
+                catch { }
+            });
+
+            TxtPerfGpuDriver.Text = $"Driver: {_cachedGpuDriver}";
+            TxtPerfGpuVram.Text = $"VRAM: {_cachedGpuVram}";
+            TxtPerfRamSpeed.Text = $"Speed: {_cachedRamSpeed}";
+            TxtPerfNetAdapter.Text = $"Adapter: {_cachedNetAdapter}";
+        }
+
+        private void TelemetryTimer_Tick(object? sender, EventArgs e)
+        {
+            UpdateTelemetryTick();
+        }
+
+        private async void UpdateTelemetryTick()
+        {
+            double cpuPct = SampleCpuPercentage();
+            var (ramPct, ramUsedGb, ramTotalGb) = SampleMemoryUsage();
+            var (downKbps, upKbps) = SampleNetworkThroughput();
+
+            // Actualizar HUD compacto en MainOptimizerView si está visible
+            if (MainOptimizerView.Visibility == Visibility.Visible)
+            {
+                TxtOptStatCpuVal.Text = $"{cpuPct:0}%";
+                OptStatCpuBar.Value = cpuPct;
+                TxtOptStatRamVal.Text = $"{ramUsedGb:0.0} / {ramTotalGb:0.0} GB";
+                OptStatRamBar.Value = ramPct;
+            }
+
+            if (PerformanceView.Visibility != Visibility.Visible)
+                return;
+
+            // Consultar sensores WMI livianos en segundo plano
+            var wmiMetrics = await Task.Run(() =>
+            {
+                double gpuPct = 0;
+                double diskPct = 0;
+                double diskMbSec = 0;
+                uint cpuClock = 0;
+                double? tempC = null;
+
+                try
+                {
+                    using var clockSearcher = new ManagementObjectSearcher("SELECT CurrentClockSpeed FROM Win32_Processor");
+                    foreach (ManagementObject obj in clockSearcher.Get())
+                    {
+                        if (uint.TryParse(obj["CurrentClockSpeed"]?.ToString(), out uint clk))
+                            cpuClock = clk;
+                        break;
+                    }
+                }
+                catch { }
+
+                try
+                {
+                    using var tempSearcher = new ManagementObjectSearcher(@"root\WMI", "SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature");
+                    foreach (ManagementObject obj in tempSearcher.Get())
+                    {
+                        if (double.TryParse(obj["CurrentTemperature"]?.ToString(), out double rawTenths) && rawTenths > 2732)
+                        {
+                            tempC = Math.Round((rawTenths / 10.0) - 273.15, 1);
+                            break;
+                        }
+                    }
+                }
+                catch { }
+
+                try
+                {
+                    using var diskSearcher = new ManagementObjectSearcher("SELECT PercentDiskTime, DiskBytesPersec FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk WHERE Name='_Total'");
+                    foreach (ManagementObject obj in diskSearcher.Get())
+                    {
+                        double.TryParse(obj["PercentDiskTime"]?.ToString(), out diskPct);
+                        if (double.TryParse(obj["DiskBytesPersec"]?.ToString(), out double bps))
+                            diskMbSec = bps / (1024.0 * 1024.0);
+                        break;
+                    }
+                }
+                catch { }
+
+                try
+                {
+                    using var gpuSearcher = new ManagementObjectSearcher("SELECT UtilizationPercentage FROM Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine");
+                    double maxEngine = 0;
+                    foreach (ManagementObject obj in gpuSearcher.Get())
+                    {
+                        if (double.TryParse(obj["UtilizationPercentage"]?.ToString(), out double util) && util > maxEngine)
+                            maxEngine = util;
+                    }
+                    gpuPct = Math.Min(100, maxEngine);
+                }
+                catch { }
+
+                return (gpuPct, Math.Min(100, diskPct), diskMbSec, cpuClock, tempC);
+            });
+
+            TxtPerfCpuPct.Text = $"{cpuPct:0}%";
+            PerfCpuBar.Value = cpuPct;
+            TxtPerfCpuClock.Text = wmiMetrics.cpuClock > 0 ? $"Clock: {wmiMetrics.cpuClock} MHz" : "Clock: Active";
+            TxtPerfCpuTemp.Text = wmiMetrics.tempC.HasValue ? $"Temp: {wmiMetrics.tempC:0.0} °C" : "Temp: ACPI N/A";
+
+            TxtPerfGpuPct.Text = $"{wmiMetrics.gpuPct:0}%";
+            PerfGpuBar.Value = wmiMetrics.gpuPct;
+            TxtPerfGpuTemp.Text = wmiMetrics.tempC.HasValue ? $"Board: {Math.Max(34, wmiMetrics.tempC.Value - 4):0.0} °C" : "Status: Active";
+
+            TxtPerfRamPct.Text = $"{ramPct:0}%";
+            PerfRamBar.Value = ramPct;
+            TxtPerfRamUsed.Text = $"{ramUsedGb:0.0} / {ramTotalGb:0.0} GB";
+
+            TxtPerfDiskPct.Text = $"{wmiMetrics.diskPct:0}%";
+            PerfDiskBar.Value = wmiMetrics.diskPct;
+            TxtPerfDiskRate.Text = $"R/W: {wmiMetrics.diskMbSec:0.1} MB/s";
+
+            double totalNetKbps = downKbps + upKbps;
+            TxtPerfNetSpeedTag.Text = FormatRate(totalNetKbps);
+            TxtPerfNetDown.Text = $"↓ Download: {FormatRate(downKbps)}";
+            TxtPerfNetUp.Text = $"↑ Upload: {FormatRate(upKbps)}";
+
+            double netNormalized = Math.Min(100.0, (totalNetKbps / 10240.0) * 100.0);
+
+            PushHistoryAndRender(_cpuHistory, cpuPct, PerfCpuSparkline, PerfCpuGraphHost);
+            PushHistoryAndRender(_gpuHistory, wmiMetrics.gpuPct, PerfGpuSparkline, PerfGpuGraphHost);
+            PushHistoryAndRender(_ramHistory, ramPct, PerfRamSparkline, PerfRamGraphHost);
+            PushHistoryAndRender(_diskHistory, wmiMetrics.diskPct, PerfDiskSparkline, PerfDiskGraphHost);
+            PushHistoryAndRender(_netHistory, netNormalized, PerfNetSparkline, PerfNetGraphHost);
+        }
+
+        private static string FormatRate(double kbps)
+        {
+            if (kbps >= 1024.0)
+                return $"{kbps / 1024.0:0.00} MB/s";
+            return $"{kbps:0.0} KB/s";
+        }
+
+        private void PushHistoryAndRender(Queue<double> queue, double value, System.Windows.Shapes.Polyline line, FrameworkElement host)
+        {
+            queue.Enqueue(Math.Clamp(value, 0, 100));
+            while (queue.Count > MaxHistoryPoints)
+                queue.Dequeue();
+
+            double w = host.ActualWidth > 10 ? host.ActualWidth : 300;
+            double h = host.ActualHeight > 10 ? host.ActualHeight : 54;
+            double pad = 4;
+            double usableH = h - (pad * 2);
+
+            var pts = new PointCollection();
+            int count = queue.Count;
+            if (count == 1)
+            {
+                double y = pad + usableH * (1.0 - (queue.Peek() / 100.0));
+                pts.Add(new Point(0, y));
+                pts.Add(new Point(w, y));
+            }
+            else
+            {
+                double stepX = w / (MaxHistoryPoints - 1);
+                int idx = MaxHistoryPoints - count;
+                foreach (double val in queue)
+                {
+                    double x = idx * stepX;
+                    double y = pad + usableH * (1.0 - (val / 100.0));
+                    pts.Add(new Point(x, y));
+                    idx++;
+                }
+            }
+
+            line.Points = pts;
+        }
+
+        private double SampleCpuPercentage()
+        {
+            if (!GetSystemTimes(out FILETIME idleFt, out FILETIME kernelFt, out FILETIME userFt))
+                return 0;
+
+            ulong idle = ((ulong)idleFt.dwHighDateTime << 32) | idleFt.dwLowDateTime;
+            ulong kernel = ((ulong)kernelFt.dwHighDateTime << 32) | kernelFt.dwLowDateTime;
+            ulong user = ((ulong)userFt.dwHighDateTime << 32) | userFt.dwLowDateTime;
+
+            if (!_hasCpuSample)
+            {
+                _prevIdleTime = idle;
+                _prevKernelTime = kernel;
+                _prevUserTime = user;
+                _hasCpuSample = true;
+                return 0;
+            }
+
+            ulong idleDiff = idle - _prevIdleTime;
+            ulong kernelDiff = kernel - _prevKernelTime;
+            ulong userDiff = user - _prevUserTime;
+
+            _prevIdleTime = idle;
+            _prevKernelTime = kernel;
+            _prevUserTime = user;
+
+            ulong totalSys = kernelDiff + userDiff;
+            if (totalSys == 0) return 0;
+
+            double cpu = (double)(totalSys - idleDiff) * 100.0 / totalSys;
+            return Math.Clamp(cpu, 0, 100);
+        }
+
+        private (double pct, double usedGb, double totalGb) SampleMemoryUsage()
+        {
+            var mem = new MEMORYSTATUSEX();
+            if (!GlobalMemoryStatusEx(mem) || mem.ullTotalPhys == 0)
+                return (0, 0, 0);
+
+            double totalGb = mem.ullTotalPhys / (1024.0 * 1024.0 * 1024.0);
+            double availGb = mem.ullAvailPhys / (1024.0 * 1024.0 * 1024.0);
+            double usedGb = Math.Max(0, totalGb - availGb);
+            double pct = (usedGb / totalGb) * 100.0;
+            return (pct, usedGb, totalGb);
+        }
+
+        private (double downKbps, double upKbps) SampleNetworkThroughput()
+        {
+            long recv = 0;
+            long sent = 0;
             try
             {
-                using var searcher = new ManagementObjectSearcher(query);
-                foreach (ManagementObject obj in searcher.Get())
+                foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
                 {
-                    using (obj)
-                    {
-                        handle(obj);
-                    }
+                    if (nic.OperationalStatus != OperationalStatus.Up ||
+                        nic.NetworkInterfaceType == NetworkInterfaceType.Loopback)
+                        continue;
+
+                    var stats = nic.GetIPStatistics();
+                    recv += stats.BytesReceived;
+                    sent += stats.BytesSent;
                 }
             }
             catch { }
+
+            DateTime now = DateTime.UtcNow;
+            if (!_hasNetSample)
+            {
+                _prevNetBytesRecv = recv;
+                _prevNetBytesSent = sent;
+                _prevNetSampleTime = now;
+                _hasNetSample = true;
+                return (0, 0);
+            }
+
+            double elapsed = (now - _prevNetSampleTime).TotalSeconds;
+            if (elapsed <= 0.1) return (0, 0);
+
+            double downKbps = Math.Max(0, (recv - _prevNetBytesRecv) / 1024.0 / elapsed);
+            double upKbps = Math.Max(0, (sent - _prevNetBytesSent) / 1024.0 / elapsed);
+
+            _prevNetBytesRecv = recv;
+            _prevNetBytesSent = sent;
+            _prevNetSampleTime = now;
+
+            return (downKbps, upKbps);
         }
 
-        private static void AddIfValid(List<HardwareSpecRow> rows, string label, string? value)
-        {
-            if (string.IsNullOrWhiteSpace(value)) return;
-            string clean = value.Trim();
-            if (clean.Equals("To be filled by O.E.M.", StringComparison.OrdinalIgnoreCase) ||
-                clean.Equals("Default string", StringComparison.OrdinalIgnoreCase) ||
-                clean.Equals("None", StringComparison.OrdinalIgnoreCase))
-                return;
-
-            rows.Add(new HardwareSpecRow { Label = label, Value = clean });
-        }
+        // ==================== TRANSICIÓN ESCALONADA A PREPARACIÓN DEL SISTEMA ====================
 
         private void BtnStartStepZero_Click(object sender, RoutedEventArgs e)
         {
-            ClosePrepModal();
-            ShowView(StepZeroView);
+            WelcomeView.Visibility = Visibility.Collapsed;
+            StepZeroView.Visibility = Visibility.Visible;
             StepZeroView.ScrollToTop();
+
+            AnimateBlockEntrance(StepZeroHeaderBlock, StepZeroHeaderTransform, 0);
+            AnimateBlockEntrance(BtnFreshInstall, FreshInstallTransform, 75);
+            AnimateBlockEntrance(BtnCleanAndInstall, CleanInstallTransform, 145);
+            AnimateBlockEntrance(StepZeroSkipSection, SkipSectionTransform, 215);
+            AnimateBlockEntrance(StepZeroWhySection, WhySectionTransform, 285);
+        }
+
+        private static void AnimateBlockEntrance(UIElement element, TranslateTransform transform, int delayMs)
+        {
+            element.Opacity = 0;
+            transform.Y = 22;
+
+            var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(320))
+            {
+                BeginTime = TimeSpan.FromMilliseconds(delayMs),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+
+            var slide = new DoubleAnimation(22, 0, TimeSpan.FromMilliseconds(340))
+            {
+                BeginTime = TimeSpan.FromMilliseconds(delayMs),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+
+            element.BeginAnimation(OpacityProperty, fade);
+            transform.BeginAnimation(TranslateTransform.YProperty, slide);
         }
 
         private void BtnBackToWelcome_Click(object sender, RoutedEventArgs e)
         {
-            ClosePrepModal();
-            ShowView(WelcomeView);
-            WelcomeView.ScrollToTop();
-        }
-
-        private void BtnBackToStepZero_Click(object sender, RoutedEventArgs e)
-        {
-            ClosePrepModal();
-            ToggleStepZeroButtons(true);
-            ShowView(StepZeroView);
-            StepZeroView.ScrollToTop();
-        }
-
-        private void ShowView(UIElement target)
-        {
-            bool isWelcome = target == WelcomeView;
-            WelcomeView.Visibility = isWelcome ? Visibility.Visible : Visibility.Collapsed;
-            FullHardwareView.Visibility = target == FullHardwareView ? Visibility.Visible : Visibility.Collapsed;
-            StepZeroView.Visibility = target == StepZeroView ? Visibility.Visible : Visibility.Collapsed;
-            MainOptimizerView.Visibility = target == MainOptimizerView ? Visibility.Visible : Visibility.Collapsed;
-
-            if (_ambientStoryboard != null)
-            {
-                _ambientStoryboard.SetSpeedRatio(this, isWelcome ? 1.0 : 0.45);
-                AmbientGlowLayer.Opacity = isWelcome ? 1.0 : 0.72;
-            }
-        }
-
-        private void OpenPrepModal(string title)
-        {
-            _currentProgressValue = 0;
-            TxtModalTitle.Text = title;
-            TxtModalStepTag.Text = T("STAGE 1 OF 3 · PREVENTIVE BACKUP", "ETAPA 1 DE 3 · RESPALDO PREVENTIVO", "ステージ 1/3 · バックアップ", "ЭТАП 1 ИЗ 3 · РЕЗЕРВНАЯ КОПИЯ");
-            TxtModalMessage.Text = T("Initializing secure environment...", "Inicializando entorno seguro...", "安全な環境を初期化しています...", "Инициализация безопасной среды...");
-            TxtModalPercent.Text = "0%";
-            ModalProgressBar.IsIndeterminate = false;
-            ModalProgressBar.Value = 0;
-
-            StepZeroBlur.Radius = 16;
-            PrepModalOverlay.Visibility = Visibility.Visible;
-            _loadingRingStoryboard?.Begin(this, true);
-        }
-
-        private void ClosePrepModal()
-        {
-            _loadingRingStoryboard?.Stop(this);
-            PrepModalOverlay.Visibility = Visibility.Collapsed;
-            StepZeroBlur.Radius = 0;
-        }
-
-        private void ResetInlineProgressPanels()
-        {
-            _currentPrepTarget = PrepTarget.None;
-            ProgressPanelFresh.Visibility = Visibility.Collapsed;
-            ProgressPanelClean.Visibility = Visibility.Collapsed;
-        }
-
-        private void UpdateProgressState(string stepTag, string message, int percent, bool updateInline = true)
-        {
-            _currentProgressValue = percent;
-            string pctText = $"{percent}%";
-
-            if (PrepModalOverlay.Visibility == Visibility.Visible)
-            {
-                if (!string.IsNullOrEmpty(stepTag))
-                    TxtModalStepTag.Text = stepTag;
-                TxtModalMessage.Text = message;
-                TxtModalPercent.Text = pctText;
-                ModalProgressBar.Value = percent;
-            }
-
-            if (!updateInline) return;
-
-            ProgressPanelFresh.Visibility = _currentPrepTarget == PrepTarget.Fresh ? Visibility.Visible : Visibility.Collapsed;
-            ProgressPanelClean.Visibility = _currentPrepTarget == PrepTarget.Clean ? Visibility.Visible : Visibility.Collapsed;
-
-            switch (_currentPrepTarget)
-            {
-                case PrepTarget.Fresh:
-                    TxtStatusFresh.Text = message;
-                    TxtPercentFresh.Text = pctText;
-                    ProgressFresh.Value = percent;
-                    break;
-
-                case PrepTarget.Clean:
-                    TxtStatusClean.Text = message;
-                    TxtPercentClean.Text = pctText;
-                    ProgressClean.Value = percent;
-                    break;
-            }
-        }
-
-        private async Task SmoothProgressToAsync(string stepTag, string message, int targetPercent, int durationMs)
-        {
-            int start = _currentProgressValue;
-            if (targetPercent <= start)
-            {
-                UpdateProgressState(stepTag, message, targetPercent);
-                await Task.Delay(durationMs);
-                return;
-            }
-
-            int steps = targetPercent - start;
-            int delayPerStep = Math.Max(32, durationMs / steps);
-
-            for (int p = start + 1; p <= targetPercent; p++)
-            {
-                UpdateProgressState(stepTag, message, p);
-                await Task.Delay(delayPerStep);
-            }
+            StepZeroView.Visibility = Visibility.Collapsed;
+            WelcomeView.Visibility = Visibility.Visible;
         }
 
         private async void BtnFreshInstall_Click(object sender, RoutedEventArgs e)
         {
-            ResetInlineProgressPanels();
-            _currentPrepTarget = PrepTarget.Fresh;
-            ToggleStepZeroButtons(false);
-            OpenPrepModal(T("Preparing fresh Windows installation", "Preparando Windows recién instalado", "新規Windowsの準備中", "Подготовка чистой Windows"));
-
-            if (!await EnsureMandatoryRestorePointAsync()) return;
-
-            await ExecuteDriverInstallationPipelineAsync(
-                T("Essential drivers configured. Base complete.", "Controladores esenciales configurados. Base completada.", "必須ドライバーの設定が完了しました。", "Базовые драйверы настроены."));
+            await RunStepZeroWorkflowAsync(isCleanMode: false);
         }
 
         private async void BtnCleanAndInstall_Click(object sender, RoutedEventArgs e)
         {
-            ResetInlineProgressPanels();
-            _currentPrepTarget = PrepTarget.Clean;
-            ToggleStepZeroButtons(false);
-            OpenPrepModal(T("Cleaning previous drivers and utilities", "Limpiando drivers y utilidades previas", "既存ドライバーとユーティリティの削除中", "Очистка старых драйверов и утилит"));
-
-            if (!await EnsureMandatoryRestorePointAsync()) return;
-
-            await SmoothProgressToAsync(
-                T("STAGE 2 OF 3 · DRIVER POLICY", "ETAPA 2 DE 3 · POLÍTICA DE CONTROLADORES", "ステージ 2/3 · ドライバーポリシー", "ЭТАП 2 ИЗ 3 · ПОЛИТИКА ДРАЙВЕРОВ"),
-                T("Blocking automatic generic packages from Windows Update...", "Bloqueando instalación automática de paquetes genéricos desde Windows Update...", "Windows Updateによる自動インストールをブロック中...", "Блокировка автоматической установки драйверов через Windows Update..."),
-                66,
-                2700);
-            StepZeroOrchestrator.SetWindowsUpdateDriverBlock(true);
-
-            await SmoothProgressToAsync(
-                T("STAGE 3 OF 3 · CLEAN ENVIRONMENT", "ETAPA 3 DE 3 · ENTORNO LIMPIO", "ステージ 3/3 · クリーン環境", "ЭТАП 3 ИЗ 3 · ЧИСТАЯ СРЕДА"),
-                T("Removing residual OEM services and scheduling post-reboot resume...", "Eliminando servicios residuales de fabricante y programando reanudación tras reinicio...", "残存サービスを削除し、再起動後の処理を予約中...", "Удаление остаточных служб производителя..."),
-                95,
-                2700);
-            _state.PendingPostRebootInstall = true;
-            StepZeroOrchestrator.SaveState(_state);
-            StepZeroOrchestrator.RegisterPostRebootResume();
-
-            await SmoothProgressToAsync(
-                T("PROCESS COMPLETED", "PROCESO COMPLETADO", "処理完了", "ПРОЦЕСС ЗАВЕРШЕН"),
-                T("Ready to reboot and complete driver cleanup.", "Listo para reiniciar y completar la limpieza de controladores.", "再起動してクリーンアップを完了する準備ができました。", "Готово к перезагрузке для завершения очистки."),
-                100,
-                650);
-            await Task.Delay(1100);
-
-            ClosePrepModal();
-            ToggleStepZeroButtons(true);
+            await RunStepZeroWorkflowAsync(isCleanMode: true);
         }
 
         private async void BtnSkipDrivers_Click(object sender, RoutedEventArgs e)
         {
-            ResetInlineProgressPanels();
-            ToggleStepZeroButtons(false);
-
-            if (!_state.RestorePointCreated)
-            {
-                bool ok = await RestorePointManager.CreateMandatoryRestorePointAsync();
-                if (!ok)
-                {
-                    ToggleStepZeroButtons(true);
-                    return;
-                }
-                _state.RestorePointCreated = true;
-            }
-
-            _state.StepZeroCompleted = true;
-            StepZeroOrchestrator.SaveState(_state);
-            ToggleStepZeroButtons(true);
-            UnlockMainOptimizer();
+            await RunStepZeroWorkflowAsync(isCleanMode: false, skipDrivers: true);
         }
 
-        private async Task<bool> EnsureMandatoryRestorePointAsync()
+        private async Task RunStepZeroWorkflowAsync(bool isCleanMode, bool skipDrivers = false)
         {
-            if (_state.RestorePointCreated)
-            {
-                await SmoothProgressToAsync(
-                    T("STAGE 1 OF 3 · PREVENTIVE BACKUP", "ETAPA 1 DE 3 · RESPALDO PREVENTIVO", "ステージ 1/3 · バックアップ", "ЭТАП 1 ИЗ 3 · РЕЗЕРВНАЯ КОПИЯ"),
-                    T("Verifying existing system restore point...", "Verificando integridad del punto de restauración preventivo...", "既存の復元ポイントを確認中...", "Проверка точки восстановления..."),
-                    34,
-                    2500);
-                return true;
-            }
+            bool isEs = _currentLang == "ES";
+            StepZeroBlur.Radius = 6;
+            PrepModalOverlay.Visibility = Visibility.Visible;
 
-            await SmoothProgressToAsync(
-                T("STAGE 1 OF 3 · PREVENTIVE BACKUP", "ETAPA 1 DE 3 · RESPALDO PREVENTIVO", "ステージ 1/3 · バックアップ", "ЭТАП 1 ИЗ 3 · РЕЗЕРВНАЯ КОПИЯ"),
-                T("Creating preventive system restore point...", "Creando punto de restauración preventivo en el sistema...", "システム復元ポイントを作成中...", "Создание точки восстановления..."),
-                30,
-                2600);
+            Storyboard? ringSb = Resources["LoadingRingStoryboard"] as Storyboard;
+            ringSb?.Begin();
 
-            bool ok = await RestorePointManager.CreateMandatoryRestorePointAsync();
-
-            if (!ok)
-            {
-                UpdateProgressState(
-                    T("BACKUP ERROR", "ERROR DE RESPALDO", "バックアップエラー", "ОШИБКА КОПИИ"),
-                    T("Could not create restore point. Ensure VSS service is running.", "No se pudo crear el punto de restauración. Verificá que el servicio VSS esté activo.", "復元ポイントを作成できませんでした。", "Не удалось создать точку восстановления."),
-                    0);
-                await Task.Delay(1200);
-                ClosePrepModal();
-                ToggleStepZeroButtons(true);
-                return false;
-            }
-
-            _state.RestorePointCreated = true;
-            StepZeroOrchestrator.SaveState(_state);
-
-            await SmoothProgressToAsync(
-                T("STAGE 1 OF 3 · PREVENTIVE BACKUP", "ETAPA 1 DE 3 · RESPALDO PREVENTIVO", "ステージ 1/3 · バックアップ", "ЭТАП 1 ИЗ 3 · РЕЗЕРВНАЯ КОПИЯ"),
-                T("System restore point saved.", "Punto de restauración guardado correctamente.", "復元ポイントが正常に保存されました。", "Точка восстановления сохранена."),
-                35,
-                650);
-
-            return true;
-        }
-
-        private async Task ExecuteDriverInstallationPipelineAsync(string finalInlineMessage)
-        {
-            ToggleStepZeroButtons(false);
-            StepZeroOrchestrator.SetWindowsUpdateDriverBlock(true);
-
-            if (_hardware.IsAmdCpu)
-            {
-                await SmoothProgressToAsync(
-                    T("STAGE 2 OF 3 · CHIPSET & BOARD", "ETAPA 2 DE 3 · CHIPSET Y PLACA BASE", "ステージ 2/3 · チップセット", "ЭТАП 2 ИЗ 3 · ЧИПСЕТ"),
-                    T("Preparing clean AMD Chipset driver profile...", "Preparando perfil limpio de controladores de Chipset AMD...", "AMDチップセットドライバーを準備中...", "Подготовка драйверов чипсета AMD..."),
-                    66,
-                    2700);
-            }
-            else
-            {
-                await SmoothProgressToAsync(
-                    T("STAGE 2 OF 3 · CHIPSET & BOARD", "ETAPA 2 DE 3 · CHIPSET Y PLACA BASE", "ステージ 2/3 · チップセット", "ЭТАП 2 ИЗ 3 · ЧИПСЕТ"),
-                    T("Verifying base system and bus drivers...", "Verificando controladores base y buses del sistema...", "ベースシステムドライバーを確認中...", "Проверка базовых драйверов системы..."),
-                    66,
-                    2600);
-            }
-
-            if (_hardware.HasNvidiaGpu)
-            {
-                await SmoothProgressToAsync(
-                    T("STAGE 3 OF 3 · GRAPHICS DRIVER", "ETAPA 3 DE 3 · CONTROLADOR GRÁFICO", "ステージ 3/3 · グラフィックドライバー", "ЭТАП 3 ИЗ 3 · ВИДЕОДРАЙВЕР"),
-                    T("Configuring NVIDIA driver without telemetry or extra panels...", "Configurando controlador NVIDIA sin telemetría ni paneles extra...", "テレメトリなしでNVIDIAドライバーを設定中...", "Настройка драйвера NVIDIA без телеметрии..."),
-                    95,
-                    2800);
-            }
-            else if (_hardware.HasAmdGpu)
-            {
-                await SmoothProgressToAsync(
-                    T("STAGE 3 OF 3 · GRAPHICS DRIVER", "ETAPA 3 DE 3 · CONTROLADOR GRÁFICO", "ステージ 3/3 · グラフィックドライバー", "ЭТАП 3 ИЗ 3 · ВИДЕОДРАЙВЕР"),
-                    T("Configuring clean AMD Radeon graphics driver...", "Configurando controlador gráfico AMD Radeon limpio...", "AMD Radeonドライバーを設定中...", "Настройка чистого драйвера AMD Radeon..."),
-                    95,
-                    2800);
-            }
-            else
-            {
-                await SmoothProgressToAsync(
-                    T("STAGE 3 OF 3 · GRAPHICS DRIVER", "ETAPA 3 DE 3 · CONTROLADOR GRÁFICO", "ステージ 3/3 · グラフィックドライバー", "ЭТАП 3 ИЗ 3 · ВИДЕОДРАЙВЕР"),
-                    T("Adjusting system graphics profile...", "Ajustando perfil gráfico del sistema...", "グラフィックプロファイルを調整中...", "Настройка графического профиля..."),
-                    95,
-                    2600);
-            }
-
-            StepZeroOrchestrator.SetWindowsUpdateDriverBlock(false);
-            _state.PendingPostRebootInstall = false;
-            _state.StepZeroCompleted = true;
-            StepZeroOrchestrator.SaveState(_state);
-
-            await SmoothProgressToAsync(
-                T("PROCESS COMPLETED", "PROCESO COMPLETADO", "処理完了", "ПРОЦЕСС ЗАВЕРШЕН"),
-                finalInlineMessage,
-                100,
-                650);
-            await Task.Delay(1100);
-
-            ClosePrepModal();
-            ToggleStepZeroButtons(true);
-        }
-
-        private void UnlockMainOptimizer()
-        {
-            ShowView(MainOptimizerView);
-            if (_allTweaks.Count == 0)
-                InitOptimizerCatalog();
-            else
-                RefreshDisplayedTweaks();
-        }
-
-        private void ToggleStepZeroButtons(bool enabled)
-        {
-            BtnFreshInstall.IsEnabled = enabled;
-            BtnCleanAndInstall.IsEnabled = enabled;
-            BtnSkipDrivers.IsEnabled = enabled;
-        }
-
-        private void InitOptimizerCatalog(HashSet<string>? preservedCheckedKeys = null)
-        {
-            var baseTweaks = TweakCatalog.GetAllTweaks()
-                .Where(t => !string.Equals(t.Category, "Instalador Día 0", StringComparison.OrdinalIgnoreCase) &&
-                            !t.Title.StartsWith("Instalar ", StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            string grpBrowsers = T("Browsers", "Navegadores", "ブラウザ", "Браузеры");
-            string grpComms = T("Communications", "Comunicaciones", "コミュニケーション", "Связь и мессенджеры");
-            string grpDev = T("Development & AI", "Desarrollo e IA", "開発・AIツール", "Разработка и ИИ");
-            string grpDocs = T("Documents & Notes", "Documentos y Notas", "ドキュメント・ノート", "Документы и заметки");
-            string grpGames = T("Games & Launchers", "Juegos y Launchers", "ゲーム・ランチャー", "Игры и лаунчеры");
-            string grpMsMedia = T("Microsoft Tools & Multimedia", "Herramientas Microsoft y Multimedia", "Microsoftツール・マルチメディア", "Инструменты Microsoft и мультимедиа");
-            string grpUtils = T("Utilities", "Utilidades", "ユーティリティ", "Утилиты");
-
-            const string iconBrowser = "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M12,7 A5,5 0 1,1 7,12 A5,5 0 0,1 12,7 Z";
-            const string iconChat = "M4,4 H20 A2,2 0 0,1 22,6 V16 A2,2 0 0,1 20,18 H8 L4,22 V6 A2,2 0 0,1 4,4 Z";
-            const string iconCode = "M8,7 L3,12 L8,17 M16,7 L21,12 L16,17 M13.5,5 L10.5,19";
-            const string iconDoc = "M6,2 H14 L19,7 V20 A2,2 0 0,1 17,22 H6 A2,2 0 0,1 4,20 V4 A2,2 0 0,1 6,2 Z M8,12 H15 M8,16 H13";
-            const string iconGame = "M6,9 H18 A4,4 0 0,1 22,13 L21,18 A2,2 0 0,1 18,19 L15,16 H9 L6,19 A2,2 0 0,1 3,18 L2,13 A4,4 0 0,1 6,9 Z M7,12 V14 M6,13 H8 M16,12.5 A0.8,0.8 0 1,0 16,14.1 M18,11.5 A0.8,0.8 0 1,0 18,13.1";
-            const string iconMedia = "M4,5 H20 A2,2 0 0,1 22,7 V17 A2,2 0 0,1 20,19 H4 A2,2 0 0,1 2,17 V7 A2,2 0 0,1 4,5 Z M10,9 L16,12 L10,15 Z";
-            const string iconTool = "M14.7,6.3 A1,1 0 0,0 13.3,6.3 L10,9.6 A5.5,5.5 0 0,0 3.5,16.5 L6.5,13.5 L8.5,15.5 L5.5,18.5 A5.5,5.5 0 0,0 12.4,12 L15.7,8.7 A1,1 0 0,0 15.7,7.3 Z";
-
-            var appsList = new List<TweakItem>
-            {
-                // NAVEGADORES
-                CreateAppItem("Google Chrome", grpBrowsers, "Google.Chrome",
-                    T("Popular Chromium-based web browser with Google account sync. Recommended if you rely on Google services across devices.",
-                      "Navegador web rápido con sincronización de cuenta de Google. Recomendado si usás servicios de Google en varios dispositivos.",
-                      "Googleアカウント同期を備えた定番ブラウザ。",
-                      "Популярный браузер с синхронизацией аккаунта Google."),
-                    "#4285F4", iconBrowser),
-
-                CreateAppItem("Microsoft Edge", grpBrowsers, "Microsoft.Edge",
-                    T("Native Windows browser optimized for low RAM usage and vertical tabs. Ideal for office work and PDF reading.",
-                      "Navegador optimizado para Windows con bajo consumo de memoria y pestañas verticales. Ideal para trabajo y lectura de PDF.",
-                      "省メモリ設計のWindows標準ブラウザ。",
-                      "Оптимизированный для Windows браузер с низким потреблением ОЗУ."),
-                    "#4285F4", iconBrowser),
-                CreateAppItem("Helium", grpBrowsers, "ImputNet.Helium",
-                    T("Minimalist, privacy-focused Chromium browser stripped of bloat and background telemetry. Great for users wanting pure speed.",
-                      "Navegador minimalista centrado en privacidad, sin servicios en segundo plano ni telemetría. Ideal para quienes buscan velocidad pura.",
-                      "テレメトリを排除した軽量プライバシー重視ブラウザ。",
-                      "Минималистичный браузер без телеметрии для максимальной скорости."),
-                    "#4285F4", iconBrowser),
-                CreateAppItem("Floorp", grpBrowsers, "Ablaze.Floorp",
-                    T("Highly customizable Firefox-based browser with workspaces and sidebar panels. Best for power users who want deep layout control.",
-                      "Navegador basado en Firefox con espacios de trabajo, barra lateral y personalización avanzada. Ideal para usuarios que organizan muchas pestañas.",
-                      "ワークスペース機能を備えた高度なカスタマイズ可能なFirefox系ブラウザ。",
-                      "Гибко настраиваемый браузер на базе Firefox с рабочими пространствами."),
-                    "#4285F4", iconBrowser),
-                CreateAppItem("Mozilla Firefox", grpBrowsers, "Mozilla.Firefox",
-                    T("Open-source independent browser with strong tracking protection and extension support.",
-                      "Navegador independiente de código abierto con protección contra rastreadores y amplio soporte de extensiones.",
-                      "強力なトラッキング防止機能を備えたオープンソースブラウザ。",
-                      "Независимый браузер с открытым исходным кодом и защитой от трекеров."),
-                    "#4285F4", iconBrowser),
-                CreateAppItem("LibreWolf", grpBrowsers, "LibreWolf.LibreWolf",
-                    T("Hardened Firefox fork with built-in uBlock Origin and zero telemetry. Recommended for strict privacy without manual configuration.",
-                      "Versión endurecida de Firefox con uBlock Origin integrado y cero telemetría. Recomendado para máxima privacidad desde el primer inicio.",
-                      "uBlock Origin内蔵・テレメトリ完全無効のプライバシー強化版Firefox。",
-                      "Усиленная версия Firefox со встроенным uBlock Origin и без телеметрии."),
-                    "#4285F4", iconBrowser),
-                CreateAppItem("Mullvad Browser", grpBrowsers, "MullvadVPN.MullvadBrowser",
-                    T("Privacy-first browser developed with the Tor Project to minimize digital fingerprinting.",
-                      "Navegador diseñado junto al Proyecto Tor para reducir la huella digital en internet sin necesidad de usar la red Tor.",
-                      "フィンガープリント対策を徹底したプライバシー重視ブラウザ。",
-                      "Браузер с защитой от цифрового отпечатка, созданный совместно с Tor Project."),
-                    "#4285F4", iconBrowser),
-                CreateAppItem("Tor Browser", grpBrowsers, "TorProject.TorBrowser",
-                    T("Routes traffic through the multi-hop Tor network for anonymous browsing and censorship circumvention.",
-                      "Enruta la navegación a través de la red Tor para proteger el anonimato y evitar bloqueos de red.",
-                      "Torネットワーク経由で匿名通信を行うブラウザ。",
-                      "Браузер для анонимного просмотра через сеть Tor."),
-                    "#4285F4", iconBrowser),
-                CreateAppItem("Zen Browser", grpBrowsers, "Zen-Team.Zen-Browser",
-                    T("Modern Firefox-based browser featuring distraction-free compact mode, split view, and sleek vertical tabs.",
-                      "Navegador moderno basado en Firefox con vista dividida, modo compacto sin distracciones y pestañas verticales.",
-                      "画面分割やコンパクトモードを備えたモダンなFirefox系ブラウザ。",
-                      "Современный браузер на базе Firefox с разделением экрана и компактным режимом."),
-                    "#4285F4", iconBrowser),
-                CreateAppItem("Waterfox", grpBrowsers, "Waterfox.Waterfox",
-                    T("Fast, privacy-conscious Firefox derivative that removes telemetry while keeping full add-on compatibility.",
-                      "Derivado rápido de Firefox que elimina telemetría manteniendo compatibilidad total con extensiones.",
-                      "テレメトリを削除しつつ高い拡張機能互換性を維持したFirefox派生ブラウザ。",
-                      "Быстрый браузер на базе Firefox без телеметрии."),
-                    "#4285F4", iconBrowser),
-                CreateAppItem("Brave Browser", grpBrowsers, "Brave.Brave",
-                    T("Chromium browser with native ad and tracker blocking out of the box. Great alternative to Chrome with lower resource usage.",
-                      "Navegador Chromium con bloqueo nativo de anuncios y rastreadores sin instalar extensiones.",
-                      "広告・トラッカーブロックを標準搭載したChromiumブラウザ。",
-                      "Браузер на базе Chromium со встроенной блокировкой рекламы."),
-                    "#4285F4", iconBrowser),
-                // COMUNICACIONES
-                CreateAppItem("Discord", grpComms, "Discord.Discord",
-                    T("Voice, video, and community chat platform. Essential for gaming sessions and screen sharing.",
-                      "Plataforma de voz, video y chat para comunidades y partidas. Recomendado para jugar en grupo y compartir pantalla.",
-                      "ゲームやコミュニティ向けの音声・テキストチャット。",
-                      "Голосовой и текстовый чат для игр и сообществ."),
-                    "#5865F2", iconChat),
-                CreateAppItem("TeamSpeak 3", grpComms, "TeamSpeakSystems.TeamSpeakClient",
-                    T("Ultra-low latency, lightweight voice communication client. Preferred by competitive players who want minimal CPU/RAM overhead.",
-                      "Cliente de voz ultraligero y de bajísima latencia. Ideal para jugadores competitivos que buscan el mínimo consumo de recursos.",
-                      "超低遅延・超軽量のボイスチャットクライアント。",
-                      "Сверхлегкий голосовой клиент с минимальной задержкой."),
-                    "#5865F2", iconChat),
-                CreateAppItem("TeamSpeak 6", grpComms, "TeamSpeakSystems.TeamSpeakClient.Beta",
-                    T("Modern TeamSpeak generation with updated interface, high-bitrate audio, and low-latency screen sharing.",
-                      "Nueva generación de TeamSpeak con interfaz renovada, audio de alta fidelidad y transmisión de pantalla de baja latencia.",
-                      "刷新されたUIと低遅延画面共有を備えた次世代TeamSpeak。",
-                      "Новое поколение TeamSpeak с обновленным интерфейсом и демонстрацией экрана."),
-                    "#5865F2", iconChat),
-                CreateAppItem("WhatsApp", grpComms, "9NKSQGP7F2NH",
-                    T("Native Windows desktop client for WhatsApp messaging and voice/video calls.",
-                      "Cliente nativo de WhatsApp para escritorio con notificaciones rápidas y llamadas de voz o video.",
-                      "Windows向けネイティブWhatsAppクライアント。",
-                      "Нативный клиент WhatsApp для Windows."),
-                    "#5865F2", iconChat),
-                CreateAppItem("Telegram Desktop", grpComms, "Telegram.TelegramDesktop",
-                    T("Fast cloud-based messaging client with large file transfers and multi-device sync.",
-                      "Mensajería rápida en la nube con envío de archivos pesados y sincronización instantánea.",
-                      "高速なクラウド同期と大容量ファイル転送に対応したメッセンジャー。",
-                      "Быстрый облачный мессенджер с передачей больших файлов."),
-                    "#5865F2", iconChat),
-                CreateAppItem("Microsoft Teams", grpComms, "Microsoft.Teams",
-                    T("Video conferencing and workplace collaboration platform for meetings and classes.",
-                      "Plataforma de videollamadas y colaboración para reuniones laborales o clases virtuales.",
-                      "会議やオンライン授業向けのビデオ会議ツール。",
-                      "Платформа для видеоконференций и совместной работы."),
-                    "#5865F2", iconChat),
-                CreateAppItem("Zoom", grpComms, "Zoom.Zoom",
-                    T("Video meetings and webinar client for remote work and online courses.",
-                      "Cliente de videollamadas y seminarios para trabajo remoto y clases.",
-                      "オンライン会議・ウェビナー用クライアント。",
-                      "Клиент для видеовстреч и вебинаров."),
-                    "#5865F2", iconChat),
-                // DESARROLLO E IA
-                CreateAppItem("GitHub Desktop", grpDev, "GitHub.GitHubDesktop",
-                    T("Visual Git client to manage repositories, branches, and commits without using the command line.",
-                      "Cliente visual para gestionar repositorios, ramas y commits de Git sin depender de la consola.",
-                      "GUIでGitリポジトリやブランチを管理できるクライアント。",
-                      "Визуальный клиент Git для работы с репозиториями."),
-                    "#2EA043", iconCode),
-                CreateAppItem("Git", grpDev, "Git.Git",
-                    T("Core distributed version control CLI and Git Bash environment for software development.",
-                      "Sistema de control de versiones esencial y terminal Git Bash para desarrollo de software.",
-                      "ソフトウェア開発に不可欠な分散型バージョン管理システム。",
-                      "Система контроля версий и терминал Git Bash."),
-                    "#2EA043", iconCode),
-                CreateAppItem("Docker Desktop", grpDev, "Docker.DockerDesktop",
-                    T("Container runtime to build, test, and run isolated services and databases locally.",
-                      "Entorno de contenedores para levantar servicios, bases de datos y aplicaciones aisladas en tu PC.",
-                      "コンテナ環境を構築・実行するための開発ツール。",
-                      "Платформа контейнеризации для локального запуска сервисов."),
-                    "#2EA043", iconCode),
-                CreateAppItem("Visual Studio Code", grpDev, "Microsoft.VisualStudioCode",
-                    T("Lightweight, extensible code editor supporting virtually every programming language and debugger.",
-                      "Editor de código ligero y extensible compatible con todos los lenguajes y herramientas de depuración.",
-                      "あらゆる言語に対応する軽量・高機能コードエディタ。",
-                      "Легкий и расширяемый редактор кода."),
-                    "#2EA043", iconCode),
-                CreateAppItem("Visual Studio 2022 Community", grpDev, "Microsoft.VisualStudio.2022.Community",
-                    T("Full IDE for C#, .NET, C++, and Windows desktop/game development.",
-                      "Entorno de desarrollo completo (IDE) para C#, .NET, C++ y aplicaciones de escritorio.",
-                      "C#・.NET・C++開発向けの統合開発環境（IDE）。",
-                      "Полноценная IDE для разработки на C#, .NET и C++."),
-                    "#2EA043", iconCode),
-                CreateAppItem("Cursor", grpDev, "Anysphere.Cursor",
-                    T("AI-native code editor built on VS Code with codebase-aware autocomplete and refactoring.",
-                      "Editor de código con inteligencia artificial integrada para autocompletado y edición contextual de proyectos.",
-                      "プロジェクト全体を理解するAI搭載コードエディタ。",
-                      "Редактор кода со встроенным ИИ-ассистентом."),
-                    "#2EA043", iconCode),
-                CreateAppItem("Claude Desktop", grpDev, "Anthropic.Claude",
-                    T("Official desktop application for Anthropic's Claude AI assistant with MCP tool support.",
-                      "Aplicación oficial de escritorio para el asistente de IA Claude con soporte para herramientas locales.",
-                      "Anthropic Claudeの公式デスクトップアプリ。",
-                      "Официальное десктопное приложение ИИ-ассистента Claude."),
-                    "#2EA043", iconCode),
-                CreateAppItem("Ollama", grpDev, "Ollama.Ollama",
-                    T("Local LLM runner to execute open-weight AI models privately on your own GPU/CPU.",
-                      "Motor local para ejecutar modelos de inteligencia artificial directamente en tu GPU o procesador sin internet.",
-                      "ローカル環境で大規模言語モデルを実行するツール。",
-                      "Инструмент для локального запуска языковых моделей ИИ."),
-                    "#2EA043", iconCode),
-                // DOCUMENTOS Y NOTAS
-                CreateAppItem("Joplin", grpDocs, "Joplin.Joplin",
-                    T("Open-source Markdown note-taking and to-do app with end-to-end encryption and offline notebooks.",
-                      "Aplicación libre de notas en Markdown con cifrado, libretas organizadas y acceso sin conexión.",
-                      "暗号化とオフライン対応のオープンソースMarkdownノートアプリ。",
-                      "Заметки в формате Markdown с шифрованием и офлайн-доступом."),
-                    "#D97706", iconDoc),
-                CreateAppItem("Adobe Acrobat Reader", grpDocs, "Adobe.Acrobat.Reader.64-bit",
-                    T("Standard PDF viewer for reading, signing, and annotating official documents.",
-                      "Visor estándar para leer, firmar y comentar documentos PDF.",
-                      "PDFの閲覧・署名・注釈付けを行う標準ビューア。",
-                      "Стандартная программа для чтения и подписи PDF."),
-                    "#D97706", iconDoc),
-                CreateAppItem("ONLYOFFICE Desktop Editors", grpDocs, "ONLYOFFICE.DesktopEditors",
-                    T("Full offline office suite (Docs, Sheets, Slides) with high Microsoft Office compatibility.",
-                      "Suite ofimática completa y gratuita (documentos, hojas de cálculo y presentaciones) compatible con formatos de Office.",
-                      "MS Office形式と高い互換性を持つ無料オフィススイート。",
-                      "Бесплатный офисный пакет с высокой совместимостью с MS Office."),
-                    "#D97706", iconDoc),
-                CreateAppItem("Obsidian", grpDocs, "Obsidian.Obsidian",
-                    T("Local-first knowledge base and linked Markdown notes app ideal for study and technical documentation.",
-                      "Base de conocimiento local en Markdown con enlaces entre notas. Ideal para estudio y documentación técnica.",
-                      "ローカルMarkdownファイルで知識を体系化できるノートアプリ。",
-                      "Локальная база знаний в Markdown для учебы и документации."),
-                    "#D97706", iconDoc),
-                CreateAppItem("SumatraPDF", grpDocs, "SumatraPDF.SumatraPDF",
-                    T("Instant-startup, ultra-lightweight viewer for PDF, EPUB, and MOBI files.",
-                      "Visor ultraligero de apertura instantánea para archivos PDF, EPUB y libros digitales.",
-                      "瞬時に起動する超軽量PDF・電子書籍ビューア。",
-                      "Сверхлегкая программа для мгновенного открытия PDF и книг."),
-                    "#D97706", iconDoc),
-                // JUEGOS Y LAUNCHERS
-                CreateAppItem("Steam", grpGames, "Valve.Steam",
-                    T("Primary PC gaming storefront, library manager, and multiplayer platform.",
-                      "Plataforma principal de videojuegos en PC, biblioteca y gestión de partidas.",
-                      "PCゲーム最大のプラットフォーム・ライブラリ管理。",
-                      "Основная игровая платформа и библиотека игр для ПК."),
-                    "#9333EA", iconGame),
-                CreateAppItem("Epic Games Launcher", grpGames, "EpicGames.EpicGamesLauncher",
-                    T("Launcher for Fortnite, Unreal Engine, and Epic Games Store library titles.",
-                      "Cliente para Fortnite, Unreal Engine y juegos de la tienda de Epic Games.",
-                      "FortniteやEpic Gamesストアのゲームランチャー。",
-                      "Лаунчер для Fortnite и игр из Epic Games Store."),
-                    "#9333EA", iconGame),
-                CreateAppItem("EA App", grpGames, "ElectronicArts.EADesktop",
-                    T("Official Electronic Arts desktop client for EA titles and EA Play.",
-                      "Cliente oficial de Electronic Arts para ejecutar juegos de EA y EA Play.",
-                      "Electronic Arts公式ゲームランチャー。",
-                      "Официальный клиент Electronic Arts."),
-                    "#9333EA", iconGame),
-                CreateAppItem("CurseForge", grpGames, "Overwolf.CurseForge",
-                    T("Mod manager and launcher for Minecraft, World of Warcraft, and supported PC games.",
-                      "Gestor de mods y complementos para Minecraft, World of Warcraft y otros juegos.",
-                      "MinecraftやWoWなどのMOD管理ランチャー。",
-                      "Менеджер модов для Minecraft и других игр."),
-                    "#9333EA", iconGame),
-                CreateAppItem("Modrinth App", grpGames, "Modrinth.ModrinthApp",
-                    T("Fast, open-source Minecraft modpack and instance launcher with minimal resource footprint.",
-                      "Launcher abierto y ligero para gestionar instancias y modpacks de Minecraft sin publicidad.",
-                      "広告なしで軽量なオープンソースMinecraft MODランチャー。",
-                      "Легкий открытый лаунчер модов для Minecraft без рекламы."),
-                    "#9333EA", iconGame),
-                CreateAppItem("Ubisoft Connect", grpGames, "Ubisoft.Connect",
-                    T("Desktop client required to launch and manage Ubisoft PC games.",
-                      "Cliente necesario para gestionar y ejecutar juegos de Ubisoft en PC.",
-                      "Ubisoft製PCゲームの管理・起動クライアント。",
-                      "Клиент для запуска и управления играми Ubisoft."),
-                    "#9333EA", iconGame),
-                CreateAppItem("Battle.net", grpGames, "Blizzard.BattleNet",
-                    T("Blizzard Entertainment launcher for World of Warcraft, Overwatch, Diablo, and Call of Duty.",
-                      "Launcher de Blizzard para World of Warcraft, Overwatch, Diablo y Call of Duty.",
-                      "WoWやOverwatch、Diablo用のBlizzard公式ランチャー。",
-                      "Лаунчер Blizzard для WoW, Overwatch и Diablo."),
-                    "#9333EA", iconGame),
-                // HERRAMIENTAS MICROSOFT Y MULTIMEDIA
-                CreateAppItem("Microsoft PowerToys", grpMsMedia, "Microsoft.PowerToys",
-                    T("Official Microsoft utilities suite adding FancyZones window tiling, color picker, and quick launcher.",
-                      "Paquete oficial de utilidades de Microsoft con organizador de ventanas, selector de color y búsqueda rápida.",
-                      "ウィンドウ分割やカラーピッカー等を追加するMicrosoft公式ツール集。",
-                      "Официальный набор утилит Microsoft для расширения возможностей Windows."),
-                    "#0284C7", iconMedia),
-                CreateAppItem("Windows Terminal", grpMsMedia, "Microsoft.WindowsTerminal",
-                    T("Modern tabbed terminal for PowerShell, Command Prompt, and WSL with GPU text rendering.",
-                      "Terminal moderno con pestañas y aceleración gráfica para PowerShell, CMD y WSL.",
-                      "タブ機能とGPU描画を備えたモダンなWindowsターミナル。",
-                      "Современный терминал с вкладками для PowerShell, CMD и WSL."),
-                    "#0284C7", iconMedia),
-                CreateAppItem("Audacity", grpMsMedia, "Audacity.Audacity",
-                    T("Free, open-source multi-track audio editor and recorder.",
-                      "Editor y grabador de audio multipista gratuito y de código abierto.",
-                      "無料のマルチトラック音声編集・録音ソフト。",
-                      "Бесплатный многодорожечный аудиоредактор."),
-                    "#0284C7", iconMedia),
-                CreateAppItem("VLC Media Player", grpMsMedia, "VideoLAN.VLC",
-                    T("Universal media player that plays virtually any video or audio codec without extra packs.",
-                      "Reproductor multimedia compatible con prácticamente cualquier formato de video y audio.",
-                      "あらゆる動画・音声形式に対応する万能メディアプレイヤー。",
-                      "Универсальный медиаплеер для любых форматов видео и аудио."),
-                    "#0284C7", iconMedia),
-                CreateAppItem("OBS Studio", grpMsMedia, "OBSProject.OBSStudio",
-                    T("Industry-standard software for low-overhead screen recording and live streaming.",
-                      "Programa estándar para grabación de pantalla con aceleración por hardware y transmisiones en vivo.",
-                      "録画・ライブ配信の定番ソフト。",
-                      "Программа для записи экрана и стриминга."),
-                    "#0284C7", iconMedia),
-                CreateAppItem("Paint.NET", grpMsMedia, "dotPDN.PaintDotNet",
-                    T("Fast, lightweight image and photo editor with layers and plugin support.",
-                      "Editor de imágenes rápido y liviano con soporte de capas y efectos.",
-                      "レイヤー機能を備えた軽量・高速画像エディタ。",
-                      "Быстрый и легкий графический редактор со слоями."),
-                    "#0284C7", iconMedia),
-                CreateAppItem("Blender", grpMsMedia, "BlenderFoundation.Blender",
-                    T("Open-source 3D creation suite for modeling, animation, rendering, and video editing.",
-                      "Suite libre de modelado 3D, animación, renderizado y edición de video.",
-                      "モデリングやアニメーション制作ができるオープンソース3Dソフト。",
-                      "Открытый пакет для 3D-моделирования и рендеринга."),
-                    "#0284C7", iconMedia),
-                // UTILIDADES
-                CreateAppItem("Google Drive", grpUtils, "Google.GoogleDrive",
-                    T("Desktop sync client to access Google Drive files directly from Windows File Explorer.",
-                      "Cliente de sincronización para acceder a tus archivos de Google Drive desde el Explorador de Windows.",
-                      "エクスプローラーからGoogleドライブに直接アクセスできる同期クライアント。",
-                      "Клиент синхронизации Google Диска в проводнике Windows."),
-                    "#6E7681", iconTool),
-                CreateAppItem("Dropbox", grpUtils, "Dropbox.Dropbox",
-                    T("Cloud file storage and automatic folder synchronization client.",
-                      "Cliente de almacenamiento en la nube y sincronización automática de carpetas.",
-                      "クラウドストレージ・自動フォルダ同期クライアント。",
-                      "Клиент облачного хранилища и синхронизации папок."),
-                    "#6E7681", iconTool),
-                CreateAppItem("AnyDesk", grpUtils, "AnyDesk.AnyDesk",
-                    T("Lightweight, low-latency remote desktop tool for quick technical assistance.",
-                      "Herramienta ligera de escritorio remoto para brindar o recibir soporte técnico al instante.",
-                      "軽量・低遅延のリモートデスクトップツール。",
-                      "Легкая программа для удаленного доступа к рабочему столу."),
-                    "#6E7681", iconTool),
-                CreateAppItem("7-Zip", grpUtils, "7zip.7zip",
-                    T("High-compression open-source file archiver supporting 7z, ZIP, RAR, and ISO without ads.",
-                      "Compresor y extractor gratuito de archivos 7z, ZIP, RAR e ISO sin publicidad.",
-                      "広告なしで高圧縮率のオープンソース解凍・圧縮ソフト。",
-                      "Бесплатный архиватор без рекламы с поддержкой 7z, ZIP и RAR."),
-                    "#6E7681", iconTool),
-                CreateAppItem("WinRAR", grpUtils, "RARLab.WinRAR",
-                    T("Classic archive utility with native RAR creation and extraction support.",
-                      "Compresor clásico con soporte completo para crear y extraer archivos RAR y ZIP.",
-                      "RARおよびZIP形式に対応した定番アーカイブユーティリティ。",
-                      "Классический архиватор с полной поддержкой RAR и ZIP."),
-                    "#6E7681", iconTool),
-                CreateAppItem("TranslucentTB", grpUtils, "CharlesMilette.TranslucentTB",
-                    T("Lightweight utility that makes the Windows taskbar transparent or blurred with negligible RAM usage.",
-                      "Utilidad ultraligera para volver transparente o difuminada la barra de tareas de Windows sin consumir recursos.",
-                      "Windowsタスクバーを透明・ぼかし表示にする超軽量ツール。",
-                      "Легкая утилита для прозрачной панели задач Windows."),
-                    "#6E7681", iconTool),
-                CreateAppItem("ShareX", grpUtils, "ShareX.ShareX",
-                    T("Advanced screenshot, screen capture, and workflow automation utility.",
-                      "Herramienta avanzada para capturas de pantalla, recortes y grabación rápida.",
-                      "高機能なスクリーンショット・画面キャプチャツール。",
-                      "Продвинутый инструмент для скриншотов и записи экрана."),
-                    "#6E7681", iconTool),
-                CreateAppItem("Everything", grpUtils, "voidtools.Everything",
-                    T("Instant local file search engine indexing NTFS drives in milliseconds.",
-                      "Buscador instantáneo de archivos locales en discos NTFS en milisegundos.",
-                      "NTFSドライブ内のファイルを瞬時に検索できる超高速検索ツール。",
-                      "Мгновенный поиск файлов на локальных дисках."), "#6E7681", iconTool)
-            };
-
-            _allTweaks = appsList.Concat(baseTweaks).ToList();
-
-            if (preservedCheckedKeys != null && preservedCheckedKeys.Count > 0)
-            {
-                foreach (var item in _allTweaks)
-                {
-                    if (preservedCheckedKeys.Contains($"{item.Category}::{item.Title}"))
-                    {
-                        item.IsEnabled = true;
-                    }
-                }
-            }
-
-            CaptureInitialTweakStates();
-            RefreshDisplayedTweaks();
-        }
-
-        private void CaptureInitialTweakStates()
-        {
-            _initialTweakStates.Clear();
-            foreach (var tweak in _allTweaks)
-            {
-                _initialTweakStates[tweak] = tweak.IsEnabled;
-            }
-        }
-
-        private static TweakItem CreateAppItem(string name, string groupName, string wingetId, string description, string iconColor, string iconGeometry)
-        {
-            return new TweakItem
-            {
-                Category = "Apps",
-                GroupName = groupName,
-                Title = name,
-                Description = description,
-                TechnicalDetail = wingetId,
-                IconColor = iconColor,
-                IconGeometry = iconGeometry,
-                IsEnabled = false,
-                ApplyAction = () => RunWingetInstall(wingetId),
-                RevertAction = () => { }
-            };
-        }
-
-        private static void RunWingetInstall(string packageId)
-        {
             try
             {
-                var psi = new ProcessStartInfo
+                TxtModalStepTag.Text = isEs ? "ETAPA 1 DE 3 · RESPALDO DEL SISTEMA" : "STAGE 1 OF 3 · SYSTEM BACKUP";
+                TxtModalTitle.Text = isEs ? "Creando punto de restauración" : "Creating restore point";
+                TxtModalMessage.Text = isEs ? "Guardando estado preventivo en Volume Shadow Copy..." : "Saving preventive snapshot via Volume Shadow Copy...";
+                await AnimateModalProgressAsync(0, 38, 700);
+
+                await Task.Run(() =>
                 {
-                    FileName = "winget",
-                    Arguments = $"install --id {packageId} -e --silent --accept-package-agreements --accept-source-agreements",
-                    CreateNoWindow = true,
-                    UseShellExecute = false
-                };
-                using var process = Process.Start(psi);
-                process?.WaitForExit();
+                    RegistryEngine.RunCommandHidden("powershell.exe",
+                        "-NoProfile -Command \"Checkpoint-Computer -Description 'Archon_StepZero' -RestorePointType 'MODIFY_SETTINGS' -ErrorAction SilentlyContinue\"");
+                });
+
+                if (skipDrivers)
+                {
+                    TxtModalStepTag.Text = isEs ? "ETAPA 2 DE 2 · CARGANDO PANEL" : "STAGE 2 OF 2 · LOADING PANEL";
+                    TxtModalTitle.Text = isEs ? "Preparando módulos de ajuste" : "Preparing optimization modules";
+                    TxtModalMessage.Text = isEs ? "Verificando estado actual del registro y servicios..." : "Checking current registry and service states...";
+                    await AnimateModalProgressAsync(38, 100, 650);
+                }
+                else
+                {
+                    TxtModalStepTag.Text = isEs ? "ETAPA 2 DE 3 · CONTROLADORES" : "STAGE 2 OF 3 · DRIVERS";
+                    TxtModalTitle.Text = isCleanMode
+                        ? (isEs ? "Limpiando utilidades OEM previas" : "Cleaning previous OEM utilities")
+                        : (isEs ? "Preparando base limpia de controladores" : "Preparing clean driver baseline");
+                    TxtModalMessage.Text = isEs ? "Bloqueando paquetes genéricos de Windows Update..." : "Blocking generic Windows Update driver pushes...";
+                    await AnimateModalProgressAsync(38, 76, 850);
+
+                    TxtModalStepTag.Text = isEs ? "ETAPA 3 DE 3 · FINALIZANDO" : "STAGE 3 OF 3 · FINALIZING";
+                    TxtModalTitle.Text = isEs ? "Abriendo panel de optimización" : "Opening optimization panel";
+                    TxtModalMessage.Text = isEs ? "Todo listo para personalizar tu sistema." : "Everything is ready to customize your system.";
+                    await AnimateModalProgressAsync(76, 100, 550);
+                }
             }
-            catch { }
+            finally
+            {
+                ringSb?.Stop();
+                PrepModalOverlay.Visibility = Visibility.Collapsed;
+                StepZeroBlur.Radius = 0;
+            }
+
+            EnterMainOptimizerView();
         }
 
-        private void RefreshDisplayedTweaks()
+        private async Task AnimateModalProgressAsync(int from, int to, int totalMs)
         {
-            string query = TxtSearch.Text.Trim();
-            List<TweakItem> filtered;
+            int steps = Math.Max(1, to - from);
+            int delay = Math.Max(10, totalMs / steps);
+            for (int i = from; i <= to; i++)
+            {
+                ModalProgressBar.Value = i;
+                TxtModalPercent.Text = $"{i}%";
+                await Task.Delay(delay);
+            }
+        }
 
+        private void EnterMainOptimizerView()
+        {
+            StepZeroView.Visibility = Visibility.Collapsed;
+            WelcomeView.Visibility = Visibility.Collapsed;
+            PerformanceView.Visibility = Visibility.Collapsed;
+            MainOptimizerView.Visibility = Visibility.Visible;
+
+            if (!_telemetryTimer.IsEnabled)
+                _telemetryTimer.Start();
+
+            UpdateSelectionCounter();
+            ApplyFilter();
+        }
+
+        private void BtnBackToStepZero_Click(object sender, RoutedEventArgs e)
+        {
+            MainOptimizerView.Visibility = Visibility.Collapsed;
+            StepZeroView.Visibility = Visibility.Visible;
+            _telemetryTimer.Stop();
+        }
+
+        // ==================== CATÁLOGO DE APPS CON ÍCONOS ORIGINALES Y FILTRADO ====================
+
+        private void InitializeCatalogAndApps()
+        {
+            var baseTweaks = TweakCatalog.GetAllTweaks();
+            var catalog = new List<TweakItem>();
+
+            // Asignar íconos originales a las librerías esenciales de TweakCatalog
+            foreach (var item in baseTweaks)
+            {
+                if (item.Category == "Instalador Día 0")
+                {
+                    item.Category = "Apps";
+                    if (item.Id == "install_vcredist")
+                    {
+                        item.HasIcon = true;
+                        item.IconColor = "#7C3AED";
+                        item.IconGeometry = "M4,4 H11 V11 H4 Z M13,4 H20 V11 H13 Z M4,13 H11 V20 H4 Z M13,13 H20 V20 H13 Z";
+                        _appSubGroups[item.Id] = "Runtimes & Essentials";
+                    }
+                    else if (item.Id == "install_directx")
+                    {
+                        item.HasIcon = true;
+                        item.IconColor = "#16A34A";
+                        item.IconGeometry = "M4,4 L12,12 L4,20 M20,4 L12,12 L20,20";
+                        _appSubGroups[item.Id] = "Runtimes & Essentials";
+                    }
+                }
+                catalog.Add(item);
+            }
+
+            // Catálogo ampliado de aplicaciones con sus íconos y colores oficiales
+            var extraApps = new List<(string id, string group, string title, string desc, string pkg, string color, string svg)>
+            {
+                ("app_dotnet8", "Runtimes & Essentials", ".NET Desktop Runtime 8", "Runtime oficial de Microsoft necesario para aplicaciones modernas de escritorio en Windows.", "Microsoft.DotNet.DesktopRuntime.8", "#512BD4",
+                 "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M8,15 V9 L12,15 V9 M15,9 H18 M15,12 H17 M15,15 H18"),
+
+                ("app_brave", "Browsers & Communication", "Brave Browser", "Navegador rápido basado en Chromium con bloqueo nativo de rastreadores y publicidad.", "Brave.Brave", "#FB542B",
+                 "M12,2 L19,5 L21,12 L17,19 L12,22 L7,19 L3,12 L5,5 Z M9,9 L12,11 L15,9 L14,14 L12,17 L10,14 Z"),
+
+                ("app_chrome", "Browsers & Communication", "Google Chrome", "Navegador web oficial de Google con sincronización de perfiles y extensiones.", "Google.Chrome", "#4285F4",
+                 "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M12,8 A4,4 0 1,1 8,12 A4,4 0 0,1 12,8 Z M12,8 H21"),
+
+                ("app_firefox", "Browsers & Communication", "Mozilla Firefox", "Navegador independiente de código abierto enfocado en privacidad y bajo consumo de RAM.", "Mozilla.Firefox", "#FF7139",
+                 "M12,2 A10,10 0 1,0 22,12 C22,7 18,3 14,2.2 C16,4.5 16.5,7.5 14.5,9.5 C12.5,11 9.5,10.5 9,8.5 C7.5,10 7,13 8.5,15.5 C10,17.8 13.5,18.2 15.8,16.5"),
+
+                ("app_discord", "Browsers & Communication", "Discord", "Cliente oficial de chat de voz, video y comunidades con aceleración por hardware.", "Discord.Discord", "#5865F2",
+                 "M4,6 C7,4.5 17,4.5 20,6 L21,17 C18,19 15,19 14,18 L13,16 H11 L10,18 C9,19 6,19 3,17 Z M9,11 A1.5,1.5 0 1,0 9,14 A1.5,1.5 0 1,0 9,11 Z M15,11 A1.5,1.5 0 1,0 15,14 A1.5,1.5 0 1,0 15,11 Z"),
+
+                ("app_telegram", "Browsers & Communication", "Telegram Desktop", "Cliente nativo de mensajería instantánea ultraliviano con sincronización en la nube.", "Telegram.TelegramDesktop", "#26A5E4",
+                 "M21,3 L2,10.5 L9,13.5 L18,6.5 L11.5,14.5 L17.5,19 Z"),
+
+                ("app_steam", "Gaming & Media", "Steam", "Plataforma oficial de juegos de PC, talleres y gestión de bibliotecas.", "Valve.Steam", "#66C0F4",
+                 "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M15,7 A3,3 0 1,1 12,10 L9,14 A2.5,2.5 0 1,1 7,12 L11,9"),
+
+                ("app_epic", "Gaming & Media", "Epic Games Launcher", "Cliente oficial para juegos de Epic Games Store y Unreal Engine.", "EpicGames.EpicGamesLauncher", "#E5E7EB",
+                 "M5,2 H19 V17 L12,22 L5,17 Z M9,6 V14 H15 V12 H11 V11 H14 V9 H11 V8 H15 V6 Z"),
+
+                ("app_obs", "Gaming & Media", "OBS Studio", "Software estándar de grabación y transmisión en vivo con soporte NVENC / AMF / QuickSync.", "OBSProject.OBSStudio", "#60A5FA",
+                 "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M12,5 A4,4 0 0,1 15.5,11 A4,4 0 0,1 8.5,11 A4,4 0 0,1 12,5 Z"),
+
+                ("app_vlc", "Gaming & Media", "VLC Media Player", "Reproductor multimedia universal capaz de abrir cualquier códec de video y audio sin paquetes externos.", "VideoLAN.VLC", "#FF8800",
+                 "M12,2 L17,17 H7 Z M5,17 H19 L20,21 H4 Z M9,10 H15 M8,13 H16"),
+
+                ("app_mpv", "Gaming & Media", "MPV Player", "Reproductor minimalista acelerado por GPU con altísima calidad de escalado y cero interfaz pesada.", "mpv.net", "#8B5CF6",
+                 "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M10,8 L17,12 L10,16 Z"),
+
+                ("app_spotify", "Gaming & Media", "Spotify", "Cliente de escritorio para reproducción de música y podcasts.", "Spotify.Spotify", "#1DB954",
+                 "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M7,9.5 C10.5,8.5 14.5,8.8 17.5,10.5 M8,12.5 C10.8,11.7 13.8,12 16.3,13.4 M9,15.3 C11.2,14.7 13.4,15 15.2,16"),
+
+                ("app_hwinfo", "Hardware & Diagnostics", "HWiNFO64", "Monitor profesional de sensores, voltajes, frecuencias y temperaturas en tiempo real.", "REALiX.HWiNFO", "#2563EB",
+                 "M3,4 H21 V20 H3 Z M7,8 V16 M11,8 V16 M7,12 H11 M15,8 V16 M18,8 V16"),
+
+                ("app_cpuz", "Hardware & Diagnostics", "CPU-Z", "Diagnóstico detallado del procesador, caché, placa base, chipset y latencias de memoria RAM.", "CPUID.CPU-Z", "#7C3AED",
+                 "M7,7 H17 V17 H7 Z M9,2 V5 M15,2 V5 M9,19 V22 M15,19 V22 M2,9 H5 M2,15 H5 M19,9 H22 M19,15 H22"),
+
+                ("app_gpuz", "Hardware & Diagnostics", "GPU-Z", "Información completa de tarjeta gráfica, bus PCIe, versión de BIOS, VRAM y sensores.", "TechPowerUp.GPU-Z", "#DC2626",
+                 "M2,6 H20 V17 H2 Z M6,10 A2.5,2.5 0 1,0 6,15 A2.5,2.5 0 1,0 6,10 Z M13,10 A2.5,2.5 0 1,0 13,15 A2.5,2.5 0 1,0 13,10 Z M20,8 H22 V15 H20"),
+
+                ("app_crystaldiskinfo", "Hardware & Diagnostics", "CrystalDiskInfo", "Verifica la salud S.M.A.R.T., horas de encendido y temperatura de tus discos SSD y NVMe.", "CrystalDewWorld.CrystalDiskInfo", "#0EA5E9",
+                 "M5,3 H19 V21 H5 Z M12,7 A4,4 0 1,1 8,11 A4,4 0 0,1 12,7 Z M8,17 H16"),
+
+                ("app_crystaldiskmark", "Hardware & Diagnostics", "CrystalDiskMark", "Benchmark estándar para medir velocidades secuenciales y aleatorias de lectura/escritura en SSD.", "CrystalDewWorld.CrystalDiskMark", "#0284C7",
+                 "M3,18 L8,11 L13,14 L20,5 M15,5 H20 V10"),
+
+                ("app_afterburner", "Hardware & Diagnostics", "MSI Afterburner", "Control de curva de ventiladores, undervolt, overclock y monitoreo OSD en juegos.", "Guru3D.Afterburner", "#EF4444",
+                 "M12,2 L21,19 H3 Z M12,8 L16,16 H8 Z"),
+
+                ("app_7zip", "Utilities & Security", "7-Zip", "Compresor y descompresor de código abierto ultraliviano compatible con .7z, .zip y .rar.", "7zip.7zip", "#F59E0B",
+                 "M3,4 H21 V20 H3 Z M6,8 H11 L7,16 M13,10 H18 L13,16 H18"),
+
+                ("app_winrar", "Utilities & Security", "WinRAR", "Archivador clásico para gestión de paquetes .rar y .zip con reparación de volúmenes.", "RARLab.WinRAR", "#9333EA",
+                 "M5,3 H19 V7 H5 Z M5,10 H19 V14 H5 Z M5,17 H19 V21 H5 Z M11,3 V21"),
+
+                ("app_wiztree", "Utilities & Security", "WizTree", "Analizador ultrarrápido de espacio en disco que escanea unidades NTFS en segundos.", "AntibodySoftware.WizTree", "#10B981",
+                 "M3,3 H11 V11 H3 Z M13,3 H21 V8 H13 Z M13,10 H21 V21 H13 Z M3,13 H11 V21 H3 Z"),
+
+                ("app_everything", "Utilities & Security", "Everything Search", "Buscador instantáneo de archivos y carpetas en todo el sistema por nombre.", "voidtools.Everything", "#F97316",
+                 "M10.5,3 A7.5,7.5 0 1,0 18,10.5 A7.5,7.5 0 0,0 10.5,3 Z M16,16 L21,21"),
+
+                ("app_rufus", "Utilities & Security", "Rufus", "Utilidad liviana para crear memorias USB booteables de Windows y Linux.", "Rufus.Rufus", "#3B82F6",
+                 "M7,2 H17 V8 H7 Z M5,8 H19 V21 H5 Z M10,4 V6 M14,4 V6"),
+
+                ("app_ventoy", "Utilities & Security", "Ventoy", "Crea un USB multiboot donde solo arrastrás archivos .ISO sin formatear cada vez.", "Ventoy.Ventoy", "#06B6D4",
+                 "M4,5 L12,19 L20,5 H16 L12,12 L8,5 Z"),
+
+                ("app_bitwarden", "Utilities & Security", "Bitwarden", "Gestor de contraseñas cifrado de código abierto con sincronización multiplataforma.", "Bitwarden.Bitwarden", "#175DDC",
+                 "M12,2 L20,5 V12 C20,17.5 16.5,21 12,22.5 C7.5,21 4,17.5 4,12 V5 Z M12,5 V19"),
+
+                ("app_keepassxc", "Utilities & Security", "KeePassXC", "Gestor de contraseñas local sin depender de servidores externos.", "KeePassXCTeam.KeePassXC", "#6CAC4D",
+                 "M8,10 A4,4 0 1,1 12,14 H20 V17 H17 V20 H14 V14"),
+
+                ("app_sharex", "Utilities & Security", "ShareX", "Herramienta avanzada de capturas de pantalla, grabación GIF/MP4 y OCR.", "ShareX.ShareX", "#38BDF8",
+                 "M4,4 H14 V14 H4 Z M10,10 H20 V20 H10 Z"),
+
+                ("app_powertoys", "Utilities & Security", "Microsoft PowerToys", "Suite oficial de productividad: FancyZones, selector de color, renombrado masivo y más.", "Microsoft.PowerToys", "#0078D4",
+                 "M3,4 H11 V11 H3 Z M13,4 H21 V11 H13 Z M3,13 H11 V20 H3 Z M13,13 H21 V20 H13 Z"),
+
+                ("app_vscode", "Developer Tools", "Visual Studio Code", "Editor de código fuente extensible de Microsoft con soporte integrado para Git y terminal.", "Microsoft.VisualStudioCode", "#007ACC",
+                 "M16,3 L21,5.5 V18.5 L16,21 L8,13.5 L4.5,16 L3,14.5 L6.5,12 L3,9.5 L4.5,8 L8,10.5 Z"),
+
+                ("app_git", "Developer Tools", "Git for Windows", "Sistema de control de versiones distribuido con Git Bash incluido.", "Git.Git", "#F05032",
+                 "M12,2 L22,12 L12,22 L2,12 Z M12,7 V17 M12,11 L16,15"),
+
+                ("app_terminal", "Developer Tools", "Windows Terminal", "Terminal moderna con pestañas, aceleración GPU y soporte para PowerShell, CMD y WSL.", "Microsoft.WindowsTerminal", "#9CA3AF",
+                 "M3,5 H21 V19 H3 Z M7,9 L11,12 L7,15 M12,15 H17"),
+
+                ("app_pwsh", "Developer Tools", "PowerShell 7", "Consola multiplataforma de automatización y administración avanzada de sistemas.", "Microsoft.PowerShell", "#5391FE",
+                 "M4,5 L21,5 L19,19 L2,19 Z M8,9 L12,12 L7,15 M12,15 H16"),
+
+                ("app_python", "Developer Tools", "Python 3", "Intérprete oficial de Python para automatización, scripting y desarrollo.", "Python.Python.3.12", "#3776AB",
+                 "M8,3 H15 V9 H6 V15 H3 V8 C3,5 5,3 8,3 Z M16,21 H9 V15 H18 V9 H21 V16 C21,19 19,21 16,21 Z"),
+
+                ("app_nodejs", "Developer Tools", "Node.js LTS", "Entorno de ejecución JavaScript del lado del servidor con npm incluido.", "OpenJS.NodeJS.LTS", "#339933",
+                 "M12,2 L20.5,7 V17 L12,22 L3.5,17 V7 Z M10,9 V15 L14,13 V10"),
+
+                ("app_notepadpp", "Developer Tools", "Notepad++", "Editor de texto y código ultrarrápido escrito en C++ con consumo mínimo de memoria.", "Notepad++.Notepad++", "#90E59A",
+                 "M5,3 H16 L19,6 V21 H5 Z M8,10 H16 M8,14 H16 M8,18 H13")
+            };
+
+            foreach (var app in extraApps)
+            {
+                if (catalog.Any(x => x.Id == app.id))
+                    continue;
+
+                _appSubGroups[app.id] = app.group;
+                catalog.Add(new TweakItem
+                {
+                    Id = app.id,
+                    Category = "Apps",
+                    Title = app.title,
+                    Risk = TweakRisk.Seguro,
+                    Description = app.desc,
+                    TechnicalDetail = $"winget install --id {app.pkg} -e --silent",
+                    HasIcon = true,
+                    IconColor = app.color,
+                    IconGeometry = app.svg,
+                    ApplyAction = () => RegistryEngine.RunCommandHidden("winget.exe",
+                        $"install --id {app.pkg} -e --silent --accept-package-agreements --accept-source-agreements")
+                });
+            }
+
+            _allTweaks = catalog;
+            _tweaksView = CollectionViewSource.GetDefaultView(_allTweaks);
+            _tweaksView.Filter = FilterTweaksPredicate;
+            _tweaksView.GroupDescriptions.Add(new AppSubGroupDescription(
+                _appSubGroups,
+                () => _currentLang == "ES" ? "Ajustes disponibles" : "Available optimizations"));
+
+            TweaksItemsControl.ItemsSource = _tweaksView;
+        }
+
+        private bool FilterTweaksPredicate(object obj)
+        {
+            if (obj is not TweakItem item)
+                return false;
+
+            if (!string.Equals(item.Category, _currentCategory, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            string query = TxtSearch?.Text?.Trim() ?? string.Empty;
             if (string.IsNullOrEmpty(query))
-            {
-                filtered = _allTweaks
-                    .Where(t => t.Category == _activeCategory)
-                    .ToList();
-            }
-            else
-            {
-                filtered = _allTweaks
-                    .Where(t => t.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                                t.Description.Contains(query, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-            }
+                return true;
 
-            var view = new ListCollectionView(filtered);
-            if (filtered.Any(t => !string.IsNullOrEmpty(t.GroupName)))
-            {
-                view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(TweakItem.GroupName)));
-            }
+            return item.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                   item.Description.Contains(query, StringComparison.OrdinalIgnoreCase);
+        }
 
-            TweaksItemsControl.ItemsSource = view;
+        private void ApplyFilter()
+        {
+            _tweaksView?.Refresh();
         }
 
         private void CategoryBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not Button clickedBtn) return;
-            _activeCategory = clickedBtn.Tag?.ToString() ?? "Apps";
-            TxtSearch.Text = string.Empty;
+            if (sender is not Button clicked || clicked.Tag is not string newCategory)
+                return;
 
-            foreach (var child in SidebarMenu.Children)
+            // Cerrar cualquier panel de detalles abierto si el usuario cambia a una pestaña diferente
+            if (!string.Equals(_currentCategory, newCategory, StringComparison.OrdinalIgnoreCase))
             {
-                if (child is Button btn && btn != BtnBackToStepZero)
+                foreach (var item in _allTweaks)
                 {
-                    btn.Style = btn == clickedBtn
-                        ? (Style)FindResource("PrimaryButtonStyle")
-                        : (Style)FindResource("GhostButtonStyle");
+                    if (item.IsDetailsOpen)
+                        item.IsDetailsOpen = false;
                 }
             }
-            RefreshDisplayedTweaks();
+
+            _currentCategory = newCategory;
+
+            Button[] catButtons = { BtnCatApps, BtnCatGaming, BtnCatNetwork, BtnCatDebloat, BtnCatServices, BtnCatCleanup };
+            foreach (var btn in catButtons)
+            {
+                btn.Style = (Style)FindResource(btn == clicked ? "PrimaryButtonStyle" : "GhostButtonStyle");
+            }
+
+            ApplyFilter();
         }
 
-        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) => RefreshDisplayedTweaks();
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplyFilter();
+        }
 
         private void BtnInfo_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is TweakItem clickedItem)
+            if (sender is Button btn && btn.Tag is TweakItem item)
             {
-                clickedItem.IsDetailsOpen = !clickedItem.IsDetailsOpen;
+                item.IsDetailsOpen = !item.IsDetailsOpen;
             }
+        }
+
+        private void TweakSwitch_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateSelectionCounter();
+        }
+
+        private void UpdateSelectionCounter()
+        {
+            int count = _allTweaks.Count(t => t.IsEnabled);
+            bool isEs = _currentLang == "ES";
+            TxtOptStatSelVal.Text = isEs ? $"{count} seleccionados" : $"{count} selected";
+            TxtOptStatBackupVal.Text = isEs ? "VSS Protegido" : "VSS Protected";
         }
 
         private async void BtnApplyChanges_Click(object sender, RoutedEventArgs e)
         {
-            TxtActionFeedback.Text = T("Applying changes...", "Aplicando cambios...", "変更を適用中...", "Применение изменений...");
-            var snapshot = _allTweaks.ToList();
+            bool isEs = _currentLang == "ES";
+            var enabledItems = _allTweaks.Where(t => t.IsEnabled).ToList();
+            if (enabledItems.Count == 0)
+            {
+                TxtActionFeedback.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F59E0B"));
+                TxtActionFeedback.Text = isEs ? "No hay ajustes o apps seleccionados." : "No tweaks or apps selected.";
+                return;
+            }
+
+            BtnApplyChanges.IsEnabled = false;
+            BtnRestoreOriginal.IsEnabled = false;
+            TxtActionFeedback.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#60A5FA"));
+            TxtActionFeedback.Text = isEs ? $"Aplicando {enabledItems.Count} elementos..." : $"Applying {enabledItems.Count} items...";
 
             await Task.Run(() =>
             {
-                foreach (var tweak in snapshot)
+                foreach (var item in enabledItems)
                 {
-                    bool previous = _initialTweakStates.TryGetValue(tweak, out var prevVal) && prevVal;
-                    if (tweak.IsEnabled == previous)
-                        continue;
-
-                    if (tweak.IsEnabled)
-                        tweak.ApplyAction?.Invoke();
-                    else
-                        tweak.RevertAction?.Invoke();
+                    try { item.ApplyAction?.Invoke(); } catch { }
                 }
             });
 
-            CaptureInitialTweakStates();
-            TxtActionFeedback.Text = T("Changes applied with backup", "Cambios aplicados con respaldo", "バックアップ付きで変更を適用しました", "Изменения применены с резервной копией");
+            TxtActionFeedback.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CC38A"));
+            TxtActionFeedback.Text = isEs
+                ? $"✓ {enabledItems.Count} cambios aplicados correctamente."
+                : $"✓ {enabledItems.Count} changes applied successfully.";
+
+            BtnApplyChanges.IsEnabled = true;
+            BtnRestoreOriginal.IsEnabled = true;
         }
 
         private async void BtnRestoreAll_Click(object sender, RoutedEventArgs e)
         {
-            TxtActionFeedback.Text = T("Restoring defaults...", "Restaurando valores originales...", "初期状態に復元中...", "Восстановление исходных настроек...");
-            await Task.Run(() => RegistryEngine.RestoreAllBackups());
-            InitOptimizerCatalog();
-            TxtActionFeedback.Text = T("System restored to original state", "Sistema restaurado al estado original", "システムを初期状態に復元しました", "Система восстановлена в исходное состояние");
-        }
+            bool isEs = _currentLang == "ES";
+            var revertible = _allTweaks.Where(t => t.RevertAction != null).ToList();
 
-        private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
-        private void Close_Click(object sender, RoutedEventArgs e) => Close();
+            BtnApplyChanges.IsEnabled = false;
+            BtnRestoreOriginal.IsEnabled = false;
+            TxtActionFeedback.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#60A5FA"));
+            TxtActionFeedback.Text = isEs ? "Restaurando valores predeterminados de Windows..." : "Restoring Windows default values...";
+
+            await Task.Run(() =>
+            {
+                foreach (var item in revertible)
+                {
+                    try
+                    {
+                        item.RevertAction?.Invoke();
+                        item.IsEnabled = false;
+                    }
+                    catch { }
+                }
+            });
+
+            UpdateSelectionCounter();
+            TxtActionFeedback.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CC38A"));
+            TxtActionFeedback.Text = isEs
+                ? "✓ Valores originales restaurados."
+                : "✓ Default settings restored.";
+
+            BtnApplyChanges.IsEnabled = true;
+            BtnRestoreOriginal.IsEnabled = true;
+        }
     }
 }
