@@ -50,6 +50,7 @@ namespace Archon
 
             return _defaultGroupProvider();
         }
+    }
 
     public partial class MainWindow : Window
     {
@@ -141,8 +142,6 @@ namespace Archon
             RefreshAccountUI();
         }
 
-        // ==================== BARRA SUPERIOR Y DESPLEGABLE DE IDIOMAS ====================
-
         private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
         private void Close_Click(object sender, RoutedEventArgs e)
@@ -163,6 +162,7 @@ namespace Archon
             {
                 ApplyLanguage(langCode);
             }
+        }
 
         private void ApplyLanguage(string lang)
         {
@@ -199,7 +199,7 @@ namespace Archon
             TxtPerfSubtitle.Text = isEs ? "Telemetría continua de procesador, gráficos, memoria, almacenamiento y red." : "Continuous system telemetry across processor, graphics, memory, storage and network.";
             TxtPerfOverviewTitle.Text = isEs ? "CURVA DE CARGA DEL SISTEMA" : "SYSTEM LOAD CURVE";
 
-BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
+            BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
             BtnSubTabGeneral.Content = isEs ? "Configuración General" : "General Settings";
             BtnChooseAvatarPhoto.Content = isEs ? "Cargar foto" : "Load photo";
             TxtProfileSectionTitle.Text = isEs ? "Cuenta e Identidad" : "Account & Identity";
@@ -216,10 +216,49 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
             BtnShareFeedback.Content = isEs ? "Compartir / Comentarios" : "Share / Feedback";
             BtnResetSettings.Content = isEs ? "Restablecer configuraciones" : "Reset settings";
             BtnAboutArchon.Content = isEs ? "Acerca de Archon" : "About Archon";
+
+            TxtHomeNavLabel.Text = isEs ? "Inicio" : "Home";
+            TxtPrepTitle.Text = isEs ? "Preparación del sistema" : "System preparation";
+            TxtPrepSubtitle.Text = isEs ? "Elegí el estado actual de tu Windows para preparar los controladores antes de entrar al panel de optimización." : "Choose your current Windows state to prepare drivers before entering the optimization panel.";
+            TxtBloatTitle.Text = isEs ? "Software adicional de fabricante detectado" : "OEM additional software detected";
+
+            TxtFreshTitle.Text = isEs ? "Instalación limpia de Windows" : "Fresh Windows installation";
+            TxtFreshDesc.Text = isEs ? "Crea un punto de restauración preventivo e instala únicamente los controladores esenciales sin telemetría ni paneles extra." : "Creates a preventive restore point and installs only essential drivers without telemetry or extra panels.";
+            TxtFreshAction.Text = isEs ? "Instalar" : "Install";
+
+            TxtCleanTitle.Text = isEs ? "Ya instalé controladores o utilidades OEM" : "I already installed drivers or OEM utilities";
+            TxtCleanDesc.Text = isEs ? "Elimina controladores previos y suites como Armoury Crate o GeForce Experience, reinicia y deja una base limpia." : "Removes previous drivers and suites like Armoury Crate or GeForce Experience, reboots, and leaves a clean base.";
+            TxtCleanAction.Text = isEs ? "Limpiar" : "Clean";
+
+            TxtAlreadyReadyPrompt.Text = isEs ? "¿Ya tenés los controladores limpios y configurados?" : "Already have clean, configured drivers?";
+            TxtSkipTitle.Text = isEs ? "Ya tengo mis controladores listos" : "My drivers are already ready";
+            TxtSkipDesc.Text = isEs ? "Crea el punto de restauración preventivo obligatorio y pasa directo al panel de optimización del sistema." : "Creates the mandatory preventive restore point and jumps straight into the system optimization panel.";
+            TxtSkipAction.Text = isEs ? "Continuar" : "Continue";
+
+            TxtWhyTitle.Text = isEs ? "¿Por qué realizamos este paso?" : "Why do we perform this step?";
+            TxtWhy1Title.Text = isEs ? "Respaldo preventivo" : "Preventive backup";
+            TxtWhy1Desc.Text = isEs ? "Guarda una instantánea exacta de Windows antes de modificar ajustes. Cero impacto en rendimiento y usa como máximo 5% de disco." : "Saves an exact snapshot of Windows before modifying any setting. Zero performance impact and uses at most 5% disk space.";
+            TxtWhy2Title.Text = isEs ? "Controladores sin bloatware" : "Bloat-free drivers";
+            TxtWhy2Desc.Text = isEs ? "Evita que Windows Update instale paquetes genéricos y prepara Chipset y GPU sin servicios en segundo plano." : "Prevents Windows Update from pushing generic packages and prepares Chipset and GPU without background services.";
+            TxtWhy3Title.Text = isEs ? "Ajustes reversibles" : "Reversible tweaks";
+            TxtWhy3Desc.Text = isEs ? "Cada ajuste permite revisar su función y restaurar los valores originales de Windows en un clic." : "Every adjustment lets you review its purpose and restore Windows defaults in a single click.";
+
+            TxtNavPrep.Text = isEs ? "Preparación" : "Preparation";
+            TxtNavPerf.Text = isEs ? "Rendimiento" : "Performance";
+            BtnCatApps.Content = "Apps";
+            BtnCatGaming.Content = isEs ? "Gaming y Energía" : "Gaming & Power";
+            BtnCatNetwork.Content = isEs ? "Red y DNS" : "Network & DNS";
+            BtnCatDebloat.Content = "Debloat";
+            BtnCatServices.Content = isEs ? "Servicios" : "Services";
+            BtnCatCleanup.Content = isEs ? "Limpieza" : "Cleanup";
+
+            TxtSearchPlaceholder.Text = isEs ? "Buscar ajuste o aplicación..." : "Search tweak or application...";
+            BtnRestoreOriginal.Content = isEs ? "Restaurar originales" : "Restore defaults";
+            BtnApplyChanges.Content = isEs ? "Aplicar cambios" : "Apply changes";
+
+            RefreshAccountUI();
             UpdateSelectionCounter();
         }
-
-        // ==================== PERFIL, AVATAR, SELECTOR DE PERFILES Y CONFIGURACIÓN ====================
 
         private void BtnProfileDropdown_Click(object sender, RoutedEventArgs e)
         {
@@ -234,6 +273,7 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                 _activeOptimizationProfile = profileName;
                 TxtActiveProfileName.Text = profileName;
             }
+        }
 
         private void BtnOpenMyProfile_Click(object sender, RoutedEventArgs e)
         {
@@ -305,6 +345,7 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                 RefreshAccountUI();
                 TxtProfileFeedback.Text = _currentLang == "ES" ? "Foto de perfil cargada." : "Profile photo loaded.";
             }
+        }
 
         private void BtnSaveProfileChanges_Click(object sender, RoutedEventArgs e)
         {
@@ -338,6 +379,9 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
             ApplyLanguage("EN");
             TxtSettingsStatusMsg.Text = "✓ Settings restored to default values.";
         }
+
+        private void BtnTabSignIn_Click(object sender, RoutedEventArgs e) => SetAccountModalMode(false);
+        private void BtnTabRegister_Click(object sender, RoutedEventArgs e) => SetAccountModalMode(true);
 
         private void SetAccountModalMode(bool register)
         {
@@ -381,6 +425,7 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                 SettingsAndProfileView.Visibility = Visibility.Collapsed;
                 WelcomeView.Visibility = Visibility.Visible;
             }
+        }
 
         private void RefreshAccountUI()
         {
@@ -423,8 +468,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
             SidebarAvatarInitial.Visibility = avatarBmp == null ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        // ==================== COMPONENTES: RESUMEN INSTANTÁNEO + CARGA EN VER MÁS ====================
-
         private void BtnScanHardware_Click(object sender, RoutedEventArgs e)
         {
             if (HardwareListPanel.Visibility == Visibility.Visible)
@@ -457,6 +500,7 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                 BloatAlertBox.Visibility = Visibility.Visible;
                 TxtDetectedBloatList.Text = string.Join(" · ", profile.DetectedBloatware);
             }
+        }
 
         private async void BtnViewAllHardware_Click(object sender, RoutedEventArgs e)
         {
@@ -486,6 +530,7 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                 deepSpinner?.Stop();
                 FullHardwareLoadingPanel.Visibility = Visibility.Collapsed;
             }
+        }
 
         private void BtnBackFromFullHardware_Click(object sender, RoutedEventArgs e)
         {
@@ -498,11 +543,10 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
             bool isEs = _currentLang == "ES";
             var sections = new List<HardwareSpecSection>();
 
-            // 1. PROCESADOR COMPLETO
             var cpuRows = new List<HardwareSpecRow>();
             try
             {
-                using var s = new ManagementObjectSearcher("SELECT Name, Manufacturer, Architecture, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed, CurrentClockSpeed, L2CacheSize, L3CacheSize, SocketDesignation, VirtualizationFirmwareEnabled FROM Win32_Processor");
+                using var s = new ManagementObjectSearcher("SELECT Name, Manufacturer, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed, CurrentClockSpeed, L2CacheSize, L3CacheSize, SocketDesignation, VirtualizationFirmwareEnabled FROM Win32_Processor");
                 foreach (ManagementObject obj in s.Get())
                 {
                     cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Modelo" : "Model", Value = (obj["Name"]?.ToString() ?? "--").Trim() });
@@ -517,15 +561,15 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Virtualización firmware" : "Firmware virtualization", Value = obj["VirtualizationFirmwareEnabled"]?.ToString() ?? "--" });
                     break;
                 }
+            }
             catch { }
             if (cpuRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Procesador (CPU)" : "Processor (CPU)", Specs = cpuRows });
 
-            // 2. TARJETA GRÁFICA COMPLETA
             var gpuRows = new List<HardwareSpecRow>();
             try
             {
-                using var s = new ManagementObjectSearcher("SELECT Name, AdapterCompatibility, VideoProcessor, AdapterRAM, DriverVersion, DriverDate, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate, Status FROM Win32_VideoController");
+                using var s = new ManagementObjectSearcher("SELECT Name, VideoProcessor, AdapterRAM, DriverVersion, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate, Status FROM Win32_VideoController");
                 int idx = 1;
                 foreach (ManagementObject obj in s.Get())
                 {
@@ -541,15 +585,15 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     gpuRows.Add(new HardwareSpecRow { Label = $"{prefix}{(isEs ? "Estado" : "Status")}", Value = obj["Status"]?.ToString() ?? "--" });
                     idx++;
                 }
+            }
             catch { }
             if (gpuRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Tarjeta Gráfica (GPU)" : "Graphics (GPU)", Specs = gpuRows });
 
-            // 3. PLACA BASE Y BIOS
             var moboRows = new List<HardwareSpecRow>();
             try
             {
-                using var s = new ManagementObjectSearcher("SELECT Manufacturer, Product, Version, SerialNumber FROM Win32_BaseBoard");
+                using var s = new ManagementObjectSearcher("SELECT Manufacturer, Product, Version FROM Win32_BaseBoard");
                 foreach (ManagementObject obj in s.Get())
                 {
                     moboRows.Add(new HardwareSpecRow { Label = isEs ? "Fabricante" : "Manufacturer", Value = obj["Manufacturer"]?.ToString() ?? "--" });
@@ -557,22 +601,22 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     moboRows.Add(new HardwareSpecRow { Label = isEs ? "Revisión" : "Revision", Value = obj["Version"]?.ToString() ?? "--" });
                     break;
                 }
-                using var bios = new ManagementObjectSearcher("SELECT Manufacturer, SMBIOSBIOSVersion, Name FROM Win32_BIOS");
+                using var bios = new ManagementObjectSearcher("SELECT Manufacturer, SMBIOSBIOSVersion FROM Win32_BIOS");
                 foreach (ManagementObject obj in bios.Get())
                 {
                     moboRows.Add(new HardwareSpecRow { Label = "BIOS", Value = $"{obj["Manufacturer"]} · {obj["SMBIOSBIOSVersion"]}" });
                     break;
                 }
+            }
             catch { }
             if (moboRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Placa Base y BIOS" : "Motherboard & BIOS", Specs = moboRows });
 
-            // 4. MEMORIA RAM POR MÓDULO
             var ramRows = new List<HardwareSpecRow>();
             try
             {
                 int slot = 1;
-                using var s = new ManagementObjectSearcher("SELECT DeviceLocator, Manufacturer, PartNumber, Capacity, Speed, ConfiguredClockSpeed, ConfiguredVoltage FROM Win32_PhysicalMemory");
+                using var s = new ManagementObjectSearcher("SELECT DeviceLocator, Manufacturer, PartNumber, Capacity, Speed, ConfiguredClockSpeed FROM Win32_PhysicalMemory");
                 foreach (ManagementObject obj in s.Get())
                 {
                     ulong capBytes = ulong.TryParse(obj["Capacity"]?.ToString(), out ulong b) ? b : 0;
@@ -584,15 +628,15 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     ramRows.Add(new HardwareSpecRow { Label = loc, Value = $"{gb} GB @ {speed} MHz · {mfg} ({part})" });
                     slot++;
                 }
+            }
             catch { }
             if (ramRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Memoria RAM (Módulos)" : "Memory Modules (RAM)", Specs = ramRows });
 
-            // 5. ALMACENAMIENTO COMPLETO
             var diskRows = new List<HardwareSpecRow>();
             try
             {
-                using var s = new ManagementObjectSearcher("SELECT Model, InterfaceType, MediaType, Size, Partitions, SerialNumber FROM Win32_DiskDrive");
+                using var s = new ManagementObjectSearcher("SELECT Model, InterfaceType, Size, Partitions FROM Win32_DiskDrive");
                 foreach (ManagementObject obj in s.Get())
                 {
                     ulong diskBytes = ulong.TryParse(obj["Size"]?.ToString(), out ulong b) ? b : 0;
@@ -604,15 +648,15 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                         Value = $"{cap} · {obj["InterfaceType"]} · {obj["Partitions"]} part."
                     });
                 }
+            }
             catch { }
             if (diskRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Almacenamiento (Unidades)" : "Storage Drives", Specs = diskRows });
 
-            // 6. RED Y SISTEMA OPERATIVO
             var sysRows = new List<HardwareSpecRow>();
             try
             {
-                using var os = new ManagementObjectSearcher("SELECT Caption, Version, BuildNumber, OSArchitecture, SystemDirectory FROM Win32_OperatingSystem");
+                using var os = new ManagementObjectSearcher("SELECT Caption, Version, BuildNumber, OSArchitecture FROM Win32_OperatingSystem");
                 foreach (ManagementObject obj in os.Get())
                 {
                     sysRows.Add(new HardwareSpecRow { Label = isEs ? "Sistema operativo" : "Operating system", Value = $"{obj["Caption"]} ({obj["OSArchitecture"]})" });
@@ -630,14 +674,13 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     sysRows.Add(new HardwareSpecRow { Label = isEs ? "Velocidad de enlace" : "Link speed", Value = speedMbps > 0 ? $"{speedMbps} Mbps" : "--" });
                     sysRows.Add(new HardwareSpecRow { Label = "MAC Address", Value = activeNic.GetPhysicalAddress().ToString() });
                 }
+            }
             catch { }
             if (sysRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Red y Sistema Operativo" : "Network & Operating System", Specs = sysRows });
 
             return sections;
         }
-
-        // ==================== RENDIMIENTO EN TIEMPO REAL ====================
 
         private async void BtnOpenPerformance_Click(object sender, RoutedEventArgs e)
         {
@@ -698,6 +741,7 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                         }
                         break;
                     }
+                }
                 catch { }
 
                 try
@@ -711,6 +755,8 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                             _cachedRamSpeed = $"{spd} MHz";
                             break;
                         }
+                    }
+                }
                 catch { }
 
                 try
@@ -769,6 +815,7 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                             cpuClock = clk;
                         break;
                     }
+                }
                 catch { }
 
                 try
@@ -781,6 +828,8 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                             tempC = Math.Round((rawTenths / 10.0) - 273.15, 1);
                             break;
                         }
+                    }
+                }
                 catch { }
 
                 try
@@ -793,6 +842,7 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                             diskMbSec = bps / (1024.0 * 1024.0);
                         break;
                     }
+                }
                 catch { }
 
                 try
@@ -883,6 +933,7 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     pts.Add(new Point(x, y));
                     idx++;
                 }
+            }
 
             line.Points = pts;
         }
@@ -949,6 +1000,7 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     recv += stats.BytesReceived;
                     sent += stats.BytesSent;
                 }
+            }
             catch { }
 
             DateTime now = DateTime.UtcNow;
@@ -973,8 +1025,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
 
             return (downKbps, upKbps);
         }
-
-        // ==================== PREPARACIÓN DEL SISTEMA (ANIMACIÓN SUAVE Y EJECUCIÓN ÚNICA) ====================
 
         private void BtnStartStepZero_Click(object sender, RoutedEventArgs e)
         {
@@ -1109,6 +1159,7 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                 TxtModalPercent.Text = $"{i}%";
                 await Task.Delay(delay);
             }
+        }
 
         private void EnterMainOptimizerView()
         {
@@ -1132,8 +1183,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
             _telemetryTimer.Stop();
         }
 
-        // ==================== CATÁLOGO DE APPS CON LOGOS REALES ====================
-
         private void InitializeCatalogAndApps()
         {
             var baseTweaks = TweakCatalog.GetAllTweaks();
@@ -1145,10 +1194,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                 {
                     item.Category = "Apps";
                     _appSubGroups[item.Id] = "Runtimes & Essentials";
-                    if (item.Id == "install_vcredist")
-                        item.IconGeometry = "https://learn.microsoft.com/favicon.ico";
-                    else if (item.Id == "install_directx")
-                        item.IconGeometry = "https://www.microsoft.com/favicon.ico";
                 }
                 catalog.Add(item);
             }
@@ -1253,6 +1298,7 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     if (item.IsDetailsOpen)
                         item.IsDetailsOpen = false;
                 }
+            }
 
             _currentCategory = newCategory;
 
@@ -1276,6 +1322,7 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
             {
                 item.IsDetailsOpen = !item.IsDetailsOpen;
             }
+        }
 
         private void TweakSwitch_Click(object sender, RoutedEventArgs e)
         {
@@ -1355,11 +1402,5 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
             BtnApplyChanges.IsEnabled = true;
             BtnRestoreOriginal.IsEnabled = true;
         }
-    
-        private void BtnTabSignIn_Click(object sender, RoutedEventArgs e) => SetAccountModalMode(false);
-        private void BtnTabRegister_Click(object sender, RoutedEventArgs e) => SetAccountModalMode(true);
-
-
-
-
+    }
 }
