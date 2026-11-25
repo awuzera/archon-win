@@ -15,6 +15,38 @@
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
+        <Storyboard x:Key="AmbientGlowStoryboard" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetName="AuroraTopTransform"
+                             Storyboard.TargetProperty="X"
+                             From="-160" To="160" Duration="0:0:12" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="AuroraTop"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0.68" To="1.0" Duration="0:0:7" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+            <DoubleAnimation Storyboard.TargetName="AuroraCenterTransform"
+                             Storyboard.TargetProperty="Y"
+                             From="-45" To="45" Duration="0:0:10" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+            <DoubleAnimation Storyboard.TargetName="AuroraBottomTransform"
+                             Storyboard.TargetProperty="X"
+                             From="150" To="-150" Duration="0:0:14" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
         <Style x:Key="TopBarUtilityButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#0E111A"/>
             <Setter Property="Foreground" Value="#D4D6E0"/>

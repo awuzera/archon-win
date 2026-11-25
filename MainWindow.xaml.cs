@@ -133,8 +133,14 @@ namespace Archon
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            if (Application.Current.Resources["AmbientGlowStoryboard"] is Storyboard sb)
-                sb.Begin();
+            try
+            {
+                if (Resources["AmbientGlowStoryboard"] is Storyboard winSb)
+                    winSb.Begin(this);
+                else if (Application.Current.Resources["AmbientGlowStoryboard"] is Storyboard appSb)
+                    appSb.Begin(this);
+            }
+            catch { }
 
             InitializeCatalogAndApps();
             UpdateSelectionCounter();
