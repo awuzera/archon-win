@@ -16,56 +16,44 @@
 
     <Window.Resources>
         <SolidColorBrush x:Key="BgCardBlack" Color="#09090D"/>
-        <SolidColorBrush x:Key="BgCardHover" Color="#11121A"/>
+        <SolidColorBrush x:Key="BgCardHover" Color="#11131C"/>
         <SolidColorBrush x:Key="BorderDark" Color="#1D1E28"/>
-        <SolidColorBrush x:Key="BorderHover" Color="#2F3B52"/>
-        <SolidColorBrush x:Key="AccentPrimary" Color="#3478C6"/>
-        <SolidColorBrush x:Key="AccentPrimaryHover" Color="#4388D6"/>
+        <SolidColorBrush x:Key="BorderHover" Color="#2E3D59"/>
+        <SolidColorBrush x:Key="AccentPrimary" Color="#255EA8"/>
+        <SolidColorBrush x:Key="AccentPrimaryHover" Color="#2E6EC0"/>
+        <SolidColorBrush x:Key="AccentLine" Color="#3574C4"/>
         <SolidColorBrush x:Key="TextSecondary" Color="#D0D0DA"/>
         <SolidColorBrush x:Key="TextMuted" Color="#9696A4"/>
 
-        <!-- ANIMACIÓN SUAVE PARA EL FONDO DIFUMINADO -->
+        <!-- ANIMACIÓN ATMOSFÉRICA NATURAL (SIN CÍRCULOS VISIBLES) -->
         <Storyboard x:Key="AmbientGlowStoryboard" RepeatBehavior="Forever">
-            <DoubleAnimation Storyboard.TargetName="GlowTopTransform"
-                             Storyboard.TargetProperty="X"
-                             From="-55" To="55" Duration="0:0:9" AutoReverse="True">
-                <DoubleAnimation.EasingFunction>
-                    <SineEase EasingMode="EaseInOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="GlowTopTransform"
-                             Storyboard.TargetProperty="Y"
-                             From="-15" To="25" Duration="0:0:7" AutoReverse="True">
+            <DoubleAnimation Storyboard.TargetName="AuroraPrimary"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0.58" To="0.95" Duration="0:0:7.5" AutoReverse="True">
                 <DoubleAnimation.EasingFunction>
                     <SineEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
 
-            <DoubleAnimation Storyboard.TargetName="GlowRightTransform"
+            <DoubleAnimation Storyboard.TargetName="AuroraPrimaryTransform"
                              Storyboard.TargetProperty="X"
-                             From="35" To="-45" Duration="0:0:11" AutoReverse="True">
-                <DoubleAnimation.EasingFunction>
-                    <SineEase EasingMode="EaseInOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="GlowRightTransform"
-                             Storyboard.TargetProperty="Y"
-                             From="20" To="-30" Duration="0:0:8" AutoReverse="True">
+                             From="-90" To="90" Duration="0:0:14" AutoReverse="True">
                 <DoubleAnimation.EasingFunction>
                     <SineEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
 
-            <DoubleAnimation Storyboard.TargetName="GlowLeftTransform"
-                             Storyboard.TargetProperty="X"
-                             From="-30" To="40" Duration="0:0:10" AutoReverse="True">
+            <DoubleAnimation Storyboard.TargetName="AuroraSecondary"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0.85" To="0.42" Duration="0:0:9" AutoReverse="True">
                 <DoubleAnimation.EasingFunction>
                     <SineEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="GlowLeftTransform"
-                             Storyboard.TargetProperty="Y"
-                             From="-20" To="25" Duration="0:0:8.5" AutoReverse="True">
+
+            <DoubleAnimation Storyboard.TargetName="AuroraSecondaryTransform"
+                             Storyboard.TargetProperty="X"
+                             From="80" To="-80" Duration="0:0:16" AutoReverse="True">
                 <DoubleAnimation.EasingFunction>
                     <SineEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
@@ -107,7 +95,7 @@
         <!-- BARRA DE PROGRESO REDONDEADA -->
         <Style TargetType="ProgressBar">
             <Setter Property="Height" Value="8"/>
-            <Setter Property="Background" Value="#161822"/>
+            <Setter Property="Background" Value="#161924"/>
             <Setter Property="Foreground" Value="{StaticResource AccentPrimary}"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -246,7 +234,7 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="RowBg" Property="Background" Value="{StaticResource BgCardHover}"/>
                                 <Setter TargetName="RowBg" Property="BorderBrush" Value="{StaticResource BorderHover}"/>
-                                <Setter TargetName="LeftAccent" Property="Background" Value="#3478C6"/>
+                                <Setter TargetName="LeftAccent" Property="Background" Value="#255EA8"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="RowBg" Property="Opacity" Value="0.5"/>
@@ -309,8 +297,8 @@
         <Border.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                 <GradientStop Color="#06070A" Offset="0"/>
-                <GradientStop Color="#0A0D16" Offset="0.5"/>
-                <GradientStop Color="#07080C" Offset="1"/>
+                <GradientStop Color="#090C14" Offset="0.5"/>
+                <GradientStop Color="#06070B" Offset="1"/>
             </LinearGradientBrush>
         </Border.Background>
 
@@ -320,15 +308,16 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- BARRA SUPERIOR NEGRA CON LÍNEA RECTA DIVISORIA E ÍCONO DE OJO -->
+            <!-- BARRA SUPERIOR NEGRA CON LÍNEA RECTA DIVISORIA E ÍCONO DE OJO REDISEÑADO -->
             <Border Grid.Row="0" Background="#050507" BorderBrush="#1D1F2B" BorderThickness="0,0,0,1">
                 <Grid>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
-                        <Viewbox Width="22" Height="22" Margin="0,0,10,0">
-                            <Canvas Width="64" Height="64">
-                                <Path Data="M4,32 Q32,10 60,32 Q32,54 4,32 Z" Fill="#0D131F" Stroke="#3478C6" StrokeThickness="4" StrokeLineJoin="Round"/>
-                                <Ellipse Canvas.Left="22" Canvas.Top="22" Width="20" Height="20" Stroke="#FFFFFF" StrokeThickness="3" Fill="#090D16"/>
-                                <Ellipse Canvas.Left="28" Canvas.Top="28" Width="8" Height="8" Fill="#3478C6"/>
+                        <Viewbox Width="22" Height="18" Margin="0,0,10,0">
+                            <Canvas Width="64" Height="48">
+                                <Path Data="M4,25 C18,8 46,8 60,25" Stroke="#3574C4" StrokeThickness="4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                <Path Data="M11,29 C23,41 41,41 53,29" Stroke="#3574C4" StrokeThickness="3.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                <Ellipse Canvas.Left="22" Canvas.Top="14" Width="20" Height="20" Stroke="#FFFFFF" StrokeThickness="2.8" Fill="#090D16"/>
+                                <Ellipse Canvas.Left="28" Canvas.Top="20" Width="8" Height="8" Fill="#3574C4"/>
                             </Canvas>
                         </Viewbox>
                         <TextBlock Text="Archon" FontWeight="SemiBold" FontSize="14.5" Foreground="#F5F5F8" VerticalAlignment="Center"/>
@@ -342,62 +331,47 @@
                 </Grid>
             </Border>
 
-            <!-- CONTENEDOR PRINCIPAL (DEBAJO DE LA BARRA NEGRA) -->
+            <!-- CONTENEDOR PRINCIPAL -->
             <Grid Grid.Row="1">
 
-                <!-- FONDO DIFUMINADO AZUL ANIMADO (3 ESFERAS CON MOVIMIENTO SUAVE) -->
+                <!-- FONDO ATMOSFÉRICO CONTINUO (SIN CÍRCULOS MARCADOS) -->
                 <Grid x:Name="AmbientGlowLayer" IsHitTestVisible="False" ClipToBounds="True">
-                    <Ellipse Width="740" Height="400" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-130,0,0">
+                    <Ellipse x:Name="AuroraPrimary" Width="1380" Height="640" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="-180,-250,-180,0">
                         <Ellipse.RenderTransform>
-                            <TranslateTransform x:Name="GlowTopTransform" X="0" Y="0"/>
+                            <TranslateTransform x:Name="AuroraPrimaryTransform" X="0" Y="0"/>
                         </Ellipse.RenderTransform>
                         <Ellipse.Fill>
                             <RadialGradientBrush>
-                                <GradientStop Color="#563478C6" Offset="0"/>
-                                <GradientStop Color="#243478C6" Offset="0.52"/>
-                                <GradientStop Color="#003478C6" Offset="1"/>
+                                <GradientStop Color="#44255EA8" Offset="0"/>
+                                <GradientStop Color="#20255EA8" Offset="0.5"/>
+                                <GradientStop Color="#00255EA8" Offset="1"/>
                             </RadialGradientBrush>
                         </Ellipse.Fill>
                         <Ellipse.Effect>
-                            <BlurEffect Radius="95"/>
+                            <BlurEffect Radius="150"/>
                         </Ellipse.Effect>
                     </Ellipse>
 
-                    <Ellipse Width="620" Height="390" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-120,-100">
+                    <Ellipse x:Name="AuroraSecondary" Width="1260" Height="620" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="-120,0,-120,-260">
                         <Ellipse.RenderTransform>
-                            <TranslateTransform x:Name="GlowRightTransform" X="0" Y="0"/>
+                            <TranslateTransform x:Name="AuroraSecondaryTransform" X="0" Y="0"/>
                         </Ellipse.RenderTransform>
                         <Ellipse.Fill>
                             <RadialGradientBrush>
-                                <GradientStop Color="#402963B8" Offset="0"/>
-                                <GradientStop Color="#182963B8" Offset="0.55"/>
-                                <GradientStop Color="#002963B8" Offset="1"/>
+                                <GradientStop Color="#361E4F91" Offset="0"/>
+                                <GradientStop Color="#161E4F91" Offset="0.55"/>
+                                <GradientStop Color="#001E4F91" Offset="1"/>
                             </RadialGradientBrush>
                         </Ellipse.Fill>
                         <Ellipse.Effect>
-                            <BlurEffect Radius="100"/>
-                        </Ellipse.Effect>
-                    </Ellipse>
-
-                    <Ellipse Width="480" Height="320" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-90,0,0,-80">
-                        <Ellipse.RenderTransform>
-                            <TranslateTransform x:Name="GlowLeftTransform" X="0" Y="0"/>
-                        </Ellipse.RenderTransform>
-                        <Ellipse.Fill>
-                            <RadialGradientBrush>
-                                <GradientStop Color="#303478C6" Offset="0"/>
-                                <GradientStop Color="#003478C6" Offset="1"/>
-                            </RadialGradientBrush>
-                        </Ellipse.Fill>
-                        <Ellipse.Effect>
-                            <BlurEffect Radius="90"/>
+                            <BlurEffect Radius="150"/>
                         </Ellipse.Effect>
                     </Ellipse>
                 </Grid>
 
-                <!-- VISTA 1: PRESENTACIÓN CON LOGO DE OJO Y TRANSICIÓN -->
+                <!-- VISTA 1: PRESENTACIÓN CON OJO REDISEÑADO PEGADO AL TÍTULO -->
                 <ScrollViewer x:Name="WelcomeView" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel x:Name="WelcomeContentPanel" MaxWidth="720" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="32,16,32,32">
+                    <StackPanel x:Name="WelcomeContentPanel" MaxWidth="720" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="32,12,32,32">
                         <StackPanel.Triggers>
                             <EventTrigger RoutedEvent="FrameworkElement.Loaded">
                                 <BeginStoryboard>
@@ -408,8 +382,8 @@
                             </EventTrigger>
                         </StackPanel.Triggers>
 
-                        <!-- LOGO DE OJO ARCHON -->
-                        <Border x:Name="WelcomeLogoContainer" Width="96" Height="76" HorizontalAlignment="Center" Margin="0,0,0,16" Background="Transparent" Cursor="Hand">
+                        <!-- LOGO DE OJO GEOMÉTRICO ABIERTO -->
+                        <Border x:Name="WelcomeLogoContainer" Width="88" Height="52" HorizontalAlignment="Center" Margin="0,0,0,2" Background="Transparent" Cursor="Hand">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
@@ -423,8 +397,8 @@
                                             <Trigger.EnterActions>
                                                 <BeginStoryboard>
                                                     <Storyboard>
-                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.06" Duration="0:0:0.18"/>
-                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.06" Duration="0:0:0.18"/>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.05" Duration="0:0:0.18"/>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.05" Duration="0:0:0.18"/>
                                                     </Storyboard>
                                                 </BeginStoryboard>
                                             </Trigger.EnterActions>
@@ -441,23 +415,25 @@
                                 </Style>
                             </Border.Style>
 
-                            <Viewbox Width="88" Height="68">
-                                <Canvas Width="80" Height="56">
-                                    <!-- Contorno exterior del ojo -->
-                                    <Path Data="M4,28 Q40,2 76,28 Q40,54 4,28 Z" Fill="#0C121E" Stroke="#3478C6" StrokeThickness="2.8" StrokeLineJoin="Round"/>
+                            <Viewbox Width="84" Height="50">
+                                <Canvas Width="84" Height="50">
                                     <!-- Arco superior sutil -->
-                                    <Path Data="M16,22 Q40,8 64,22" Stroke="#5897E0" StrokeThickness="1.2" Opacity="0.6"/>
+                                    <Path Data="M20,12 C32,4 52,4 64,12" Stroke="#4D89D6" StrokeThickness="1.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.75"/>
+                                    <!-- Párpado superior -->
+                                    <Path Data="M5,26 C23,6 61,6 79,26" Stroke="#3574C4" StrokeThickness="3.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    <!-- Párpado inferior abierto -->
+                                    <Path Data="M14,30 C29,44 55,44 70,30" Stroke="#2A61A8" StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                                     <!-- Iris -->
-                                    <Ellipse Canvas.Left="27" Canvas.Top="15" Width="26" Height="26" Fill="#090D16" Stroke="#FFFFFF" StrokeThickness="2.4"/>
+                                    <Ellipse Canvas.Left="29" Canvas.Top="13" Width="26" Height="26" Fill="#080B13" Stroke="#FFFFFF" StrokeThickness="2.3"/>
                                     <!-- Pupila -->
-                                    <Ellipse Canvas.Left="35" Canvas.Top="23" Width="10" Height="10" Fill="#3478C6"/>
-                                    <!-- Reflejo óptico -->
-                                    <Ellipse Canvas.Left="43" Canvas.Top="19" Width="3.5" Height="3.5" Fill="#FFFFFF"/>
+                                    <Ellipse Canvas.Left="37" Canvas.Top="21" Width="10" Height="10" Fill="#255EA8"/>
+                                    <!-- Brillo óptico -->
+                                    <Ellipse Canvas.Left="43.5" Canvas.Top="17.5" Width="3.2" Height="3.2" Fill="#FFFFFF"/>
                                 </Canvas>
                             </Viewbox>
                         </Border>
 
-                        <TextBlock Text="Archon" FontSize="38" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                        <TextBlock Text="Archon" FontSize="38" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,4"/>
 
                         <TextBlock Text="Bienvenido" FontSize="17.5" Foreground="{StaticResource TextSecondary}"
                                    HorizontalAlignment="Center" Margin="0,0,0,28"/>
@@ -549,8 +525,12 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- VISTA 2: PREPARACIÓN DEL SISTEMA -->
+                <!-- VISTA 2: PREPARACIÓN DEL SISTEMA (CON DESENFOQUE DINÁMICO AL ABRIR MODAL) -->
                 <ScrollViewer x:Name="StepZeroView" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ScrollViewer.Effect>
+                        <BlurEffect x:Name="StepZeroBlur" Radius="0"/>
+                    </ScrollViewer.Effect>
+
                     <StackPanel Width="900" HorizontalAlignment="Center" Margin="24,14,24,40">
 
                         <!-- BOTÓN INICIO -->
@@ -571,9 +551,9 @@
                         <!-- AVISO DE BLOATWARE DETECTADO -->
                         <Border x:Name="BloatAlertBox" Visibility="Collapsed" Background="#0C111C" BorderBrush="#23334F" BorderThickness="1" CornerRadius="5" Padding="18,13" Margin="0,0,0,16">
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="M12,3 L22,20 H2 Z M12,9 V13 M12,17 H12.01" Stroke="#72AEF2" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="18" Height="18" Stretch="Uniform" Margin="0,1,12,0" VerticalAlignment="Top"/>
+                                <Path Data="M12,3 L22,20 H2 Z M12,9 V13 M12,17 H12.01" Stroke="#5D9BE6" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="18" Height="18" Stretch="Uniform" Margin="0,1,12,0" VerticalAlignment="Top"/>
                                 <StackPanel>
-                                    <TextBlock Text="Software adicional de fabricante detectado" FontSize="14.5" FontWeight="SemiBold" Foreground="#72AEF2" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Software adicional de fabricante detectado" FontSize="14.5" FontWeight="SemiBold" Foreground="#5D9BE6" Margin="0,0,0,2"/>
                                     <TextBlock x:Name="TxtDetectedBloatList" Text="" FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </StackPanel>
@@ -595,21 +575,21 @@
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="Instalar" FontSize="14.5" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
-                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3478C6" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
+                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3574C4" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
                                 </StackPanel>
                             </Grid>
                         </Button>
 
-                        <!-- BARRA DESPLEGABLE DE OPCIÓN 1 (PORCENTAJE EN BLANCO) -->
-                        <Border x:Name="ProgressPanelFresh" Visibility="Collapsed" Background="#07080C" BorderBrush="#1D1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,5,5" Padding="24,14" Margin="0,0,0,12">
+                        <!-- BARRA DESPLEGABLE DE OPCIÓN 1 -->
+                        <Border x:Name="ProgressPanelFresh" Visibility="Collapsed" Background="#07080C" BorderBrush="#1D1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,5,5" Padding="24,14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" x:Name="TxtStatusFresh" Text="Preparando..." FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtPercentFresh" Text="0%" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock Grid.Column="0" x:Name="TxtStatusFresh" Text="Completado" FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtPercentFresh" Text="100%" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 </Grid>
                                 <ProgressBar x:Name="ProgressFresh" Minimum="0" Maximum="100" Value="0"/>
                             </StackPanel>
@@ -633,12 +613,12 @@
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="Limpiar" FontSize="14.5" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
-                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3478C6" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
+                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3574C4" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
                                 </StackPanel>
                             </Grid>
                         </Button>
 
-                        <!-- BARRA DESPLEGABLE DE OPCIÓN 2 (PORCENTAJE EN BLANCO) -->
+                        <!-- BARRA DESPLEGABLE DE OPCIÓN 2 -->
                         <Border x:Name="ProgressPanelClean" Visibility="Collapsed" Background="#07080C" BorderBrush="#1D1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,5,5" Padding="24,14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,8">
@@ -646,8 +626,8 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" x:Name="TxtStatusClean" Text="Preparando..." FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtPercentClean" Text="0%" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock Grid.Column="0" x:Name="TxtStatusClean" Text="Completado" FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtPercentClean" Text="100%" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 </Grid>
                                 <ProgressBar x:Name="ProgressClean" Minimum="0" Maximum="100" Value="0"/>
                             </StackPanel>
@@ -674,12 +654,12 @@
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="Continuar" FontSize="14.5" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
-                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3478C6" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
+                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3574C4" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
                                 </StackPanel>
                             </Grid>
                         </Button>
 
-                        <!-- BARRA DESPLEGABLE DE OPCIÓN 3 (PORCENTAJE EN BLANCO) -->
+                        <!-- BARRA DESPLEGABLE DE OPCIÓN 3 -->
                         <Border x:Name="ProgressPanelSkip" Visibility="Collapsed" Background="#07080C" BorderBrush="#1D1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,5,5" Padding="24,14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,8">
@@ -711,7 +691,7 @@
                             <StackPanel Grid.Column="0">
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Path Data="M12,2 L20,6 V12 C20,17.5 16.5,21.5 12,23 C7.5,21.5 4,17.5 4,12 V6 L12,2 Z"
-                                          Stroke="#3478C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
+                                          Stroke="#3574C4" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
                                     <TextBlock Text="Respaldo preventivo" FontSize="15.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 </StackPanel>
                                 <TextBlock Text="Guarda una copia exacta del estado actual de Windows antes de tocar cualquier clave. No consume rendimiento y usa como máximo el 5% del disco."
@@ -721,7 +701,7 @@
                             <StackPanel Grid.Column="2">
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Path Data="M4,6 H20 V18 H4 Z M8,2 V6 M16,2 V6"
-                                          Stroke="#3478C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
+                                          Stroke="#3574C4" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
                                     <TextBlock Text="Drivers sin basura" FontSize="15.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 </StackPanel>
                                 <TextBlock Text="Evita que Windows Update instale paquetes genéricos y prepara Chipset y GPU sin servicios corriendo en segundo plano."
@@ -731,7 +711,7 @@
                             <StackPanel Grid.Column="4">
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Path Data="M3,7 A2,2 0 0 1 5,5 H9 L11,7 H19 A2,2 0 0 1 21,9 V17 A2,2 0 0 1 19,19 H5 A2,2 0 0 1 3,17 Z"
-                                          Stroke="#3478C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
+                                          Stroke="#3574C4" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
                                     <TextBlock Text="Cambios reversibles" FontSize="15.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 </StackPanel>
                                 <TextBlock Text="Cada ajuste permite revisar qué modifica en el Registro y volver al estado original de Windows en un clic."
@@ -741,7 +721,38 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- VISTA 3: PANEL DE AJUSTES (CATEGORÍA "APPS" EN LUGAR DE "INSTALADOR DÍA 0") -->
+                <!-- MODAL EMERGENTE SOBRE FONDO DIFUMINADO -->
+                <Grid x:Name="PrepModalOverlay" Visibility="Collapsed" Background="#8A050609">
+                    <Border x:Name="PrepModalCard" Width="490" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Background="#0A0C12" BorderBrush="#26344F" BorderThickness="1" CornerRadius="7" Padding="30,26">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="42" ShadowDepth="10" Color="#000000" Opacity="0.88"/>
+                        </Border.Effect>
+
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <Ellipse Width="9" Height="9" Fill="#3574C4" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtModalTitle" Text="Preparando sistema" FontSize="18" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                            </StackPanel>
+
+                            <TextBlock x:Name="TxtModalMessage" Text="Creando punto de restauración preventivo en el sistema..."
+                                       FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21" Margin="0,0,0,20"/>
+
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Progreso" FontSize="13.5" Foreground="{StaticResource TextMuted}"/>
+                                <TextBlock Grid.Column="1" x:Name="TxtModalPercent" Text="0%" FontSize="14.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                            </Grid>
+
+                            <ProgressBar x:Name="ModalProgressBar" Height="9" Minimum="0" Maximum="100" Value="0"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- VISTA 3: PANEL DE AJUSTES -->
                 <Grid x:Name="MainOptimizerView" Visibility="Collapsed" Margin="20,14,20,20">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="215"/>

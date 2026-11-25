@@ -59,7 +59,9 @@ namespace Archon
             {
                 ShowView(StepZeroView);
                 _currentPrepTarget = PrepTarget.Clean;
-                await ExecuteDriverInstallationPipelineAsync();
+                OpenPrepModal("Completando preparación del sistema");
+                await ExecuteDriverInstallationPipelineAsync(
+                    "Limpieza finalizada. Base lista al 100%.");
             }
         }
 
@@ -98,20 +100,21 @@ namespace Archon
 
         private void BtnStartStepZero_Click(object sender, RoutedEventArgs e)
         {
-            ResetInlineProgressPanels();
+            ClosePrepModal();
             ShowView(StepZeroView);
             StepZeroView.ScrollToTop();
         }
 
         private void BtnBackToWelcome_Click(object sender, RoutedEventArgs e)
         {
+            ClosePrepModal();
             ShowView(WelcomeView);
             WelcomeView.ScrollToTop();
         }
 
         private void BtnBackToStepZero_Click(object sender, RoutedEventArgs e)
         {
-            ResetInlineProgressPanels();
+            ClosePrepModal();
             ToggleStepZeroButtons(true);
             ShowView(StepZeroView);
             StepZeroView.ScrollToTop();
@@ -126,9 +129,27 @@ namespace Archon
 
             if (_ambientStoryboard != null)
             {
-                _ambientStoryboard.SetSpeedRatio(this, isWelcome ? 1.0 : 0.35);
+                _ambientStoryboard.SetSpeedRatio(this, isWelcome ? 1.0 : 0.45);
                 AmbientGlowLayer.Opacity = isWelcome ? 1.0 : 0.72;
             }
+        }
+
+        private void OpenPrepModal(string title)
+        {
+            TxtModalTitle.Text = title;
+            TxtModalMessage.Text = "Iniciando proceso...";
+            TxtModalPercent.Text = "0%";
+            ModalProgressBar.IsIndeterminate = false;
+            ModalProgressBar.Value = 0;
+
+            StepZeroBlur.Radius = 14;
+            PrepModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void ClosePrepModal()
+        {
+            PrepModalOverlay.Visibility = Visibility.Collapsed;
+            StepZeroBlur.Radius = 0;
         }
 
         private void ResetInlineProgressPanels()
@@ -137,27 +158,25 @@ namespace Archon
             ProgressPanelFresh.Visibility = Visibility.Collapsed;
             ProgressPanelClean.Visibility = Visibility.Collapsed;
             ProgressPanelSkip.Visibility = Visibility.Collapsed;
-
-            ProgressFresh.IsIndeterminate = false;
-            ProgressFresh.Value = 0;
-            TxtPercentFresh.Text = "0%";
-
-            ProgressClean.IsIndeterminate = false;
-            ProgressClean.Value = 0;
-            TxtPercentClean.Text = "0%";
-
-            ProgressSkip.IsIndeterminate = false;
-            ProgressSkip.Value = 0;
-            TxtPercentSkip.Text = "0%";
         }
 
-        private void UpdateInlineProgress(string message, int percent, bool isIndeterminate = false)
+        private void UpdateProgressState(string message, int percent, bool isIndeterminate = false, bool updateInline = true)
         {
+            string pctText = isIndeterminate ? "..." : $"{percent}%";
+
+            if (PrepModalOverlay.Visibility == Visibility.Visible)
+            {
+                TxtModalMessage.Text = message;
+                TxtModalPercent.Text = pctText;
+                ModalProgressBar.IsIndeterminate = isIndeterminate;
+                if (!isIndeterminate) ModalProgressBar.Value = percent;
+            }
+
+            if (!updateInline) return;
+
             ProgressPanelFresh.Visibility = _currentPrepTarget == PrepTarget.Fresh ? Visibility.Visible : Visibility.Collapsed;
             ProgressPanelClean.Visibility = _currentPrepTarget == PrepTarget.Clean ? Visibility.Visible : Visibility.Collapsed;
             ProgressPanelSkip.Visibility = _currentPrepTarget == PrepTarget.Skip ? Visibility.Visible : Visibility.Collapsed;
-
-            string pctText = isIndeterminate ? "..." : $"{percent}%";
 
             switch (_currentPrepTarget)
             {
@@ -189,9 +208,12 @@ namespace Archon
             ResetInlineProgressPanels();
             _currentPrepTarget = PrepTarget.Fresh;
             ToggleStepZeroButtons(false);
+            OpenPrepModal("Preparando Windows recién instalado");
 
             if (!await EnsureMandatoryRestorePointAsync()) return;
-            await ExecuteDriverInstallationPipelineAsync();
+
+            await ExecuteDriverInstallationPipelineAsync(
+                "Controladores esenciales configurados. Base completada.");
         }
 
         private async void BtnCleanAndInstall_Click(object sender, RoutedEventArgs e)
@@ -199,20 +221,24 @@ namespace Archon
             ResetInlineProgressPanels();
             _currentPrepTarget = PrepTarget.Clean;
             ToggleStepZeroButtons(false);
+            OpenPrepModal("Limpiando drivers y utilidades previas");
 
             if (!await EnsureMandatoryRestorePointAsync()) return;
 
-            UpdateInlineProgress("Bloqueando drivers automáticos de Windows Update...", 45);
+            UpdateProgressState("Bloqueando instalación automática de drivers desde Windows Update...", 55);
             StepZeroOrchestrator.SetWindowsUpdateDriverBlock(true);
-            await Task.Delay(400);
+            await Task.Delay(500);
 
-            UpdateInlineProgress("Programando reanudación automática tras reinicio...", 80);
+            UpdateProgressState("Preparando entorno limpio y reanudación tras reinicio...", 85);
             _state.PendingPostRebootInstall = true;
             StepZeroOrchestrator.SaveState(_state);
             StepZeroOrchestrator.RegisterPostRebootResume();
-            await Task.Delay(400);
+            await Task.Delay(500);
 
-            UpdateInlineProgress("Listo para reiniciar y completar la limpieza de controladores.", 100);
+            UpdateProgressState("Listo para reiniciar y completar la limpieza de controladores.", 100);
+            await Task.Delay(450);
+
+            ClosePrepModal();
             ToggleStepZeroButtons(true);
         }
 
@@ -224,8 +250,8 @@ namespace Archon
 
             if (!await EnsureMandatoryRestorePointAsync()) return;
 
-            UpdateInlineProgress("Respaldo listo. Abriendo panel de ajustes...", 100);
-            await Task.Delay(350);
+            UpdateProgressState("Respaldo preventivo verificado. Abriendo panel de ajustes...", 100);
+            await Task.Delay(300);
 
             _state.StepZeroCompleted = true;
             StepZeroOrchestrator.SaveState(_state);
@@ -236,48 +262,50 @@ namespace Archon
         {
             if (_state.RestorePointCreated)
             {
-                UpdateInlineProgress("Punto de restauración verificado.", 30);
-                await Task.Delay(250);
+                UpdateProgressState("Punto de restauración preventivo verificado.", 30);
+                await Task.Delay(300);
                 return true;
             }
 
-            UpdateInlineProgress("Creando punto de restauración preventivo en el sistema...", 15, isIndeterminate: true);
+            UpdateProgressState("Creando punto de restauración preventivo en el sistema...", 15, isIndeterminate: true);
 
             bool ok = await RestorePointManager.CreateMandatoryRestorePointAsync();
 
             if (!ok)
             {
-                UpdateInlineProgress("No se pudo crear el punto de restauración. Verificá que el servicio VSS esté activo.", 0);
+                UpdateProgressState("No se pudo crear el punto de restauración. Verificá que el servicio VSS esté activo.", 0);
+                await Task.Delay(700);
+                ClosePrepModal();
                 ToggleStepZeroButtons(true);
                 return false;
             }
 
             _state.RestorePointCreated = true;
             StepZeroOrchestrator.SaveState(_state);
-            UpdateInlineProgress("Punto de restauración guardado correctamente.", 30);
-            await Task.Delay(300);
+            UpdateProgressState("Punto de restauración guardado correctamente.", 30);
+            await Task.Delay(350);
             return true;
         }
 
-        private async Task ExecuteDriverInstallationPipelineAsync()
+        private async Task ExecuteDriverInstallationPipelineAsync(string finalInlineMessage)
         {
             ToggleStepZeroButtons(false);
             StepZeroOrchestrator.SetWindowsUpdateDriverBlock(true);
 
             if (_hardware.IsAmdCpu)
             {
-                UpdateInlineProgress("Preparando instalación limpia de Chipset AMD...", 55);
+                UpdateProgressState("Preparando perfil limpio de Chipset AMD...", 55);
                 await Task.Delay(700);
             }
 
             if (_hardware.HasNvidiaGpu)
             {
-                UpdateInlineProgress("Aplicando perfil limpio sin telemetría para NVIDIA...", 80);
+                UpdateProgressState("Configurando controlador NVIDIA sin telemetría ni paneles extra...", 82);
                 await Task.Delay(700);
             }
             else if (_hardware.HasAmdGpu)
             {
-                UpdateInlineProgress("Instalando controlador gráfico AMD Radeon...", 80);
+                UpdateProgressState("Configurando controlador gráfico AMD Radeon...", 82);
                 await Task.Delay(700);
             }
 
@@ -286,10 +314,11 @@ namespace Archon
             _state.StepZeroCompleted = true;
             StepZeroOrchestrator.SaveState(_state);
 
-            UpdateInlineProgress("Base preparada correctamente. Abriendo panel de ajustes...", 100);
-            await Task.Delay(500);
+            UpdateProgressState(finalInlineMessage, 100);
+            await Task.Delay(450);
 
-            UnlockMainOptimizer();
+            ClosePrepModal();
+            ToggleStepZeroButtons(true);
         }
 
         private void UnlockMainOptimizer()
