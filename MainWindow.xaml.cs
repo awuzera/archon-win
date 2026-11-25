@@ -12,9 +12,11 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Archon.Core;
 using Archon.Models;
+using Microsoft.Win32;
 
 namespace Archon
 {
@@ -56,21 +58,23 @@ namespace Archon
         private ICollectionView? _tweaksView;
         private string _currentCategory = "Apps";
         private string _currentLang = "EN";
-        private string? _signedInUser;
+        private string? _signedInUser = "Agustín";
+        private string? _avatarImagePath;
+        private string _activeOptimizationProfile = "Predeterminado";
         private bool _isRegisterMode;
+        private bool _isSystemPrepared;
         private SystemHardwareProfile? _hardwareProfile;
         private bool _isHardwareScanned;
 
         private readonly Dictionary<string, string> _appSubGroups = new();
 
-        // Telemetría en tiempo real
         private readonly DispatcherTimer _telemetryTimer;
         private readonly Queue<double> _cpuHistory = new();
         private readonly Queue<double> _gpuHistory = new();
         private readonly Queue<double> _ramHistory = new();
         private readonly Queue<double> _diskHistory = new();
         private readonly Queue<double> _netHistory = new();
-        private const int MaxHistoryPoints = 36;
+        private const int MaxHistoryPoints = 40;
 
         private ulong _prevIdleTime;
         private ulong _prevKernelTime;
@@ -129,12 +133,13 @@ namespace Archon
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            if (Resources["AmbientGlowStoryboard"] is Storyboard sb)
+            if (Application.Current.Resources["AmbientGlowStoryboard"] is Storyboard sb)
                 sb.Begin();
 
             InitializeCatalogAndApps();
             UpdateSelectionCounter();
             ApplyLanguage("EN");
+            RefreshAccountUI();
         }
 
         // ==================== BARRA SUPERIOR Y DESPLEGABLE DE IDIOMAS ====================
@@ -170,13 +175,11 @@ namespace Archon
             bool isJa = lang == "JA";
             bool isRu = lang == "RU";
 
+            TxtProfilePrefix.Text = isEs ? "Perfil:" : isJa ? "プロファイル:" : isRu ? "Профиль:" : "Profile:";
             TxtWelcomeSubtitle.Text = isEs ? "Bienvenido" : isJa ? "ようこそ" : isRu ? "Добро пожаловать" : "Welcome";
             TxtStartButtonLabel.Text = isEs ? "Comenzar" : isJa ? "開始する" : isRu ? "Начать" : "Get Started";
             TxtScanButtonLabel.Text = isEs ? "Ver mis componentes" : isJa ? "コンポーネントを表示" : isRu ? "Мои компоненты" : "View my components";
             TxtPerformanceButtonLabel.Text = isEs ? "Rendimiento" : isJa ? "パフォーマンス" : isRu ? "Производительность" : "Performance";
-
-            TxtHardwareLoadingTitle.Text = isEs ? "Analizando componentes del equipo..." : isJa ? "システムハードウェアをスキャン中..." : isRu ? "Сканирование оборудования..." : "Scanning system hardware...";
-            TxtHardwareLoadingSub.Text = isEs ? "Leyendo sensores de procesador, gráfica, memoria RAM y almacenamiento..." : "Reading CPU, GPU, RAM, storage and motherboard sensors...";
 
             TxtDetectedComponentsTitle.Text = isEs ? "Componentes detectados" : isJa ? "検出されたコンポーネント" : isRu ? "Обнаруженные компоненты" : "Detected components";
             TxtSeeMoreLabel.Text = isEs ? "Ver más" : isJa ? "詳細を見る" : isRu ? "Подробнее" : "See more";
@@ -188,14 +191,36 @@ namespace Archon
             TxtLblOs.Text = isEs ? "Sistema operativo" : isJa ? "OS" : isRu ? "Операционная система" : "Operating system";
 
             TxtBackHomeLabel.Text = isEs ? "Volver al inicio" : isJa ? "ホームに戻る" : isRu ? "На главную" : "Back to home";
+            TxtBackFromSettingsLabel.Text = TxtBackHomeLabel.Text;
             TxtPerfBackLabel.Text = TxtBackHomeLabel.Text;
             TxtFullSpecsTitle.Text = isEs ? "Especificaciones completas del sistema" : isJa ? "システム完全仕様" : isRu ? "Полные характеристики системы" : "Full system specifications";
+            TxtDeepScanTitle.Text = isEs ? "Cargando especificaciones avanzadas del sistema..." : "Loading advanced system specifications...";
+            TxtDeepScanSub.Text = isEs ? "Consultando procesador, gráfica, placa base, BIOS, RAM, discos y red..." : "Querying CPU architecture, BIOS, memory slots, drives, network adapters and OS details...";
 
             TxtPerfTitle.Text = isEs ? "Rendimiento en tiempo real" : isJa ? "リアルタイムパフォーマンス" : isRu ? "Производительность в реальном времени" : "Real-time hardware performance";
-            TxtPerfSubtitle.Text = isEs ? "Monitoreo continuo de carga, temperaturas, frecuencias, memoria y tráfico de red." : "Live utilization, temperatures, clock speeds, memory and network throughput.";
+            TxtPerfSubtitle.Text = isEs ? "Telemetría continua de procesador, gráficos, memoria, almacenamiento y red." : "Continuous system telemetry across processor, graphics, memory, storage and network.";
+            TxtPerfOverviewTitle.Text = isEs ? "CURVA DE CARGA DEL SISTEMA" : "SYSTEM LOAD CURVE";
 
-            TxtHomeNavLabel.Text = isEs ? "Inicio" : isJa ? "ホーム" : isRu ? "Главная" : "Home";
-            TxtPrepTitle.Text = isEs ? "Preparación del sistema" : isJa ? "システム準備" : isRu ? "Подготовка системы" : "System preparation";
+            TxtSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
+            TxtSubTabGeneral.Content = isEs ? "Configuración General" : "General Settings";
+            TxtChooseAvatarPhoto.Content = isEs ? "Cargar foto" : "Load photo";
+            TxtProfileSectionTitle.Text = isEs ? "Cuenta e Identidad" : "Account & Identity";
+            TxtProfileNameLabel.Text = isEs ? "Nombre visible" : "Display name";
+            TxtSaveProfileChanges.Content = isEs ? "Guardar perfil" : "Save profile";
+            TxtSignOutProfile.Content = isEs ? "Cerrar sesión" : "Sign out";
+
+            TxtGenBlockTitle.Text = isEs ? "General e Interfaz" : "General & Interface";
+            TxtOptNotifications.Text = isEs ? "Notificaciones de escritorio al completar tareas" : "Desktop notifications for completed tasks";
+            TxtOptExperimental.Text = isEs ? "Activar funciones de prueba y telemetría experimental" : "Enable experimental features & preview telemetry";
+            TxtOptAnalytics.Text = isEs ? "Análisis diagnóstico anónimo de rendimiento" : "Anonymous diagnostic & performance analytics";
+            TxtGenSystemBlockTitle.Text = isEs ? "Actualizaciones, Comentarios y Acerca de" : "Updates, Feedback & About";
+            TxtCheckUpdates.Content = isEs ? "Buscar actualizaciones" : "Check for updates";
+            TxtShareFeedback.Content = isEs ? "Compartir / Comentarios" : "Share / Feedback";
+            TxtResetSettings.Content = isEs ? "Restablecer configuraciones" : "Reset settings";
+            TxtAboutArchon.Content = isEs ? "Acerca de Archon" : "About Archon";
+
+            TxtHomeNavLabel.Text = isEs ? "Inicio" : "Home";
+            TxtPrepTitle.Text = isEs ? "Preparación del sistema" : "System preparation";
             TxtPrepSubtitle.Text = isEs ? "Elegí el estado actual de tu Windows para preparar los controladores antes de entrar al panel de optimización." : "Choose your current Windows state to prepare drivers before entering the optimization panel.";
             TxtBloatTitle.Text = isEs ? "Software adicional de fabricante detectado" : "OEM additional software detected";
 
@@ -233,29 +258,131 @@ namespace Archon
             BtnRestoreOriginal.Content = isEs ? "Restaurar originales" : "Restore defaults";
             BtnApplyChanges.Content = isEs ? "Aplicar cambios" : "Apply changes";
 
-            RefreshAccountLabels();
+            RefreshAccountUI();
             UpdateSelectionCounter();
         }
 
-        // ==================== CUENTA / INICIO DE SESIÓN Y REGISTRO ====================
+        // ==================== PERFIL, AVATAR, SELECTOR DE PERFILES Y CONFIGURACIÓN ====================
 
-        private void BtnOpenSignIn_Click(object sender, RoutedEventArgs e)
+        private void BtnProfileDropdown_Click(object sender, RoutedEventArgs e)
         {
-            SetAccountModalMode(false);
-            TxtAccountInput.Text = _signedInUser ?? string.Empty;
-            AccountModalOverlay.Visibility = Visibility.Visible;
+            ProfilePopup.IsOpen = !ProfilePopup.IsOpen;
         }
 
-        private void BtnOpenRegister_Click(object sender, RoutedEventArgs e)
+        private void SelectOptimizationProfile_Click(object sender, RoutedEventArgs e)
         {
-            SetAccountModalMode(true);
-            TxtAccountInput.Text = string.Empty;
-            TxtAccountPassInput.Password = string.Empty;
-            AccountModalOverlay.Visibility = Visibility.Visible;
+            ProfilePopup.IsOpen = false;
+            if (sender is Button btn && btn.Tag is string profileName)
+            {
+                _activeOptimizationProfile = profileName;
+                TxtActiveProfileName.Text = profileName;
+            }
         }
 
-        private void BtnTabSignIn_Click(object sender, RoutedEventArgs e) => SetAccountModalMode(false);
-        private void BtnTabRegister_Click(object sender, RoutedEventArgs e) => SetAccountModalMode(true);
+        private void BtnOpenMyProfile_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_signedInUser))
+            {
+                SetAccountModalMode(false);
+                TxtAccountInput.Text = string.Empty;
+                TxtAccountPassInput.Password = string.Empty;
+                AccountModalOverlay.Visibility = Visibility.Visible;
+                return;
+            }
+
+            OpenSettingsAndProfileTab(showGeneral: false);
+        }
+
+        private void BtnOpenGeneralSettings_Click(object sender, RoutedEventArgs e)
+        {
+            OpenSettingsAndProfileTab(showGeneral: true);
+        }
+
+        private void OpenSettingsAndProfileTab(bool showGeneral)
+        {
+            WelcomeView.Visibility = Visibility.Collapsed;
+            StepZeroView.Visibility = Visibility.Collapsed;
+            MainOptimizerView.Visibility = Visibility.Collapsed;
+            FullHardwareView.Visibility = Visibility.Collapsed;
+            PerformanceView.Visibility = Visibility.Collapsed;
+            SettingsAndProfileView.Visibility = Visibility.Visible;
+
+            if (showGeneral)
+                BtnSubTabGeneral_Click(BtnSubTabGeneral, new RoutedEventArgs());
+            else
+                BtnSubTabProfile_Click(BtnSubTabProfile, new RoutedEventArgs());
+        }
+
+        private void BtnSubTabProfile_Click(object sender, RoutedEventArgs e)
+        {
+            SubPanelProfile.Visibility = Visibility.Visible;
+            SubPanelGeneral.Visibility = Visibility.Collapsed;
+            BtnSubTabProfile.Style = (Style)FindResource("PrimaryButtonStyle");
+            BtnSubTabGeneral.Style = (Style)FindResource("SoftCardButtonStyle");
+            TxtProfileDisplayName.Text = _signedInUser ?? string.Empty;
+        }
+
+        private void BtnSubTabGeneral_Click(object sender, RoutedEventArgs e)
+        {
+            SubPanelProfile.Visibility = Visibility.Collapsed;
+            SubPanelGeneral.Visibility = Visibility.Visible;
+            BtnSubTabGeneral.Style = (Style)FindResource("PrimaryButtonStyle");
+            BtnSubTabProfile.Style = (Style)FindResource("SoftCardButtonStyle");
+        }
+
+        private void BtnBackFromSettings_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsAndProfileView.Visibility = Visibility.Collapsed;
+            WelcomeView.Visibility = Visibility.Visible;
+        }
+
+        private void BtnChooseAvatarPhoto_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new OpenFileDialog
+            {
+                Filter = "Imágenes (*.png;*.jpg;*.jpeg;*.webp)|*.png;*.jpg;*.jpeg;*.webp|Todos los archivos (*.*)|*.*"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                _avatarImagePath = dlg.FileName;
+                RefreshAccountUI();
+                TxtProfileFeedback.Text = _currentLang == "ES" ? "Foto de perfil cargada." : "Profile photo loaded.";
+            }
+        }
+
+        private void BtnSaveProfileChanges_Click(object sender, RoutedEventArgs e)
+        {
+            string newName = TxtProfileDisplayName.Text.Trim();
+            if (string.IsNullOrWhiteSpace(newName))
+                return;
+
+            _signedInUser = newName;
+            RefreshAccountUI();
+            TxtProfileFeedback.Text = _currentLang == "ES" ? "✓ Cambios guardados en tu perfil." : "✓ Profile changes saved.";
+        }
+
+        private void BtnSettingsAction_Click(object sender, RoutedEventArgs e)
+        {
+            bool isEs = _currentLang == "ES";
+            if (sender == BtnCheckUpdates)
+                TxtSettingsStatusMsg.Text = isEs ? "Archon v1.0 · Estás en la última compilación." : "Archon v1.0 · You are on the latest build.";
+            else if (sender == BtnShareFeedback)
+                TxtSettingsStatusMsg.Text = isEs ? "Comentarios habilitados para la próxima versión de Archon." : "Feedback notes ready for the next Archon release.";
+            else if (sender == BtnAboutArchon)
+                TxtSettingsStatusMsg.Text = isEs ? "Archon System Optimizer · Perfil activo: " + _activeOptimizationProfile : "Archon System Optimizer · Active profile: " + _activeOptimizationProfile;
+        }
+
+        private void BtnResetSettings_Click(object sender, RoutedEventArgs e)
+        {
+            ChkOptNotifications.IsChecked = true;
+            ChkOptExperimental.IsChecked = false;
+            ChkOptAnalytics.IsChecked = true;
+            _activeOptimizationProfile = "Predeterminado";
+            TxtActiveProfileName.Text = _activeOptimizationProfile;
+            ApplyLanguage("EN");
+            TxtSettingsStatusMsg.Text = "✓ Settings restored to default values.";
+        }
 
         private void SetAccountModalMode(bool register)
         {
@@ -272,76 +399,79 @@ namespace Archon
 
         private void BtnAccountSave_Click(object sender, RoutedEventArgs e)
         {
-            string input = TxtAccountInput.Text.Trim();
-            if (string.IsNullOrWhiteSpace(input))
+            string chosenName = _isRegisterMode && !string.IsNullOrWhiteSpace(TxtRegisterDisplayName.Text)
+                ? TxtRegisterDisplayName.Text.Trim()
+                : TxtAccountInput.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(chosenName))
                 return;
 
-            _signedInUser = input;
+            _signedInUser = chosenName;
             AccountModalOverlay.Visibility = Visibility.Collapsed;
-            RefreshAccountLabels();
+            RefreshAccountUI();
         }
 
         private void BtnAccountSignOut_Click(object sender, RoutedEventArgs e)
         {
             _signedInUser = null;
+            _avatarImagePath = null;
             TxtAccountInput.Text = string.Empty;
             TxtAccountPassInput.Password = string.Empty;
+            TxtRegisterDisplayName.Text = string.Empty;
             AccountModalOverlay.Visibility = Visibility.Collapsed;
-            RefreshAccountLabels();
+            RefreshAccountUI();
+
+            if (SettingsAndProfileView.Visibility == Visibility.Visible)
+            {
+                SettingsAndProfileView.Visibility = Visibility.Collapsed;
+                WelcomeView.Visibility = Visibility.Visible;
+            }
         }
 
-        private void RefreshAccountLabels()
+        private void RefreshAccountUI()
         {
             bool isEs = _currentLang == "ES";
-            if (!string.IsNullOrWhiteSpace(_signedInUser))
+            bool loggedIn = !string.IsNullOrWhiteSpace(_signedInUser);
+            string label = loggedIn ? _signedInUser! : (isEs ? "Perfil Invitado" : "Guest Profile");
+            string initial = loggedIn ? label.Substring(0, 1).ToUpperInvariant() : "?";
+
+            WelcomeAvatarInitial.Text = initial;
+            ProfilePageAvatarInitial.Text = initial;
+            SidebarAvatarInitial.Text = initial;
+
+            TxtSidebarUser.Text = label;
+            TxtSidebarUserStatus.Text = loggedIn
+                ? (isEs ? "Sesión iniciada" : "Signed in")
+                : (isEs ? "Iniciar sesión" : "Sign in");
+
+            BitmapImage? avatarBmp = null;
+            if (!string.IsNullOrWhiteSpace(_avatarImagePath) && System.IO.File.Exists(_avatarImagePath))
             {
-                string initial = _signedInUser.Substring(0, 1).ToUpperInvariant();
-                WelcomeTopAvatarInitial.Text = initial;
-                WelcomeCardAvatarInitial.Text = initial;
-                SidebarAvatarInitial.Text = initial;
-
-                TxtWelcomeTopUser.Text = _signedInUser;
-                TxtWelcomeTopSub.Text = isEs ? "Sesión activa · Sincronizado" : "Signed in · Synced";
-
-                TxtWelcomeAuthTitle.Text = isEs ? $"Conectado como {_signedInUser}" : $"Signed in as {_signedInUser}";
-                TxtWelcomeAuthDesc.Text = isEs ? "Tus perfiles de optimización y listas de apps están vinculados." : "Your optimization presets and app selections are linked.";
-
-                TxtSidebarUser.Text = _signedInUser;
-                TxtSidebarUserStatus.Text = isEs ? "Cuenta conectada" : "Connected account";
-
-                BtnWelcomeSignIn.Visibility = Visibility.Collapsed;
-                BtnWelcomeRegister.Visibility = Visibility.Collapsed;
-                BtnWelcomeSignOutInline.Visibility = Visibility.Visible;
-                BtnWelcomeSignOutInline.Content = isEs ? "Cerrar sesión" : "Sign out";
-                BtnAccountSignOut.Visibility = Visibility.Visible;
+                try
+                {
+                    var bmp = new BitmapImage();
+                    bmp.BeginInit();
+                    bmp.UriSource = new Uri(_avatarImagePath, UriKind.Absolute);
+                    bmp.CacheOption = BitmapCacheOption.OnLoad;
+                    bmp.EndInit();
+                    bmp.Freeze();
+                    avatarBmp = bmp;
+                }
+                catch { }
             }
-            else
-            {
-                WelcomeTopAvatarInitial.Text = "A";
-                WelcomeCardAvatarInitial.Text = "?";
-                SidebarAvatarInitial.Text = "A";
 
-                TxtWelcomeTopUser.Text = isEs ? "Perfil Invitado" : "Guest Profile";
-                TxtWelcomeTopSub.Text = isEs ? "Iniciar sesión para sincronizar" : "Sign in to sync";
+            WelcomeAvatarBrush.ImageSource = avatarBmp;
+            ProfilePageAvatarBrush.ImageSource = avatarBmp;
+            SidebarAvatarBrush.ImageSource = avatarBmp;
 
-                TxtWelcomeAuthTitle.Text = isEs ? "Perfil en la nube de Archon" : "Archon Cloud Profile";
-                TxtWelcomeAuthDesc.Text = isEs ? "Iniciá sesión o registrate para guardar tus ajustes y configuraciones." : "Sign in or create an account to save your tweaks and presets.";
-
-                TxtSidebarUser.Text = isEs ? "Perfil Invitado" : "Guest Profile";
-                TxtSidebarUserStatus.Text = isEs ? "Gestionar cuenta" : "Manage account";
-
-                BtnWelcomeSignIn.Visibility = Visibility.Visible;
-                BtnWelcomeRegister.Visibility = Visibility.Visible;
-                BtnWelcomeSignIn.Content = isEs ? "Iniciar sesión" : "Sign in";
-                BtnWelcomeRegister.Content = isEs ? "Registrarse" : "Register";
-                BtnWelcomeSignOutInline.Visibility = Visibility.Collapsed;
-                BtnAccountSignOut.Visibility = Visibility.Collapsed;
-            }
+            WelcomeAvatarInitial.Visibility = avatarBmp == null ? Visibility.Visible : Visibility.Collapsed;
+            ProfilePageAvatarInitial.Visibility = avatarBmp == null ? Visibility.Visible : Visibility.Collapsed;
+            SidebarAvatarInitial.Visibility = avatarBmp == null ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        // ==================== ESCANEO DE COMPONENTES CON CARGA PREVIA ====================
+        // ==================== COMPONENTES: RESUMEN INSTANTÁNEO + CARGA EN VER MÁS ====================
 
-        private async void BtnScanHardware_Click(object sender, RoutedEventArgs e)
+        private void BtnScanHardware_Click(object sender, RoutedEventArgs e)
         {
             if (HardwareListPanel.Visibility == Visibility.Visible)
             {
@@ -349,39 +479,14 @@ namespace Archon
                 return;
             }
 
-            BtnScanHardware.IsEnabled = false;
-            HardwareListPanel.Visibility = Visibility.Collapsed;
-            HardwareLoadingPanel.Visibility = Visibility.Visible;
-
-            Storyboard? spinnerSb = Resources["HardwareScanSpinnerStoryboard"] as Storyboard;
-            spinnerSb?.Begin();
-
-            try
+            if (!_isHardwareScanned || _hardwareProfile == null)
             {
-                if (!_isHardwareScanned || _hardwareProfile == null)
-                {
-                    var scanTask = Task.Run(() => HardwareDetector.ScanSystem());
-                    var minDelay = Task.Delay(950);
-                    await Task.WhenAll(scanTask, minDelay);
-                    _hardwareProfile = await scanTask;
-                    _isHardwareScanned = true;
-                }
-                else
-                {
-                    await Task.Delay(450);
-                }
+                _hardwareProfile = HardwareDetector.ScanSystem();
+                _isHardwareScanned = true;
+            }
 
-                PopulateSummaryHardwareUI(_hardwareProfile);
-            }
-            finally
-            {
-                spinnerSb?.Stop();
-                HardwareLoadingPanel.Visibility = Visibility.Collapsed;
-                HardwareListPanel.Opacity = 0;
-                HardwareListPanel.Visibility = Visibility.Visible;
-                HardwareListPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260)));
-                BtnScanHardware.IsEnabled = true;
-            }
+            PopulateSummaryHardwareUI(_hardwareProfile);
+            HardwareListPanel.Visibility = Visibility.Visible;
         }
 
         private void PopulateSummaryHardwareUI(SystemHardwareProfile profile)
@@ -404,15 +509,30 @@ namespace Archon
         {
             WelcomeView.Visibility = Visibility.Collapsed;
             FullHardwareView.Visibility = Visibility.Visible;
-            FullHardwareSlideTransform.Y = 18;
+            FullHardwareSectionsControl.ItemsSource = null;
+            FullHardwareLoadingPanel.Visibility = Visibility.Visible;
+
+            Storyboard? deepSpinner = Application.Current.Resources["DeepScanSpinnerStoryboard"] as Storyboard;
+            deepSpinner?.Begin();
+
+            FullHardwareSlideTransform.Y = 20;
             FullHardwareContainer.Opacity = 0;
+            FullHardwareContainer.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(320)));
+            FullHardwareSlideTransform.BeginAnimation(TranslateTransform.YProperty,
+                new DoubleAnimation(20, 0, TimeSpan.FromMilliseconds(360)) { EasingFunction = new QuarticEase { EasingMode = EasingMode.EaseOut } });
 
-            FullHardwareContainer.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260)));
-            FullHardwareSlideTransform.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty,
-                new DoubleAnimation(18, 0, TimeSpan.FromMilliseconds(260)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
-
-            var sections = await Task.Run(BuildFullHardwareSections);
-            FullHardwareSectionsControl.ItemsSource = sections;
+            try
+            {
+                var scanTask = Task.Run(BuildFullHardwareSections);
+                var minSpinnerDelay = Task.Delay(750);
+                await Task.WhenAll(scanTask, minSpinnerDelay);
+                FullHardwareSectionsControl.ItemsSource = await scanTask;
+            }
+            finally
+            {
+                deepSpinner?.Stop();
+                FullHardwareLoadingPanel.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void BtnBackFromFullHardware_Click(object sender, RoutedEventArgs e)
@@ -426,16 +546,23 @@ namespace Archon
             bool isEs = _currentLang == "ES";
             var sections = new List<HardwareSpecSection>();
 
+            // 1. PROCESADOR COMPLETO
             var cpuRows = new List<HardwareSpecRow>();
             try
             {
-                using var s = new ManagementObjectSearcher("SELECT Name, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed, L2CacheSize, L3CacheSize, SocketDesignation FROM Win32_Processor");
+                using var s = new ManagementObjectSearcher("SELECT Name, Manufacturer, Architecture, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed, CurrentClockSpeed, L2CacheSize, L3CacheSize, SocketDesignation, VirtualizationFirmwareEnabled FROM Win32_Processor");
                 foreach (ManagementObject obj in s.Get())
                 {
-                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Modelo" : "Model", Value = (obj["Name"]?.ToString() ?? "").Trim() });
-                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Núcleos / Hilos" : "Cores / Threads", Value = $"{obj["NumberOfCores"]} Cores / {obj["NumberOfLogicalProcessors"]} Threads" });
-                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Frecuencia máxima" : "Max boost clock", Value = $"{obj["MaxClockSpeed"]} MHz" });
+                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Modelo" : "Model", Value = (obj["Name"]?.ToString() ?? "--").Trim() });
+                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Fabricante" : "Manufacturer", Value = obj["Manufacturer"]?.ToString() ?? "--" });
+                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Núcleos físicos" : "Physical cores", Value = obj["NumberOfCores"]?.ToString() ?? "--" });
+                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Procesadores lógicos (hilos)" : "Logical processors", Value = obj["NumberOfLogicalProcessors"]?.ToString() ?? "--" });
+                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Frecuencia actual" : "Current clock", Value = $"{obj["CurrentClockSpeed"]} MHz" });
+                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Frecuencia máxima" : "Max clock", Value = $"{obj["MaxClockSpeed"]} MHz" });
+                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Caché L2" : "L2 cache", Value = $"{obj["L2CacheSize"]} KB" });
+                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Caché L3" : "L3 cache", Value = $"{obj["L3CacheSize"]} KB" });
                     cpuRows.Add(new HardwareSpecRow { Label = "Socket", Value = obj["SocketDesignation"]?.ToString() ?? "--" });
+                    cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Virtualización firmware" : "Firmware virtualization", Value = obj["VirtualizationFirmwareEnabled"]?.ToString() ?? "--" });
                     break;
                 }
             }
@@ -443,37 +570,47 @@ namespace Archon
             if (cpuRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Procesador (CPU)" : "Processor (CPU)", Specs = cpuRows });
 
+            // 2. TARJETA GRÁFICA COMPLETA
             var gpuRows = new List<HardwareSpecRow>();
             try
             {
-                using var s = new ManagementObjectSearcher("SELECT Name, DriverVersion, VideoProcessor, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate FROM Win32_VideoController");
+                using var s = new ManagementObjectSearcher("SELECT Name, AdapterCompatibility, VideoProcessor, AdapterRAM, DriverVersion, DriverDate, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate, Status FROM Win32_VideoController");
+                int idx = 1;
                 foreach (ManagementObject obj in s.Get())
                 {
                     string name = obj["Name"]?.ToString() ?? "";
-                    if (name.Contains("Basic", StringComparison.OrdinalIgnoreCase)) continue;
-                    gpuRows.Add(new HardwareSpecRow { Label = isEs ? "Adaptador" : "Adapter", Value = name });
-                    gpuRows.Add(new HardwareSpecRow { Label = isEs ? "Versión de driver" : "Driver version", Value = obj["DriverVersion"]?.ToString() ?? "--" });
-                    gpuRows.Add(new HardwareSpecRow { Label = isEs ? "Resolución activa" : "Active display", Value = $"{obj["CurrentHorizontalResolution"]}x{obj["CurrentVerticalResolution"]} @ {obj["CurrentRefreshRate"]} Hz" });
+                    if (string.IsNullOrWhiteSpace(name)) continue;
+                    string prefix = idx > 1 ? $"GPU #{idx} · " : "";
+                    gpuRows.Add(new HardwareSpecRow { Label = $"{prefix}{(isEs ? "Adaptador" : "Adapter")}", Value = name });
+                    gpuRows.Add(new HardwareSpecRow { Label = $"{prefix}{(isEs ? "Procesador de video" : "Video processor")}", Value = obj["VideoProcessor"]?.ToString() ?? "--" });
+                    if (ulong.TryParse(obj["AdapterRAM"]?.ToString(), out ulong vram) && vram > 0)
+                        gpuRows.Add(new HardwareSpecRow { Label = $"{prefix}VRAM", Value = $"{Math.Round(vram / (1024.0 * 1024.0 * 1024.0), 1)} GB" });
+                    gpuRows.Add(new HardwareSpecRow { Label = $"{prefix}{(isEs ? "Versión driver" : "Driver version")}", Value = obj["DriverVersion"]?.ToString() ?? "--" });
+                    gpuRows.Add(new HardwareSpecRow { Label = $"{prefix}{(isEs ? "Resolución y tasa" : "Resolution & refresh")}", Value = $"{obj["CurrentHorizontalResolution"]}x{obj["CurrentVerticalResolution"]} @ {obj["CurrentRefreshRate"]} Hz" });
+                    gpuRows.Add(new HardwareSpecRow { Label = $"{prefix}{(isEs ? "Estado" : "Status")}", Value = obj["Status"]?.ToString() ?? "--" });
+                    idx++;
                 }
             }
             catch { }
             if (gpuRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Tarjeta Gráfica (GPU)" : "Graphics (GPU)", Specs = gpuRows });
 
+            // 3. PLACA BASE Y BIOS
             var moboRows = new List<HardwareSpecRow>();
             try
             {
-                using var s = new ManagementObjectSearcher("SELECT Manufacturer, Product, Version FROM Win32_BaseBoard");
+                using var s = new ManagementObjectSearcher("SELECT Manufacturer, Product, Version, SerialNumber FROM Win32_BaseBoard");
                 foreach (ManagementObject obj in s.Get())
                 {
                     moboRows.Add(new HardwareSpecRow { Label = isEs ? "Fabricante" : "Manufacturer", Value = obj["Manufacturer"]?.ToString() ?? "--" });
-                    moboRows.Add(new HardwareSpecRow { Label = isEs ? "Modelo" : "Board model", Value = obj["Product"]?.ToString() ?? "--" });
+                    moboRows.Add(new HardwareSpecRow { Label = isEs ? "Modelo de placa" : "Board model", Value = obj["Product"]?.ToString() ?? "--" });
+                    moboRows.Add(new HardwareSpecRow { Label = isEs ? "Revisión" : "Revision", Value = obj["Version"]?.ToString() ?? "--" });
                     break;
                 }
-                using var bios = new ManagementObjectSearcher("SELECT SMBIOSBIOSVersion, ReleaseDate FROM Win32_BIOS");
+                using var bios = new ManagementObjectSearcher("SELECT Manufacturer, SMBIOSBIOSVersion, Name FROM Win32_BIOS");
                 foreach (ManagementObject obj in bios.Get())
                 {
-                    moboRows.Add(new HardwareSpecRow { Label = "BIOS", Value = obj["SMBIOSBIOSVersion"]?.ToString() ?? "--" });
+                    moboRows.Add(new HardwareSpecRow { Label = "BIOS", Value = $"{obj["Manufacturer"]} · {obj["SMBIOSBIOSVersion"]}" });
                     break;
                 }
             }
@@ -481,48 +618,80 @@ namespace Archon
             if (moboRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Placa Base y BIOS" : "Motherboard & BIOS", Specs = moboRows });
 
+            // 4. MEMORIA RAM POR MÓDULO
             var ramRows = new List<HardwareSpecRow>();
             try
             {
                 int slot = 1;
-                using var s = new ManagementObjectSearcher("SELECT Manufacturer, PartNumber, Capacity, Speed, ConfiguredClockSpeed FROM Win32_PhysicalMemory");
+                using var s = new ManagementObjectSearcher("SELECT DeviceLocator, Manufacturer, PartNumber, Capacity, Speed, ConfiguredClockSpeed, ConfiguredVoltage FROM Win32_PhysicalMemory");
                 foreach (ManagementObject obj in s.Get())
                 {
                     ulong capBytes = ulong.TryParse(obj["Capacity"]?.ToString(), out ulong b) ? b : 0;
                     double gb = Math.Round(capBytes / (1024.0 * 1024.0 * 1024.0));
                     string speed = obj["ConfiguredClockSpeed"]?.ToString() ?? obj["Speed"]?.ToString() ?? "--";
                     string part = (obj["PartNumber"]?.ToString() ?? "").Trim();
-                    ramRows.Add(new HardwareSpecRow { Label = $"Slot {slot++}", Value = $"{gb} GB @ {speed} MHz ({part})" });
+                    string mfg = (obj["Manufacturer"]?.ToString() ?? "").Trim();
+                    string loc = obj["DeviceLocator"]?.ToString() ?? $"Slot {slot}";
+                    ramRows.Add(new HardwareSpecRow { Label = loc, Value = $"{gb} GB @ {speed} MHz · {mfg} ({part})" });
+                    slot++;
                 }
             }
             catch { }
             if (ramRows.Count > 0)
-                sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Módulos de Memoria RAM" : "Memory Modules (RAM)", Specs = ramRows });
+                sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Memoria RAM (Módulos)" : "Memory Modules (RAM)", Specs = ramRows });
 
+            // 5. ALMACENAMIENTO COMPLETO
             var diskRows = new List<HardwareSpecRow>();
             try
             {
-                using var s = new ManagementObjectSearcher("SELECT Model, InterfaceType, Size FROM Win32_DiskDrive");
+                using var s = new ManagementObjectSearcher("SELECT Model, InterfaceType, MediaType, Size, Partitions, SerialNumber FROM Win32_DiskDrive");
                 foreach (ManagementObject obj in s.Get())
                 {
                     ulong diskBytes = ulong.TryParse(obj["Size"]?.ToString(), out ulong b) ? b : 0;
                     double gb = Math.Round(diskBytes / (1000.0 * 1000.0 * 1000.0));
-                    string cap = gb >= 1000 ? $"{Math.Round(gb / 1000.0, 1)} TB" : $"{gb} GB";
+                    string cap = gb >= 1000 ? $"{Math.Round(gb / 1000.0, 2)} TB" : $"{gb} GB";
                     diskRows.Add(new HardwareSpecRow
                     {
                         Label = obj["Model"]?.ToString() ?? "Disk",
-                        Value = $"{cap} ({obj["InterfaceType"]})"
+                        Value = $"{cap} · {obj["InterfaceType"]} · {obj["Partitions"]} part."
                     });
                 }
             }
             catch { }
             if (diskRows.Count > 0)
-                sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Unidades de Almacenamiento" : "Storage Drives", Specs = diskRows });
+                sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Almacenamiento (Unidades)" : "Storage Drives", Specs = diskRows });
+
+            // 6. RED Y SISTEMA OPERATIVO
+            var sysRows = new List<HardwareSpecRow>();
+            try
+            {
+                using var os = new ManagementObjectSearcher("SELECT Caption, Version, BuildNumber, OSArchitecture, SystemDirectory FROM Win32_OperatingSystem");
+                foreach (ManagementObject obj in os.Get())
+                {
+                    sysRows.Add(new HardwareSpecRow { Label = isEs ? "Sistema operativo" : "Operating system", Value = $"{obj["Caption"]} ({obj["OSArchitecture"]})" });
+                    sysRows.Add(new HardwareSpecRow { Label = isEs ? "Versión y compilación" : "Version & build", Value = $"{obj["Version"]} (Build {obj["BuildNumber"]})" });
+                    break;
+                }
+
+                var activeNic = NetworkInterface.GetAllNetworkInterfaces()
+                    .FirstOrDefault(n => n.OperationalStatus == OperationalStatus.Up &&
+                                         n.NetworkInterfaceType != NetworkInterfaceType.Loopback);
+                if (activeNic != null)
+                {
+                    double speedMbps = activeNic.Speed / 1_000_000.0;
+                    sysRows.Add(new HardwareSpecRow { Label = isEs ? "Adaptador de red activo" : "Active network adapter", Value = $"{activeNic.Name} ({activeNic.NetworkInterfaceType})" });
+                    sysRows.Add(new HardwareSpecRow { Label = isEs ? "Velocidad de enlace" : "Link speed", Value = speedMbps > 0 ? $"{speedMbps} Mbps" : "--" });
+                    sysRows.Add(new HardwareSpecRow { Label = "MAC Address", Value = activeNic.GetPhysicalAddress().ToString() });
+                }
+            }
+            catch { }
+            if (sysRows.Count > 0)
+                sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Red y Sistema Operativo" : "Network & Operating System", Specs = sysRows });
 
             return sections;
         }
 
-        // ==================== VISTA DE RENDIMIENTO EN TIEMPO REAL ====================
+        // ==================== RENDIMIENTO EN TIEMPO REAL ====================
 
         private async void BtnOpenPerformance_Click(object sender, RoutedEventArgs e)
         {
@@ -530,6 +699,7 @@ namespace Archon
             StepZeroView.Visibility = Visibility.Collapsed;
             MainOptimizerView.Visibility = Visibility.Collapsed;
             FullHardwareView.Visibility = Visibility.Collapsed;
+            SettingsAndProfileView.Visibility = Visibility.Collapsed;
             PerformanceView.Visibility = Visibility.Visible;
 
             if (!_perfStaticLoaded)
@@ -628,7 +798,6 @@ namespace Archon
             var (ramPct, ramUsedGb, ramTotalGb) = SampleMemoryUsage();
             var (downKbps, upKbps) = SampleNetworkThroughput();
 
-            // Actualizar HUD compacto en MainOptimizerView si está visible
             if (MainOptimizerView.Visibility == Visibility.Visible)
             {
                 TxtOptStatCpuVal.Text = $"{cpuPct:0}%";
@@ -640,7 +809,6 @@ namespace Archon
             if (PerformanceView.Visibility != Visibility.Visible)
                 return;
 
-            // Consultar sensores WMI livianos en segundo plano
             var wmiMetrics = await Task.Run(() =>
             {
                 double gpuPct = 0;
@@ -704,6 +872,8 @@ namespace Archon
                 return (gpuPct, diskPct: Math.Min(100, diskPct), diskMbSec, cpuClock, tempC);
             });
 
+            TxtPerfOverviewSummary.Text = $"CPU {cpuPct:0}% · GPU {wmiMetrics.gpuPct:0}% · RAM {ramPct:0}%";
+
             TxtPerfCpuPct.Text = $"{cpuPct:0}%";
             PerfCpuBar.Value = cpuPct;
             TxtPerfCpuClock.Text = wmiMetrics.cpuClock > 0 ? $"Clock: {wmiMetrics.cpuClock} MHz" : "Clock: Active";
@@ -718,21 +888,23 @@ namespace Archon
             TxtPerfRamUsed.Text = $"{ramUsedGb:0.0} / {ramTotalGb:0.0} GB";
 
             TxtPerfDiskPct.Text = $"{wmiMetrics.diskPct:0}%";
-            PerfDiskBar.Value = wmiMetrics.diskPct;
-            TxtPerfDiskRate.Text = $"R/W: {wmiMetrics.diskMbSec:0.1} MB/s";
+            TxtPerfDiskRate.Text = $"Disk R/W: {wmiMetrics.diskMbSec:0.1} MB/s";
 
             double totalNetKbps = downKbps + upKbps;
-            TxtPerfNetSpeedTag.Text = FormatRate(totalNetKbps);
-            TxtPerfNetDown.Text = $"↓ Download: {FormatRate(downKbps)}";
-            TxtPerfNetUp.Text = $"↑ Upload: {FormatRate(upKbps)}";
+            TxtPerfNetDown.Text = $"↓ Down: {FormatRate(downKbps)}";
+            TxtPerfNetUp.Text = $"↑ Up: {FormatRate(upKbps)}";
 
             double netNormalized = Math.Min(100.0, (totalNetKbps / 10240.0) * 100.0);
 
-            PushHistoryAndRender(_cpuHistory, cpuPct, PerfCpuSparkline, PerfCpuGraphHost);
-            PushHistoryAndRender(_gpuHistory, wmiMetrics.gpuPct, PerfGpuSparkline, PerfGpuGraphHost);
-            PushHistoryAndRender(_ramHistory, ramPct, PerfRamSparkline, PerfRamGraphHost);
-            PushHistoryAndRender(_diskHistory, wmiMetrics.diskPct, PerfDiskSparkline, PerfDiskGraphHost);
-            PushHistoryAndRender(_netHistory, netNormalized, PerfNetSparkline, PerfNetGraphHost);
+            PushHistoryAndRender(_cpuHistory, cpuPct, PerfCpuSparkline, PerfOverviewGraphHost);
+            PushHistoryAndRender(_gpuHistory, wmiMetrics.gpuPct, PerfGpuSparkline, PerfOverviewGraphHost);
+            PushHistoryAndRender(_ramHistory, ramPct, PerfRamSparkline, PerfOverviewGraphHost);
+
+            PushHistoryAndRender(_cpuHistory, cpuPct, PerfCpuMiniLine, PerfCpuMiniHost);
+            PushHistoryAndRender(_gpuHistory, wmiMetrics.gpuPct, PerfGpuMiniLine, PerfGpuMiniHost);
+            PushHistoryAndRender(_ramHistory, ramPct, PerfRamMiniLine, PerfRamMiniHost);
+            PushHistoryAndRender(_diskHistory, wmiMetrics.diskPct, PerfDiskSparkline, PerfDiskMiniHost);
+            PushHistoryAndRender(_netHistory, netNormalized, PerfNetSparkline, PerfDiskMiniHost);
         }
 
         private static string FormatRate(double kbps)
@@ -749,7 +921,7 @@ namespace Archon
                 queue.Dequeue();
 
             double w = host.ActualWidth > 10 ? host.ActualWidth : 300;
-            double h = host.ActualHeight > 10 ? host.ActualHeight : 54;
+            double h = host.ActualHeight > 10 ? host.ActualHeight : 50;
             double pad = 4;
             double usableH = h - (pad * 2);
 
@@ -865,7 +1037,7 @@ namespace Archon
             return (downKbps, upKbps);
         }
 
-        // ==================== TRANSICIÓN ESCALONADA A PREPARACIÓN DEL SISTEMA ====================
+        // ==================== PREPARACIÓN DEL SISTEMA (ANIMACIÓN SUAVE Y EJECUCIÓN ÚNICA) ====================
 
         private void BtnStartStepZero_Click(object sender, RoutedEventArgs e)
         {
@@ -874,27 +1046,27 @@ namespace Archon
             StepZeroView.ScrollToTop();
 
             AnimateBlockEntrance(StepZeroHeaderBlock, StepZeroHeaderTransform, 0);
-            AnimateBlockEntrance(BtnFreshInstall, FreshInstallTransform, 75);
-            AnimateBlockEntrance(BtnCleanAndInstall, CleanInstallTransform, 145);
-            AnimateBlockEntrance(StepZeroSkipSection, SkipSectionTransform, 215);
-            AnimateBlockEntrance(StepZeroWhySection, WhySectionTransform, 285);
+            AnimateBlockEntrance(BtnFreshInstall, FreshInstallTransform, 130);
+            AnimateBlockEntrance(BtnCleanAndInstall, CleanInstallTransform, 260);
+            AnimateBlockEntrance(StepZeroSkipSection, SkipSectionTransform, 390);
+            AnimateBlockEntrance(StepZeroWhySection, WhySectionTransform, 520);
         }
 
         private static void AnimateBlockEntrance(UIElement element, TranslateTransform transform, int delayMs)
         {
             element.Opacity = 0;
-            transform.Y = 22;
+            transform.Y = 28;
 
-            var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(320))
+            var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(520))
             {
                 BeginTime = TimeSpan.FromMilliseconds(delayMs),
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                EasingFunction = new QuarticEase { EasingMode = EasingMode.EaseOut }
             };
 
-            var slide = new DoubleAnimation(22, 0, TimeSpan.FromMilliseconds(340))
+            var slide = new DoubleAnimation(28, 0, TimeSpan.FromMilliseconds(560))
             {
                 BeginTime = TimeSpan.FromMilliseconds(delayMs),
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                EasingFunction = new QuarticEase { EasingMode = EasingMode.EaseOut }
             };
 
             element.BeginAnimation(OpacityProperty, fade);
@@ -909,26 +1081,38 @@ namespace Archon
 
         private async void BtnFreshInstall_Click(object sender, RoutedEventArgs e)
         {
-            await RunStepZeroWorkflowAsync(isCleanMode: false);
+            await RunStepZeroWorkflowAsync(isCleanMode: false, forceRun: true);
         }
 
         private async void BtnCleanAndInstall_Click(object sender, RoutedEventArgs e)
         {
-            await RunStepZeroWorkflowAsync(isCleanMode: true);
+            await RunStepZeroWorkflowAsync(isCleanMode: true, forceRun: true);
         }
 
         private async void BtnSkipDrivers_Click(object sender, RoutedEventArgs e)
         {
-            await RunStepZeroWorkflowAsync(isCleanMode: false, skipDrivers: true);
+            if (_isSystemPrepared)
+            {
+                EnterMainOptimizerView();
+                return;
+            }
+
+            await RunStepZeroWorkflowAsync(isCleanMode: false, skipDrivers: true, forceRun: false);
         }
 
-        private async Task RunStepZeroWorkflowAsync(bool isCleanMode, bool skipDrivers = false)
+        private async Task RunStepZeroWorkflowAsync(bool isCleanMode, bool skipDrivers = false, bool forceRun = false)
         {
+            if (_isSystemPrepared && !forceRun)
+            {
+                EnterMainOptimizerView();
+                return;
+            }
+
             bool isEs = _currentLang == "ES";
             StepZeroBlur.Radius = 6;
             PrepModalOverlay.Visibility = Visibility.Visible;
 
-            Storyboard? ringSb = Resources["LoadingRingStoryboard"] as Storyboard;
+            Storyboard? ringSb = Application.Current.Resources["LoadingRingStoryboard"] as Storyboard;
             ringSb?.Begin();
 
             try
@@ -936,7 +1120,7 @@ namespace Archon
                 TxtModalStepTag.Text = isEs ? "ETAPA 1 DE 3 · RESPALDO DEL SISTEMA" : "STAGE 1 OF 3 · SYSTEM BACKUP";
                 TxtModalTitle.Text = isEs ? "Creando punto de restauración" : "Creating restore point";
                 TxtModalMessage.Text = isEs ? "Guardando estado preventivo en Volume Shadow Copy..." : "Saving preventive snapshot via Volume Shadow Copy...";
-                await AnimateModalProgressAsync(0, 38, 700);
+                await AnimateModalProgressAsync(0, 38, 750);
 
                 await Task.Run(() =>
                 {
@@ -965,6 +1149,8 @@ namespace Archon
                     TxtModalMessage.Text = isEs ? "Todo listo para personalizar tu sistema." : "Everything is ready to customize your system.";
                     await AnimateModalProgressAsync(76, 100, 550);
                 }
+
+                _isSystemPrepared = true;
             }
             finally
             {
@@ -993,6 +1179,7 @@ namespace Archon
             StepZeroView.Visibility = Visibility.Collapsed;
             WelcomeView.Visibility = Visibility.Collapsed;
             PerformanceView.Visibility = Visibility.Collapsed;
+            SettingsAndProfileView.Visibility = Visibility.Collapsed;
             MainOptimizerView.Visibility = Visibility.Visible;
 
             if (!_telemetryTimer.IsEnabled)
@@ -1009,142 +1196,62 @@ namespace Archon
             _telemetryTimer.Stop();
         }
 
-        // ==================== CATÁLOGO DE APPS CON ÍCONOS ORIGINALES Y FILTRADO ====================
+        // ==================== CATÁLOGO DE APPS CON LOGOS REALES ====================
 
         private void InitializeCatalogAndApps()
         {
             var baseTweaks = TweakCatalog.GetAllTweaks();
             var catalog = new List<TweakItem>();
 
-            // Asignar íconos originales a las librerías esenciales de TweakCatalog
             foreach (var item in baseTweaks)
             {
                 if (item.Category == "Instalador Día 0")
                 {
                     item.Category = "Apps";
+                    _appSubGroups[item.Id] = "Runtimes & Essentials";
                     if (item.Id == "install_vcredist")
-                    {
-                        item.IconColor = "#7C3AED";
-                        item.IconGeometry = "M4,4 H11 V11 H4 Z M13,4 H20 V11 H13 Z M4,13 H11 V20 H4 Z M13,13 H20 V20 H13 Z";
-                        _appSubGroups[item.Id] = "Runtimes & Essentials";
-                    }
+                        item.IconUrl = "https://learn.microsoft.com/favicon.ico";
                     else if (item.Id == "install_directx")
-                    {
-                        item.IconColor = "#16A34A";
-                        item.IconGeometry = "M4,4 L12,12 L4,20 M20,4 L12,12 L20,20";
-                        _appSubGroups[item.Id] = "Runtimes & Essentials";
-                    }
+                        item.IconUrl = "https://www.microsoft.com/favicon.ico";
                 }
                 catalog.Add(item);
             }
 
-            // Catálogo ampliado de aplicaciones con sus íconos y colores oficiales
-            var extraApps = new List<(string id, string group, string title, string desc, string pkg, string color, string svg)>
+            var extraApps = new List<(string id, string group, string title, string desc, string pkg, string iconUrl)>
             {
-                ("app_dotnet8", "Runtimes & Essentials", ".NET Desktop Runtime 8", "Runtime oficial de Microsoft necesario para aplicaciones modernas de escritorio en Windows.", "Microsoft.DotNet.DesktopRuntime.8", "#512BD4",
-                 "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M8,15 V9 L12,15 V9 M15,9 H18 M15,12 H17 M15,15 H18"),
-
-                ("app_brave", "Browsers & Communication", "Brave Browser", "Navegador rápido basado en Chromium con bloqueo nativo de rastreadores y publicidad.", "Brave.Brave", "#FB542B",
-                 "M12,2 L19,5 L21,12 L17,19 L12,22 L7,19 L3,12 L5,5 Z M9,9 L12,11 L15,9 L14,14 L12,17 L10,14 Z"),
-
-                ("app_chrome", "Browsers & Communication", "Google Chrome", "Navegador web oficial de Google con sincronización de perfiles y extensiones.", "Google.Chrome", "#4285F4",
-                 "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M12,8 A4,4 0 1,1 8,12 A4,4 0 0,1 12,8 Z M12,8 H21"),
-
-                ("app_firefox", "Browsers & Communication", "Mozilla Firefox", "Navegador independiente de código abierto enfocado en privacidad y bajo consumo de RAM.", "Mozilla.Firefox", "#FF7139",
-                 "M12,2 A10,10 0 1,0 22,12 C22,7 18,3 14,2.2 C16,4.5 16.5,7.5 14.5,9.5 C12.5,11 9.5,10.5 9,8.5 C7.5,10 7,13 8.5,15.5 C10,17.8 13.5,18.2 15.8,16.5"),
-
-                ("app_discord", "Browsers & Communication", "Discord", "Cliente oficial de chat de voz, video y comunidades con aceleración por hardware.", "Discord.Discord", "#5865F2",
-                 "M4,6 C7,4.5 17,4.5 20,6 L21,17 C18,19 15,19 14,18 L13,16 H11 L10,18 C9,19 6,19 3,17 Z M9,11 A1.5,1.5 0 1,0 9,14 A1.5,1.5 0 1,0 9,11 Z M15,11 A1.5,1.5 0 1,0 15,14 A1.5,1.5 0 1,0 15,11 Z"),
-
-                ("app_telegram", "Browsers & Communication", "Telegram Desktop", "Cliente nativo de mensajería instantánea ultraliviano con sincronización en la nube.", "Telegram.TelegramDesktop", "#26A5E4",
-                 "M21,3 L2,10.5 L9,13.5 L18,6.5 L11.5,14.5 L17.5,19 Z"),
-
-                ("app_steam", "Gaming & Media", "Steam", "Plataforma oficial de juegos de PC, talleres y gestión de bibliotecas.", "Valve.Steam", "#66C0F4",
-                 "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M15,7 A3,3 0 1,1 12,10 L9,14 A2.5,2.5 0 1,1 7,12 L11,9"),
-
-                ("app_epic", "Gaming & Media", "Epic Games Launcher", "Cliente oficial para juegos de Epic Games Store y Unreal Engine.", "EpicGames.EpicGamesLauncher", "#E5E7EB",
-                 "M5,2 H19 V17 L12,22 L5,17 Z M9,6 V14 H15 V12 H11 V11 H14 V9 H11 V8 H15 V6 Z"),
-
-                ("app_obs", "Gaming & Media", "OBS Studio", "Software estándar de grabación y transmisión en vivo con soporte NVENC / AMF / QuickSync.", "OBSProject.OBSStudio", "#60A5FA",
-                 "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M12,5 A4,4 0 0,1 15.5,11 A4,4 0 0,1 8.5,11 A4,4 0 0,1 12,5 Z"),
-
-                ("app_vlc", "Gaming & Media", "VLC Media Player", "Reproductor multimedia universal capaz de abrir cualquier códec de video y audio sin paquetes externos.", "VideoLAN.VLC", "#FF8800",
-                 "M12,2 L17,17 H7 Z M5,17 H19 L20,21 H4 Z M9,10 H15 M8,13 H16"),
-
-                ("app_mpv", "Gaming & Media", "MPV Player", "Reproductor minimalista acelerado por GPU con altísima calidad de escalado y cero interfaz pesada.", "mpv.net", "#8B5CF6",
-                 "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M10,8 L17,12 L10,16 Z"),
-
-                ("app_spotify", "Gaming & Media", "Spotify", "Cliente de escritorio para reproducción de música y podcasts.", "Spotify.Spotify", "#1DB954",
-                 "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M7,9.5 C10.5,8.5 14.5,8.8 17.5,10.5 M8,12.5 C10.8,11.7 13.8,12 16.3,13.4 M9,15.3 C11.2,14.7 13.4,15 15.2,16"),
-
-                ("app_hwinfo", "Hardware & Diagnostics", "HWiNFO64", "Monitor profesional de sensores, voltajes, frecuencias y temperaturas en tiempo real.", "REALiX.HWiNFO", "#2563EB",
-                 "M3,4 H21 V20 H3 Z M7,8 V16 M11,8 V16 M7,12 H11 M15,8 V16 M18,8 V16"),
-
-                ("app_cpuz", "Hardware & Diagnostics", "CPU-Z", "Diagnóstico detallado del procesador, caché, placa base, chipset y latencias de memoria RAM.", "CPUID.CPU-Z", "#7C3AED",
-                 "M7,7 H17 V17 H7 Z M9,2 V5 M15,2 V5 M9,19 V22 M15,19 V22 M2,9 H5 M2,15 H5 M19,9 H22 M19,15 H22"),
-
-                ("app_gpuz", "Hardware & Diagnostics", "GPU-Z", "Información completa de tarjeta gráfica, bus PCIe, versión de BIOS, VRAM y sensores.", "TechPowerUp.GPU-Z", "#DC2626",
-                 "M2,6 H20 V17 H2 Z M6,10 A2.5,2.5 0 1,0 6,15 A2.5,2.5 0 1,0 6,10 Z M13,10 A2.5,2.5 0 1,0 13,15 A2.5,2.5 0 1,0 13,10 Z M20,8 H22 V15 H20"),
-
-                ("app_crystaldiskinfo", "Hardware & Diagnostics", "CrystalDiskInfo", "Verifica la salud S.M.A.R.T., horas de encendido y temperatura de tus discos SSD y NVMe.", "CrystalDewWorld.CrystalDiskInfo", "#0EA5E9",
-                 "M5,3 H19 V21 H5 Z M12,7 A4,4 0 1,1 8,11 A4,4 0 0,1 12,7 Z M8,17 H16"),
-
-                ("app_crystaldiskmark", "Hardware & Diagnostics", "CrystalDiskMark", "Benchmark estándar para medir velocidades secuenciales y aleatorias de lectura/escritura en SSD.", "CrystalDewWorld.CrystalDiskMark", "#0284C7",
-                 "M3,18 L8,11 L13,14 L20,5 M15,5 H20 V10"),
-
-                ("app_afterburner", "Hardware & Diagnostics", "MSI Afterburner", "Control de curva de ventiladores, undervolt, overclock y monitoreo OSD en juegos.", "Guru3D.Afterburner", "#EF4444",
-                 "M12,2 L21,19 H3 Z M12,8 L16,16 H8 Z"),
-
-                ("app_7zip", "Utilities & Security", "7-Zip", "Compresor y descompresor de código abierto ultraliviano compatible con .7z, .zip y .rar.", "7zip.7zip", "#F59E0B",
-                 "M3,4 H21 V20 H3 Z M6,8 H11 L7,16 M13,10 H18 L13,16 H18"),
-
-                ("app_winrar", "Utilities & Security", "WinRAR", "Archivador clásico para gestión de paquetes .rar y .zip con reparación de volúmenes.", "RARLab.WinRAR", "#9333EA",
-                 "M5,3 H19 V7 H5 Z M5,10 H19 V14 H5 Z M5,17 H19 V21 H5 Z M11,3 V21"),
-
-                ("app_wiztree", "Utilities & Security", "WizTree", "Analizador ultrarrápido de espacio en disco que escanea unidades NTFS en segundos.", "AntibodySoftware.WizTree", "#10B981",
-                 "M3,3 H11 V11 H3 Z M13,3 H21 V8 H13 Z M13,10 H21 V21 H13 Z M3,13 H11 V21 H3 Z"),
-
-                ("app_everything", "Utilities & Security", "Everything Search", "Buscador instantáneo de archivos y carpetas en todo el sistema por nombre.", "voidtools.Everything", "#F97316",
-                 "M10.5,3 A7.5,7.5 0 1,0 18,10.5 A7.5,7.5 0 0,0 10.5,3 Z M16,16 L21,21"),
-
-                ("app_rufus", "Utilities & Security", "Rufus", "Utilidad liviana para crear memorias USB booteables de Windows y Linux.", "Rufus.Rufus", "#3B82F6",
-                 "M7,2 H17 V8 H7 Z M5,8 H19 V21 H5 Z M10,4 V6 M14,4 V6"),
-
-                ("app_ventoy", "Utilities & Security", "Ventoy", "Crea un USB multiboot donde solo arrastrás archivos .ISO sin formatear cada vez.", "Ventoy.Ventoy", "#06B6D4",
-                 "M4,5 L12,19 L20,5 H16 L12,12 L8,5 Z"),
-
-                ("app_bitwarden", "Utilities & Security", "Bitwarden", "Gestor de contraseñas cifrado de código abierto con sincronización multiplataforma.", "Bitwarden.Bitwarden", "#175DDC",
-                 "M12,2 L20,5 V12 C20,17.5 16.5,21 12,22.5 C7.5,21 4,17.5 4,12 V5 Z M12,5 V19"),
-
-                ("app_keepassxc", "Utilities & Security", "KeePassXC", "Gestor de contraseñas local sin depender de servidores externos.", "KeePassXCTeam.KeePassXC", "#6CAC4D",
-                 "M8,10 A4,4 0 1,1 12,14 H20 V17 H17 V20 H14 V14"),
-
-                ("app_sharex", "Utilities & Security", "ShareX", "Herramienta avanzada de capturas de pantalla, grabación GIF/MP4 y OCR.", "ShareX.ShareX", "#38BDF8",
-                 "M4,4 H14 V14 H4 Z M10,10 H20 V20 H10 Z"),
-
-                ("app_powertoys", "Utilities & Security", "Microsoft PowerToys", "Suite oficial de productividad: FancyZones, selector de color, renombrado masivo y más.", "Microsoft.PowerToys", "#0078D4",
-                 "M3,4 H11 V11 H3 Z M13,4 H21 V11 H13 Z M3,13 H11 V20 H3 Z M13,13 H21 V20 H13 Z"),
-
-                ("app_vscode", "Developer Tools", "Visual Studio Code", "Editor de código fuente extensible de Microsoft con soporte integrado para Git y terminal.", "Microsoft.VisualStudioCode", "#007ACC",
-                 "M16,3 L21,5.5 V18.5 L16,21 L8,13.5 L4.5,16 L3,14.5 L6.5,12 L3,9.5 L4.5,8 L8,10.5 Z"),
-
-                ("app_git", "Developer Tools", "Git for Windows", "Sistema de control de versiones distribuido con Git Bash incluido.", "Git.Git", "#F05032",
-                 "M12,2 L22,12 L12,22 L2,12 Z M12,7 V17 M12,11 L16,15"),
-
-                ("app_terminal", "Developer Tools", "Windows Terminal", "Terminal moderna con pestañas, aceleración GPU y soporte para PowerShell, CMD y WSL.", "Microsoft.WindowsTerminal", "#9CA3AF",
-                 "M3,5 H21 V19 H3 Z M7,9 L11,12 L7,15 M12,15 H17"),
-
-                ("app_pwsh", "Developer Tools", "PowerShell 7", "Consola multiplataforma de automatización y administración avanzada de sistemas.", "Microsoft.PowerShell", "#5391FE",
-                 "M4,5 L21,5 L19,19 L2,19 Z M8,9 L12,12 L7,15 M12,15 H16"),
-
-                ("app_python", "Developer Tools", "Python 3", "Intérprete oficial de Python para automatización, scripting y desarrollo.", "Python.Python.3.12", "#3776AB",
-                 "M8,3 H15 V9 H6 V15 H3 V8 C3,5 5,3 8,3 Z M16,21 H9 V15 H18 V9 H21 V16 C21,19 19,21 16,21 Z"),
-
-                ("app_nodejs", "Developer Tools", "Node.js LTS", "Entorno de ejecución JavaScript del lado del servidor con npm incluido.", "OpenJS.NodeJS.LTS", "#339933",
-                 "M12,2 L20.5,7 V17 L12,22 L3.5,17 V7 Z M10,9 V15 L14,13 V10"),
-
-                ("app_notepadpp", "Developer Tools", "Notepad++", "Editor de texto y código ultrarrápido escrito en C++ con consumo mínimo de memoria.", "Notepad++.Notepad++", "#90E59A",
-                 "M5,3 H16 L19,6 V21 H5 Z M8,10 H16 M8,14 H16 M8,18 H13")
+                ("app_dotnet8", "Runtimes & Essentials", ".NET Desktop Runtime 8", "Runtime oficial de Microsoft necesario para aplicaciones modernas de escritorio en Windows.", "Microsoft.DotNet.DesktopRuntime.8", "https://dotnet.microsoft.com/favicon.ico"),
+                ("app_brave", "Browsers & Communication", "Brave Browser", "Navegador rápido basado en Chromium con bloqueo nativo de rastreadores y publicidad.", "Brave.Brave", "https://brave.com/favicon.ico"),
+                ("app_chrome", "Browsers & Communication", "Google Chrome", "Navegador web oficial de Google con sincronización de perfiles y extensiones.", "Google.Chrome", "https://www.google.com/chrome/static/images/chrome-logo.svg"),
+                ("app_firefox", "Browsers & Communication", "Mozilla Firefox", "Navegador independiente de código abierto enfocado en privacidad y bajo consumo de RAM.", "Mozilla.Firefox", "https://www.mozilla.org/media/img/favicons/firefox/browser/favicon.ico"),
+                ("app_discord", "Browsers & Communication", "Discord", "Cliente oficial de chat de voz, video y comunidades con aceleración por hardware.", "Discord.Discord", "https://discord.com/assets/847541504914fd33810e70a0ea73177e.ico"),
+                ("app_telegram", "Browsers & Communication", "Telegram Desktop", "Cliente nativo de mensajería instantánea ultraliviano con sincronización en la nube.", "Telegram.TelegramDesktop", "https://telegram.org/favicon.ico"),
+                ("app_steam", "Gaming & Media", "Steam", "Plataforma oficial de juegos de PC, talleres y gestión de bibliotecas.", "Valve.Steam", "https://store.steampowered.com/favicon.ico"),
+                ("app_epic", "Gaming & Media", "Epic Games Launcher", "Cliente oficial para juegos de Epic Games Store y Unreal Engine.", "EpicGames.EpicGamesLauncher", "https://static-assets-prod.epicgames.com/epic-games-store/static/images/common/favicon.ico"),
+                ("app_obs", "Gaming & Media", "OBS Studio", "Software estándar de grabación y transmisión en vivo con soporte NVENC / AMF / QuickSync.", "OBSProject.OBSStudio", "https://obsproject.com/assets/images/new_icon_small-r.png"),
+                ("app_vlc", "Gaming & Media", "VLC Media Player", "Reproductor multimedia universal capaz de abrir cualquier códec de video y audio sin paquetes externos.", "VideoLAN.VLC", "https://images.videolan.org/images/favicon.ico"),
+                ("app_spotify", "Gaming & Media", "Spotify", "Cliente de escritorio para reproducción de música y podcasts.", "Spotify.Spotify", "https://open.spotify.com/favicon.ico"),
+                ("app_hwinfo", "Hardware & Diagnostics", "HWiNFO64", "Monitor profesional de sensores, voltajes, frecuencias y temperaturas en tiempo real.", "REALiX.HWiNFO", "https://www.hwinfo.com/favicon.ico"),
+                ("app_cpuz", "Hardware & Diagnostics", "CPU-Z", "Diagnóstico detallado del procesador, caché, placa base, chipset y latencias de memoria RAM.", "CPUID.CPU-Z", "https://www.cpuid.com/favicon.ico"),
+                ("app_gpuz", "Hardware & Diagnostics", "GPU-Z", "Información completa de tarjeta gráfica, bus PCIe, versión de BIOS, VRAM y sensores.", "TechPowerUp.GPU-Z", "https://www.techpowerup.com/favicon.ico"),
+                ("app_crystaldiskinfo", "Hardware & Diagnostics", "CrystalDiskInfo", "Verifica la salud S.M.A.R.T., horas de encendido y temperatura de tus discos SSD y NVMe.", "CrystalDewWorld.CrystalDiskInfo", "https://crystalmark.info/favicon.ico"),
+                ("app_crystaldiskmark", "Hardware & Diagnostics", "CrystalDiskMark", "Benchmark estándar para medir velocidades secuenciales y aleatorias de lectura/escritura en SSD.", "CrystalDewWorld.CrystalDiskMark", "https://crystalmark.info/favicon.ico"),
+                ("app_7zip", "Utilities & Security", "7-Zip", "Compresor y descompresor de código abierto ultraliviano compatible con .7z, .zip y .rar.", "7zip.7zip", "https://www.7-zip.org/favicon.ico"),
+                ("app_winrar", "Utilities & Security", "WinRAR", "Archivador clásico para gestión de paquetes .rar y .zip con reparación de volúmenes.", "RARLab.WinRAR", "https://www.win-rar.com/favicon.ico"),
+                ("app_wiztree", "Utilities & Security", "WizTree", "Analizador ultrarrápido de espacio en disco que escanea unidades NTFS en segundos.", "AntibodySoftware.WizTree", "https://diskanalyzer.com/favicon.ico"),
+                ("app_everything", "Utilities & Security", "Everything Search", "Buscador instantáneo de archivos y carpetas en todo el sistema por nombre.", "voidtools.Everything", "https://www.voidtools.com/favicon.ico"),
+                ("app_rufus", "Utilities & Security", "Rufus", "Utilidad liviana para crear memorias USB booteables de Windows y Linux.", "Rufus.Rufus", "https://rufus.ie/favicon.ico"),
+                ("app_ventoy", "Utilities & Security", "Ventoy", "Crea un USB multiboot donde solo arrastrás archivos .ISO sin formatear cada vez.", "Ventoy.Ventoy", "https://www.ventoy.net/favicon.ico"),
+                ("app_bitwarden", "Utilities & Security", "Bitwarden", "Gestor de contraseñas cifrado de código abierto con sincronización multiplataforma.", "Bitwarden.Bitwarden", "https://bitwarden.com/favicon.ico"),
+                ("app_keepassxc", "Utilities & Security", "KeePassXC", "Gestor de contraseñas local sin depender de servidores externos.", "KeePassXCTeam.KeePassXC", "https://keepassxc.org/favicon.ico"),
+                ("app_sharex", "Utilities & Security", "ShareX", "Herramienta avanzada de capturas de pantalla, grabación GIF/MP4 y OCR.", "ShareX.ShareX", "https://getsharex.com/favicon.ico"),
+                ("app_powertoys", "Utilities & Security", "Microsoft PowerToys", "Suite oficial de productividad: FancyZones, selector de color, renombrado masivo y más.", "Microsoft.PowerToys", "https://learn.microsoft.com/favicon.ico"),
+                ("app_vscode", "Developer Tools", "Visual Studio Code", "Editor de código fuente extensible de Microsoft con soporte integrado para Git y terminal.", "Microsoft.VisualStudioCode", "https://code.visualstudio.com/favicon.ico"),
+                ("app_git", "Developer Tools", "Git for Windows", "Sistema de control de versiones distribuido con Git Bash incluido.", "Git.Git", "https://git-scm.com/favicon.ico"),
+                ("app_terminal", "Developer Tools", "Windows Terminal", "Terminal moderna con pestañas, aceleración GPU y soporte para PowerShell, CMD y WSL.", "Microsoft.WindowsTerminal", "https://learn.microsoft.com/favicon.ico"),
+                ("app_pwsh", "Developer Tools", "PowerShell 7", "Consola multiplataforma de automatización y administración avanzada de sistemas.", "Microsoft.PowerShell", "https://learn.microsoft.com/favicon.ico"),
+                ("app_python", "Developer Tools", "Python 3", "Intérprete oficial de Python para automatización, scripting y desarrollo.", "Python.Python.3.12", "https://www.python.org/static/favicon.ico"),
+                ("app_nodejs", "Developer Tools", "Node.js LTS", "Entorno de ejecución JavaScript del lado del servidor con npm incluido.", "OpenJS.NodeJS.LTS", "https://nodejs.org/static/images/favicons/favicon.ico"),
+                ("app_notepadpp", "Developer Tools", "Notepad++", "Editor de texto y código ultrarrápido escrito en C++ con consumo mínimo de memoria.", "Notepad++.Notepad++", "https://notepad-plus-plus.org/favicon.ico")
             };
 
             foreach (var app in extraApps)
@@ -1161,8 +1268,7 @@ namespace Archon
                     Risk = TweakRisk.Seguro,
                     Description = app.desc,
                     TechnicalDetail = $"winget install --id {app.pkg} -e --silent",
-                    IconColor = app.color,
-                    IconGeometry = app.svg,
+                    IconUrl = app.iconUrl,
                     ApplyAction = () => RegistryEngine.RunCommandHidden("winget.exe",
                         $"install --id {app.pkg} -e --silent --accept-package-agreements --accept-source-agreements")
                 });
@@ -1204,7 +1310,6 @@ namespace Archon
             if (sender is not Button clicked || clicked.Tag is not string newCategory)
                 return;
 
-            // Cerrar cualquier panel de detalles abierto si el usuario cambia a una pestaña diferente
             if (!string.Equals(_currentCategory, newCategory, StringComparison.OrdinalIgnoreCase))
             {
                 foreach (var item in _allTweaks)

@@ -15,162 +15,6 @@
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-
-        <SolidColorBrush x:Key="BgCardBlack" Color="#090A0F"/>
-        <SolidColorBrush x:Key="BgCardHover" Color="#11141E"/>
-        <SolidColorBrush x:Key="BorderDark" Color="#1C1F2B"/>
-        <SolidColorBrush x:Key="BorderHover" Color="#2F4263"/>
-        <SolidColorBrush x:Key="AccentPrimary" Color="#1B4985"/>
-        <SolidColorBrush x:Key="AccentPrimaryHover" Color="#2359A1"/>
-        <SolidColorBrush x:Key="AccentLine" Color="#3B82F6"/>
-        <SolidColorBrush x:Key="TextSecondary" Color="#D4D6E0"/>
-        <SolidColorBrush x:Key="TextMuted" Color="#A6ACBE"/>
-
-        <!-- ILUMINACIÓN AMBIENTAL DE FONDO -->
-        <Storyboard x:Key="AmbientGlowStoryboard" RepeatBehavior="Forever">
-            <DoubleAnimation Storyboard.TargetName="AuroraTopTransform"
-                             Storyboard.TargetProperty="X"
-                             From="-170" To="170" Duration="0:0:11" AutoReverse="True">
-                <DoubleAnimation.EasingFunction>
-                    <SineEase EasingMode="EaseInOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="AuroraTop"
-                             Storyboard.TargetProperty="Opacity"
-                             From="0.72" To="1.0" Duration="0:0:6.5" AutoReverse="True">
-                <DoubleAnimation.EasingFunction>
-                    <SineEase EasingMode="EaseInOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-
-            <DoubleAnimation Storyboard.TargetName="AuroraCenterTransform"
-                             Storyboard.TargetProperty="Y"
-                             From="-55" To="55" Duration="0:0:9" AutoReverse="True">
-                <DoubleAnimation.EasingFunction>
-                    <SineEase EasingMode="EaseInOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="AuroraCenter"
-                             Storyboard.TargetProperty="Opacity"
-                             From="0.55" To="0.95" Duration="0:0:7.5" AutoReverse="True">
-                <DoubleAnimation.EasingFunction>
-                    <SineEase EasingMode="EaseInOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-
-            <DoubleAnimation Storyboard.TargetName="AuroraBottomTransform"
-                             Storyboard.TargetProperty="X"
-                             From="160" To="-160" Duration="0:0:13" AutoReverse="True">
-                <DoubleAnimation.EasingFunction>
-                    <SineEase EasingMode="EaseInOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="AuroraBottom"
-                             Storyboard.TargetProperty="Opacity"
-                             From="0.95" To="0.60" Duration="0:0:8" AutoReverse="True">
-                <DoubleAnimation.EasingFunction>
-                    <SineEase EasingMode="EaseInOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-        </Storyboard>
-
-        <!-- ANIMACIÓN DOBLE ANILLO PARA CARGA -->
-        <Storyboard x:Key="LoadingRingStoryboard" RepeatBehavior="Forever">
-            <DoubleAnimation Storyboard.TargetName="LoadingRingRotate"
-                             Storyboard.TargetProperty="Angle"
-                             From="0" To="360" Duration="0:0:2.1"/>
-            <DoubleAnimation Storyboard.TargetName="LoadingInnerRingRotate"
-                             Storyboard.TargetProperty="Angle"
-                             From="360" To="0" Duration="0:0:3.2"/>
-        </Storyboard>
-
-        <!-- SPINNER DE ESCANEO DE COMPONENTES -->
-        <Storyboard x:Key="HardwareScanSpinnerStoryboard" RepeatBehavior="Forever">
-            <DoubleAnimation Storyboard.TargetName="HardwareSpinnerRotate"
-                             Storyboard.TargetProperty="Angle"
-                             From="0" To="360" Duration="0:0:1.15"/>
-        </Storyboard>
-
-        <!-- SCROLLBAR -->
-        <Style TargetType="ScrollBar">
-            <Setter Property="Width" Value="10"/>
-            <Setter Property="MinWidth" Value="10"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ScrollBar">
-                        <Grid Background="Transparent" Margin="2,2,0,2">
-                            <Track x:Name="PART_Track" IsDirectionReversed="True">
-                                <Track.DecreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" IsHitTestVisible="False"/>
-                                </Track.DecreaseRepeatButton>
-                                <Track.Thumb>
-                                    <Thumb>
-                                        <Thumb.Template>
-                                            <ControlTemplate TargetType="Thumb">
-                                                <Border x:Name="ThumbBorder" Background="#282B38" CornerRadius="4"/>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="ThumbBorder" Property="Background" Value="#3D4357"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Thumb.Template>
-                                    </Thumb>
-                                </Track.Thumb>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" IsHitTestVisible="False"/>
-                                </Track.IncreaseRepeatButton>
-                            </Track>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- BARRA DE PROGRESO -->
-        <Style TargetType="ProgressBar">
-            <Setter Property="Height" Value="8"/>
-            <Setter Property="Background" Value="#151822"/>
-            <Setter Property="Foreground" Value="#2D6EC2"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ProgressBar">
-                        <Grid x:Name="TemplateRoot">
-                            <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="4"/>
-                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="4"/>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- BOTONES DE VENTANA -->
-        <Style x:Key="WindowControlButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#A8A8B6"/>
-            <Setter Property="Width" Value="46"/>
-            <Setter Property="Height" Value="45"/>
-            <Setter Property="FontSize" Value="13.5"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#14161F"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <Style x:Key="TopBarUtilityButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#0E111A"/>
             <Setter Property="Foreground" Value="#D4D6E0"/>
@@ -219,163 +63,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
-        <Style x:Key="WindowCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource WindowControlButtonStyle}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="0,8,0,0">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#B82D35"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- BOTÓN PRINCIPAL AZUL -->
-        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="Padding" Value="26,13"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="15"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="#D9194785" BorderBrush="#26599E" BorderThickness="1" CornerRadius="7" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#EB2157A1"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#326EBD"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="border" Property="Opacity" Value="0.45"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- BOTÓN OSCURO DE SUPERFICIE -->
-        <Style x:Key="SoftCardButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#B80B0D14"/>
-            <Setter Property="Foreground" Value="#F5F5F8"/>
-            <Setter Property="Padding" Value="22,14"/>
-            <Setter Property="FontSize" Value="15"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}"
-                                BorderBrush="{StaticResource BorderDark}" BorderThickness="1"
-                                CornerRadius="7" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#D9131724"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource BorderHover}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="border" Property="Opacity" Value="0.45"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- BLOQUE DE OPCIÓN PARA PREPARACIÓN -->
-        <Style x:Key="PrepOptionButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource BgCardBlack}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderDark}"/>
-            <Setter Property="Foreground" Value="#F5F5F8"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="RowBg" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="6">
-                            <Grid>
-                                <Border x:Name="LeftAccent" Width="3" HorizontalAlignment="Left" CornerRadius="6,0,0,6" Background="Transparent"/>
-                                <Border Padding="28,22">
-                                    <ContentPresenter/>
-                                </Border>
-                            </Grid>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="RowBg" Property="Background" Value="{StaticResource BgCardHover}"/>
-                                <Setter TargetName="RowBg" Property="BorderBrush" Value="{StaticResource BorderHover}"/>
-                                <Setter TargetName="LeftAccent" Property="Background" Value="#2D6EC2"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="RowBg" Property="Opacity" Value="0.5"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- BOTÓN DE NAVEGACIÓN DISCRETO -->
-        <Style x:Key="GhostButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
-            <Setter Property="Padding" Value="13,10"/>
-            <Setter Property="FontSize" Value="14.5"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}"
-                                CornerRadius="6" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#141620"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- SWITCH -->
-        <Style x:Key="ModernSwitchStyle" TargetType="CheckBox">
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="CheckBox">
-                        <Border x:Name="Track" Width="46" Height="24" CornerRadius="5" Background="#1D1F2A">
-                            <Border x:Name="Thumb" Width="18" Height="18" CornerRadius="3" Margin="3,0" HorizontalAlignment="Left" Background="#9A9AA8"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="{StaticResource AccentPrimary}"/>
-                                <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
-                                <Setter TargetName="Thumb" Property="Background" Value="#FFFFFF"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </Window.Resources>
 
     <Border BorderBrush="#1A1C26" BorderThickness="1" CornerRadius="8">
@@ -393,20 +80,20 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- BARRA SUPERIOR CON EMBLEMA REDISEÑADO Y MENÚ DESPLEGABLE DE IDIOMAS -->
+            <!-- BARRA SUPERIOR CON EMBLEMA Y DESPLEGABLE DE IDIOMA -->
             <Border Grid.Row="0" Background="#050507" BorderBrush="#12141C" BorderThickness="0,0,0,1" CornerRadius="8,8,0,0">
                 <Grid>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="22,0,0,0">
                         <Viewbox Width="24" Height="24" Margin="0,0,10,0">
                             <Canvas Width="64" Height="64">
-                                <Ellipse Canvas.Left="4" Canvas.Top="4" Width="56" Height="56" Stroke="#1D3B6E" StrokeThickness="1.6" StrokeDashArray="4 2"/>
-                                <Path Data="M26,24 L14,12 L8,5 M38,24 L50,12 L56,5" Stroke="#3B82F6" StrokeThickness="2.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                <Path Data="M23,29 L9,23 L4,16 M41,29 L55,23 L60,16" Stroke="#3B82F6" StrokeThickness="2.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                <Path Data="M23,35 L9,41 L4,49 M41,35 L55,41 L60,49" Stroke="#3B82F6" StrokeThickness="2.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                <Path Data="M26,40 L15,52 L9,59 M38,40 L49,52 L55,59" Stroke="#3B82F6" StrokeThickness="2.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                <Ellipse Canvas.Left="4" Canvas.Top="4" Width="56" Height="56" Stroke="#1D3B6E" StrokeThickness="1.5" StrokeDashArray="4 2"/>
+                                <Path Data="M26,24 L14,12 L7,6 M38,24 L50,12 L57,6" Stroke="#3B82F6" StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                <Path Data="M23,29 L9,23 L3,17 M41,29 L55,23 L61,17" Stroke="#3B82F6" StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                <Path Data="M23,35 L9,41 L3,48 M41,35 L55,41 L61,48" Stroke="#3B82F6" StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                <Path Data="M26,40 L15,52 L8,59 M38,40 L49,52 L56,59" Stroke="#3B82F6" StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
                                 <Polygon Points="32,14 39,22 32,29 25,22" Fill="#FFFFFF"/>
-                                <Polygon Points="32,29 42,41 32,54 22,41" Fill="#122E59" Stroke="#FFFFFF" StrokeThickness="2.2" StrokeLineJoin="Round"/>
-                                <Polygon Points="32,35 36,41 32,47 28,41" Fill="#60A5FA"/>
+                                <Polygon Points="32,29 42,41 32,54 22,41" Fill="#122E59" Stroke="#FFFFFF" StrokeThickness="2.1" StrokeLineJoin="Round"/>
+                                <TextBlock Canvas.Left="27.5" Canvas.Top="34.5" Text="Σ" FontSize="11" FontWeight="Bold" Foreground="#93C5FD"/>
                             </Canvas>
                         </Viewbox>
                         <TextBlock Text="Archon" FontWeight="SemiBold" FontSize="15" Foreground="#F5F5F8" VerticalAlignment="Center"/>
@@ -414,7 +101,6 @@
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" WindowChrome.IsHitTestVisibleInChrome="True">
-                        <!-- SELECTOR DESPLEGABLE DE IDIOMA -->
                         <Button x:Name="BtnLanguageDropdown" Style="{StaticResource TopBarUtilityButtonStyle}" Margin="0,0,10,0" Click="BtnLanguageDropdown_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M2,12 H22 M12,2 C14.8,5 16,8.4 16,12 C16,15.6 14.8,19 12,22 C9.2,19 8,15.6 8,12 C8,8.4 9.2,5 12,2 Z"
@@ -443,7 +129,7 @@
                 </Grid>
             </Border>
 
-            <!-- CONTENEDOR PRINCIPAL -->
+            <!-- CONTENEDOR PRINCIPAL DE VISTAS -->
             <Grid Grid.Row="1">
 
                 <!-- ILUMINACIÓN AMBIENTAL DE FONDO -->
@@ -490,116 +176,114 @@
                     </Rectangle>
                 </Grid>
 
-                <!-- VISTA 1: PRESENTACIÓN CON AVATAR REUBICADO, AUTH Y 3 ACCIONES -->
+                <!-- VISTA 1: PRESENTACIÓN CON AVATAR CIRCULAR, SELECTOR DE PERFIL Y TUERCA -->
                 <ScrollViewer x:Name="WelcomeView" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <Grid Margin="28,18,28,36">
-                        <!-- TARJETA CIRCULAR DE PERFIL EN ESQUINA SUPERIOR IZQUIERDA (FUERA DE BOTONES DE VENTANA) -->
-                        <Button x:Name="BtnWelcomeTopProfile" Style="{StaticResource SoftCardButtonStyle}"
-                                HorizontalAlignment="Left" VerticalAlignment="Top" Padding="10,8"
-                                Click="BtnOpenSignIn_Click">
-                            <StackPanel Orientation="Horizontal">
-                                <!-- CONTENEDOR CIRCULAR ESPACIOSO LISTO PARA FOTO REAL -->
-                                <Border Width="40" Height="40" CornerRadius="20" Background="#121A2B" BorderBrush="#3B82F6" BorderThickness="1.5" Margin="0,0,11,0">
+
+                        <!-- BARRA DE IDENTIDAD + PERFIL ACTIVO + CONFIGURACIÓN GENERAL -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                            <!-- FOTO CIRCULAR DE PERFIL (AL CLIC ABRE MI PERFIL) -->
+                            <Button x:Name="BtnWelcomeAvatar" Background="Transparent" BorderThickness="0" Padding="0" Margin="0,0,10,0" Cursor="Hand" Click="BtnOpenMyProfile_Click">
+                                <Border Width="44" Height="44" CornerRadius="22" Background="#101829" BorderBrush="#3B82F6" BorderThickness="1.8">
                                     <Grid>
-                                        <Ellipse Fill="#0D1526" Margin="2"/>
-                                        <TextBlock x:Name="WelcomeTopAvatarInitial" Text="A" FontSize="15" FontWeight="Bold" Foreground="#60A5FA"
+                                        <Ellipse Margin="2">
+                                            <Ellipse.Fill>
+                                                <ImageBrush x:Name="WelcomeAvatarBrush" Stretch="UniformToFill"/>
+                                            </Ellipse.Fill>
+                                        </Ellipse>
+                                        <TextBlock x:Name="WelcomeAvatarInitial" Text="A" FontSize="16" FontWeight="Bold" Foreground="#60A5FA"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Border>
-                                <StackPanel VerticalAlignment="Center" Margin="0,0,6,0">
-                                    <TextBlock x:Name="TxtWelcomeTopUser" Text="Guest Profile" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
-                                    <TextBlock x:Name="TxtWelcomeTopSub" Text="Sign in to sync" FontSize="11.5" Foreground="#8FA4C7"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Button>
+                            </Button>
 
-                        <!-- BLOQUE CENTRAL -->
-                        <StackPanel x:Name="WelcomeContentPanel" MaxWidth="860" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,24,0,0">
+                            <!-- SELECTOR DESPLEGABLE DE PERFIL ACTIVO -->
+                            <Button x:Name="BtnProfileDropdown" Style="{StaticResource SoftCardButtonStyle}" Padding="14,9" Margin="0,0,10,0" Click="BtnProfileDropdown_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock x:Name="TxtProfilePrefix" Text="Profile:" FontSize="13" Foreground="#8C97AD" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtActiveProfileName" Text="Predeterminado" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                    <Path Data="M6,9 L12,15 L18,9" Stroke="#8C97AD" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="10" Height="10" Stretch="Uniform" Margin="8,1,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Popup x:Name="ProfilePopup" PlacementTarget="{Binding ElementName=BtnProfileDropdown}"
+                                   Placement="Bottom" HorizontalOffset="0" VerticalOffset="6"
+                                   StaysOpen="False" AllowsTransparency="True">
+                                <Border Background="#0B0E17" BorderBrush="#26334D" BorderThickness="1" CornerRadius="7" Padding="6" Width="210">
+                                    <StackPanel>
+                                        <Button Content="⚡  Predeterminado" Tag="Predeterminado" Style="{StaticResource LangMenuItemStyle}" Click="SelectOptimizationProfile_Click"/>
+                                        <Button Content="🎮  Gaming Competitivo" Tag="Gaming Competitivo" Style="{StaticResource LangMenuItemStyle}" Click="SelectOptimizationProfile_Click"/>
+                                        <Button Content="💻  Trabajo / Desarrollo" Tag="Trabajo / Desarrollo" Style="{StaticResource LangMenuItemStyle}" Click="SelectOptimizationProfile_Click"/>
+                                        <Button Content="🔇  Silencioso / Bajo Consumo" Tag="Silencioso / Bajo Consumo" Style="{StaticResource LangMenuItemStyle}" Click="SelectOptimizationProfile_Click"/>
+                                    </StackPanel>
+                                </Border>
+                            </Popup>
+
+                            <!-- TUERCA DE CONFIGURACIÓN GENERAL -->
+                            <Button x:Name="BtnOpenGeneralSettings" Style="{StaticResource SoftCardButtonStyle}" Width="42" Height="42" Padding="0" Click="BtnOpenGeneralSettings_Click">
+                                <Path Data="M12,8.5 A3.5,3.5 0 1,0 15.5,12 A3.5,3.5 0 0,0 12,8.5 Z M19.4,13 L21.5,14.6 L19.8,17.5 L17.3,16.5 A7.6,7.6 0 0,1 15.7,17.4 L15.3,20 H12 L11.6,17.4 A7.6,7.6 0 0,1 10,16.5 L7.5,17.5 L5.8,14.6 L7.9,13 A7.8,7.8 0 0,1 7.9,11 L5.8,9.4 L7.5,6.5 L10,7.5 A7.6,7.6 0 0,1 11.6,6.6 L12,4 H15.3 L15.7,6.6 A7.6,7.6 0 0,1 17.3,7.5 L19.8,6.5 L21.5,9.4 L19.4,11 A7.8,7.8 0 0,1 19.4,13 Z"
+                                      Stroke="#C8D0E0" StrokeThickness="1.5" StrokeLineJoin="Round" Width="18" Height="18" Stretch="Uniform"/>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- BLOQUE CENTRAL DE INICIO -->
+                        <StackPanel x:Name="WelcomeContentPanel" MaxWidth="860" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,36,0,0">
                             <StackPanel.Triggers>
                                 <EventTrigger RoutedEvent="FrameworkElement.Loaded">
                                     <BeginStoryboard>
                                         <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.45"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.5"/>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </EventTrigger>
                             </StackPanel.Triggers>
 
-                            <!-- EMBLEMA DE ARAÑA GEOMÉTRICA REDISEÑADO -->
-                            <Border x:Name="WelcomeLogoContainer" Width="108" Height="108" HorizontalAlignment="Center" Margin="0,0,0,6" Background="Transparent" Cursor="Hand">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
-                                        <Setter Property="RenderTransform">
-                                            <Setter.Value>
-                                                <ScaleTransform ScaleX="1" ScaleY="1"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Trigger.EnterActions>
-                                                    <BeginStoryboard>
-                                                        <Storyboard>
-                                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.06" Duration="0:0:0.18"/>
-                                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.06" Duration="0:0:0.18"/>
-                                                        </Storyboard>
-                                                    </BeginStoryboard>
-                                                </Trigger.EnterActions>
-                                                <Trigger.ExitActions>
-                                                    <BeginStoryboard>
-                                                        <Storyboard>
-                                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.0" Duration="0:0:0.18"/>
-                                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.0" Duration="0:0:0.18"/>
-                                                        </Storyboard>
-                                                    </BeginStoryboard>
-                                                </Trigger.ExitActions>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
+                            <!-- ARAÑA GEOMÉTRICA CON SIMBOLOGÍA MATEMÁTICA (Σ, π, ∞, EJES) -->
+                            <Border x:Name="WelcomeLogoContainer" Width="122" Height="122" HorizontalAlignment="Center" Margin="0,0,0,6" Background="Transparent" Cursor="Hand">
+                                <Viewbox Width="118" Height="118">
+                                    <Canvas Width="120" Height="120">
+                                        <!-- Plano cartesiano de fondo sutil -->
+                                        <Line X1="60" Y1="6" X2="60" Y2="114" Stroke="#13223D" StrokeThickness="1" StrokeDashArray="3 3"/>
+                                        <Line X1="6" Y1="60" X2="114" Y2="60" Stroke="#13223D" StrokeThickness="1" StrokeDashArray="3 3"/>
+                                        <Ellipse Canvas.Left="10" Canvas.Top="10" Width="100" Height="100" Stroke="#193361" StrokeThickness="1.2" StrokeDashArray="6 4"/>
 
-                                <Viewbox Width="104" Height="104">
-                                    <Canvas Width="112" Height="112">
-                                        <!-- Anillos orbitales de precisión -->
-                                        <Ellipse Canvas.Left="8" Canvas.Top="8" Width="96" Height="96" Stroke="#1B3666" StrokeThickness="1.3" StrokeDashArray="5 3"/>
-                                        <Ellipse Canvas.Left="16" Canvas.Top="16" Width="80" Height="80" Stroke="#14284D" StrokeThickness="1"/>
+                                        <!-- 8 PATAS DE ARAÑA ARTICULADAS EN DOBLE QUIEBRE -->
+                                        <!-- Izquierda 1 (frontal) -->
+                                        <Path Data="M53,46 L34,24 L17,12" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                        <!-- Izquierda 2 -->
+                                        <Path Data="M50,53 L26,38 L7,31" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                        <!-- Izquierda 3 -->
+                                        <Path Data="M50,62 L24,62 L5,68" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                        <!-- Izquierda 4 (trasera) -->
+                                        <Path Data="M53,70 L33,89 L18,106" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
 
-                                        <!-- Patas delanteras con articulación -->
-                                        <Path Data="M47,42 L26,21 L16,8 M65,42 L86,21 L96,8"
-                                              Stroke="#3B82F6" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                        <Ellipse Canvas.Left="23.5" Canvas.Top="18.5" Width="5" Height="5" Fill="#93C5FD"/>
-                                        <Ellipse Canvas.Left="83.5" Canvas.Top="18.5" Width="5" Height="5" Fill="#93C5FD"/>
+                                        <!-- Derecha 1 (frontal) -->
+                                        <Path Data="M67,46 L86,24 L103,12" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                        <!-- Derecha 2 -->
+                                        <Path Data="M70,53 L94,38 L113,31" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                        <!-- Derecha 3 -->
+                                        <Path Data="M70,62 L96,62 L115,68" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                        <!-- Derecha 4 (trasera) -->
+                                        <Path Data="M67,70 L87,89 L102,106" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
 
-                                        <!-- Patas medio-delanteras -->
-                                        <Path Data="M43,49 L18,39 L7,28 M69,49 L94,39 L105,28"
-                                              Stroke="#3B82F6" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                        <Ellipse Canvas.Left="15.5" Canvas.Top="36.5" Width="5" Height="5" Fill="#93C5FD"/>
-                                        <Ellipse Canvas.Left="91.5" Canvas.Top="36.5" Width="5" Height="5" Fill="#93C5FD"/>
+                                        <!-- Articulaciones con puntos de precisión -->
+                                        <Ellipse Canvas.Left="31.5" Canvas.Top="21.5" Width="5" Height="5" Fill="#93C5FD"/>
+                                        <Ellipse Canvas.Left="83.5" Canvas.Top="21.5" Width="5" Height="5" Fill="#93C5FD"/>
+                                        <Ellipse Canvas.Left="23.5" Canvas.Top="35.5" Width="5" Height="5" Fill="#93C5FD"/>
+                                        <Ellipse Canvas.Left="91.5" Canvas.Top="35.5" Width="5" Height="5" Fill="#93C5FD"/>
+                                        <Ellipse Canvas.Left="21.5" Canvas.Top="59.5" Width="5" Height="5" Fill="#93C5FD"/>
+                                        <Ellipse Canvas.Left="93.5" Canvas.Top="59.5" Width="5" Height="5" Fill="#93C5FD"/>
+                                        <Ellipse Canvas.Left="30.5" Canvas.Top="86.5" Width="5" Height="5" Fill="#93C5FD"/>
+                                        <Ellipse Canvas.Left="84.5" Canvas.Top="86.5" Width="5" Height="5" Fill="#93C5FD"/>
 
-                                        <!-- Patas medio-traseras -->
-                                        <Path Data="M43,59 L18,69 L7,82 M69,59 L94,69 L105,82"
-                                              Stroke="#3B82F6" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                        <Ellipse Canvas.Left="15.5" Canvas.Top="66.5" Width="5" Height="5" Fill="#93C5FD"/>
-                                        <Ellipse Canvas.Left="91.5" Canvas.Top="66.5" Width="5" Height="5" Fill="#93C5FD"/>
+                                        <!-- Cefalotórax superior con símbolo π -->
+                                        <Polygon Points="60,26 71,38 60,48 49,38" Fill="#FFFFFF"/>
+                                        <TextBlock Canvas.Left="55.5" Canvas.Top="30.5" Text="π" FontSize="12" FontWeight="Bold" Foreground="#0B1933"/>
 
-                                        <!-- Patas traseras -->
-                                        <Path Data="M47,67 L27,88 L17,102 M65,67 L85,88 L95,102"
-                                              Stroke="#3B82F6" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                        <Ellipse Canvas.Left="24.5" Canvas.Top="85.5" Width="5" Height="5" Fill="#93C5FD"/>
-                                        <Ellipse Canvas.Left="82.5" Canvas.Top="85.5" Width="5" Height="5" Fill="#93C5FD"/>
-
-                                        <!-- Quelíceros frontales -->
-                                        <Path Data="M51,26 L49,17 M61,26 L63,17" Stroke="#60A5FA" StrokeThickness="2.4" StrokeStartLineCap="Round"/>
-
-                                        <!-- Cefalotórax facetado -->
-                                        <Polygon Points="56,24 67,37 56,49 45,37" Fill="#FFFFFF"/>
-                                        <Polygon Points="56,28 62,37 56,45 50,37" Fill="#DBEAFE"/>
-
-                                        <!-- Abdomen blindado -->
-                                        <Polygon Points="56,49 73,69 56,92 39,69" Fill="#0F254A" Stroke="#FFFFFF" StrokeThickness="2.6" StrokeLineJoin="Round"/>
-                                        <!-- Núcleo energético dorsal -->
-                                        <Polygon Points="56,57 63,69 56,81 49,69" Fill="#3B82F6"/>
-                                        <Polygon Points="56,63 59,69 56,75 53,69" Fill="#FFFFFF"/>
+                                        <!-- Abdomen alargado de araña con símbolo Σ e ∞ -->
+                                        <Polygon Points="60,48 73,68 60,96 47,68" Fill="#0D2142" Stroke="#FFFFFF" StrokeThickness="2.4" StrokeLineJoin="Round"/>
+                                        <TextBlock Canvas.Left="54.8" Canvas.Top="52" Text="Σ" FontSize="13" FontWeight="Bold" Foreground="#60A5FA"/>
+                                        <TextBlock Canvas.Left="53.5" Canvas.Top="69" Text="∞" FontSize="14" FontWeight="Bold" Foreground="#93C5FD"/>
                                     </Canvas>
                                 </Viewbox>
                             </Border>
@@ -607,38 +291,10 @@
                             <TextBlock Text="Archon" FontSize="44" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,2"/>
 
                             <TextBlock x:Name="TxtWelcomeSubtitle" Text="Welcome" FontSize="17.5" Foreground="{StaticResource TextSecondary}"
-                                       HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                                       HorizontalAlignment="Center" Margin="0,0,0,26"/>
 
-                            <!-- BLOQUE DE INICIO DE SESIÓN / REGISTRO EN INICIO -->
-                            <Border x:Name="WelcomeAuthCard" Background="#CC090B12" BorderBrush="#1F283D" BorderThickness="1"
-                                    CornerRadius="8" Padding="18,13" Margin="0,0,0,22" HorizontalAlignment="Center" MinWidth="540">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <Border Grid.Column="0" Width="42" Height="42" CornerRadius="21" Background="#111829" BorderBrush="#2E5AA3" BorderThickness="1.5" Margin="0,0,14,0">
-                                        <TextBlock x:Name="WelcomeCardAvatarInitial" Text="?" FontSize="16" FontWeight="Bold" Foreground="#60A5FA"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
-                                        <TextBlock x:Name="TxtWelcomeAuthTitle" Text="Archon Cloud Profile" FontSize="14.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
-                                        <TextBlock x:Name="TxtWelcomeAuthDesc" Text="Sign in or create an account to save your tweaks and presets." FontSize="12.5" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
-                                    </StackPanel>
-
-                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Button x:Name="BtnWelcomeSignIn" Content="Sign in" Style="{StaticResource PrimaryButtonStyle}" Padding="15,8" FontSize="13" Margin="0,0,8,0" Click="BtnOpenSignIn_Click"/>
-                                        <Button x:Name="BtnWelcomeRegister" Content="Register" Style="{StaticResource SoftCardButtonStyle}" Padding="15,8" FontSize="13" Click="BtnOpenRegister_Click"/>
-                                        <Button x:Name="BtnWelcomeSignOutInline" Content="Sign out" Style="{StaticResource SoftCardButtonStyle}" Padding="14,8" FontSize="13" Visibility="Collapsed" Click="BtnAccountSignOut_Click"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-
-                            <!-- 3 BOTONES PRINCIPALES (COMENZAR, VER MIS COMPONENTES, RENDIMIENTO) -->
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,24">
+                            <!-- 3 BOTONES PRINCIPALES -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,26">
                                 <Button x:Name="BtnStartStepZero" Style="{StaticResource PrimaryButtonStyle}" Padding="30,14" Margin="0,0,12,0" Click="BtnStartStepZero_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock x:Name="TxtStartButtonLabel" Text="Get Started" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -664,28 +320,9 @@
                                 </Button>
                             </StackPanel>
 
-                            <!-- INDICADOR DE CARGA ANTES DE MOSTRAR COMPONENTES -->
-                            <Border x:Name="HardwareLoadingPanel" Visibility="Collapsed" MinWidth="660" Background="#CC090A0F"
-                                    BorderBrush="#22304A" BorderThickness="1" CornerRadius="7" Padding="26,22" Margin="0,0,0,14">
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <Grid Width="34" Height="34" Margin="0,0,16,0">
-                                        <Ellipse Width="34" Height="34" Stroke="#1B263B" StrokeThickness="2.5"/>
-                                        <Path Data="M17,2 A15,15 0 0,1 32,17" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" RenderTransformOrigin="0.5,0.5">
-                                            <Path.RenderTransform>
-                                                <RotateTransform x:Name="HardwareSpinnerRotate" Angle="0"/>
-                                            </Path.RenderTransform>
-                                        </Path>
-                                    </Grid>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock x:Name="TxtHardwareLoadingTitle" Text="Scanning system hardware..." FontSize="15.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
-                                        <TextBlock x:Name="TxtHardwareLoadingSub" Text="Reading CPU, GPU, RAM, storage and motherboard sensors..." FontSize="13" Foreground="{StaticResource TextMuted}"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- PANEL INTERACTIVO DE HARDWARE -->
+                            <!-- RESUMEN INSTANTÁNEO DE COMPONENTES -->
                             <Border x:Name="HardwareListPanel" Visibility="Collapsed" MinWidth="680" Background="#CC090A0F"
-                                    BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="7" Padding="26,22">
+                                    BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1" CornerRadius="7" Padding="26,22">
                                 <StackPanel>
                                     <Grid Margin="0,0,0,18">
                                         <Grid.ColumnDefinitions>
@@ -767,9 +404,9 @@
                     </Grid>
                 </ScrollViewer>
 
-                <!-- VISTA 1B: ESPECIFICACIONES COMPLETAS DEL EQUIPO -->
+                <!-- VISTA 1B: ESPECIFICACIONES COMPLETAS DEL SISTEMA CON CARGA AL TOCAR VER MÁS -->
                 <ScrollViewer x:Name="FullHardwareView" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel x:Name="FullHardwareContainer" Width="1080" HorizontalAlignment="Center" Margin="28,18,28,48">
+                    <StackPanel x:Name="FullHardwareContainer" Width="1100" HorizontalAlignment="Center" Margin="28,18,28,48">
                         <StackPanel.RenderTransform>
                             <TranslateTransform x:Name="FullHardwareSlideTransform" Y="0"/>
                         </StackPanel.RenderTransform>
@@ -785,10 +422,29 @@
 
                         <TextBlock x:Name="TxtFullSpecsTitle" Text="Full system specifications" FontSize="29" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,22"/>
 
+                        <!-- CARGA AL ENTRAR A VER MÁS -->
+                        <Border x:Name="FullHardwareLoadingPanel" Visibility="Collapsed" Background="#D9090A0F"
+                                BorderBrush="#24334F" BorderThickness="1" CornerRadius="8" Padding="32,28" Margin="0,0,0,18">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Grid Width="36" Height="36" Margin="0,0,16,0">
+                                    <Ellipse Width="36" Height="36" Stroke="#1B2840" StrokeThickness="2.5"/>
+                                    <Path Data="M18,2 A16,16 0 0,1 34,18" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" RenderTransformOrigin="0.5,0.5">
+                                        <Path.RenderTransform>
+                                            <RotateTransform x:Name="DeepScanSpinnerRotate" Angle="0"/>
+                                        </Path.RenderTransform>
+                                    </Path>
+                                </Grid>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock x:Name="TxtDeepScanTitle" Text="Loading advanced system specifications..." FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock x:Name="TxtDeepScanSub" Text="Querying CPU architecture, BIOS, memory slots, drives, network adapters and OS details..." FontSize="13" Foreground="{StaticResource TextMuted}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
                         <ItemsControl x:Name="FullHardwareSectionsControl">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="#D9090A0F" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="7" Padding="26,20" Margin="0,0,0,16">
+                                    <Border Background="#D9090A0F" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1" CornerRadius="7" Padding="26,20" Margin="0,0,0,16">
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                                                 <Border Width="4" Height="18" CornerRadius="2" Background="#3B82F6" Margin="0,0,11,0" VerticalAlignment="Center"/>
@@ -801,7 +457,7 @@
                                                         <Border BorderBrush="#161924" BorderThickness="0,0,0,1" Padding="0,12">
                                                             <Grid>
                                                                 <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="310"/>
+                                                                    <ColumnDefinition Width="320"/>
                                                                     <ColumnDefinition Width="*"/>
                                                                 </Grid.ColumnDefinitions>
                                                                 <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="16" FontWeight="Medium" Foreground="#CED5E6" VerticalAlignment="Center"/>
@@ -819,10 +475,106 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- VISTA 1C: RENDIMIENTO EN TIEMPO REAL (NUEVA PESTAÑA) -->
+                <!-- VISTA 1D: MI PERFIL Y CONFIGURACIÓN GENERAL -->
+                <ScrollViewer x:Name="SettingsAndProfileView" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Width="1060" HorizontalAlignment="Center" Margin="28,18,28,48">
+                        <Button x:Name="BtnBackFromSettings" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left" Margin="-10,0,0,14" Click="BtnBackFromSettings_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="M19,12 L5,12 M11,6 L5,12 L11,18"
+                                      Stroke="#E4E7F2" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                      Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtBackFromSettingsLabel" Text="Back to home" FontSize="15" FontWeight="Medium" Foreground="#EEF1FA" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- PESTAÑAS INTERNAS: MI PERFIL / CONFIGURACIÓN GENERAL -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,22">
+                            <Button x:Name="BtnSubTabProfile" Content="My Profile" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0" Click="BtnSubTabProfile_Click"/>
+                            <Button x:Name="BtnSubTabGeneral" Content="General Settings" Style="{StaticResource SoftCardButtonStyle}" Click="BtnSubTabGeneral_Click"/>
+                        </StackPanel>
+
+                        <!-- SUBVISTA PERFIL -->
+                        <Border x:Name="SubPanelProfile" Background="#D9090A0F" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="28,24">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" HorizontalAlignment="Center" Margin="0,0,32,0">
+                                    <Border Width="104" Height="104" CornerRadius="52" Background="#101829" BorderBrush="#3B82F6" BorderThickness="2" Margin="0,0,0,14">
+                                        <Grid>
+                                            <Ellipse Margin="3">
+                                                <Ellipse.Fill>
+                                                    <ImageBrush x:Name="ProfilePageAvatarBrush" Stretch="UniformToFill"/>
+                                                </Ellipse.Fill>
+                                            </Ellipse>
+                                            <TextBlock x:Name="ProfilePageAvatarInitial" Text="A" FontSize="36" FontWeight="Bold" Foreground="#60A5FA"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                    <Button x:Name="BtnChooseAvatarPhoto" Content="Load photo" Style="{StaticResource SoftCardButtonStyle}" Padding="14,8" FontSize="13" Click="BtnChooseAvatarPhoto_Click"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TxtProfileSectionTitle" Text="Account &amp; Identity" FontSize="22" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,14"/>
+                                    <TextBlock x:Name="TxtProfileNameLabel" Text="Display name" FontSize="13.5" Foreground="#A6ACBE" Margin="0,0,0,6"/>
+                                    <Border Background="#07080C" BorderBrush="#1F2433" BorderThickness="1" CornerRadius="6" MaxWidth="380" HorizontalAlignment="Left" Margin="0,0,0,16">
+                                        <TextBox x:Name="TxtProfileDisplayName" Background="Transparent" Foreground="#FFFFFF" CaretBrush="#FFFFFF"
+                                                 BorderThickness="0" Padding="12,10" FontSize="14.5"/>
+                                    </Border>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button x:Name="BtnSaveProfileChanges" Content="Save profile" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,12,0" Click="BtnSaveProfileChanges_Click"/>
+                                        <Button x:Name="BtnSignOutProfile" Content="Sign out" Style="{StaticResource SoftCardButtonStyle}" Click="BtnAccountSignOut_Click"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="TxtProfileFeedback" Text="" FontSize="13.5" Foreground="#4CC38A" Margin="0,12,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- SUBVISTA CONFIGURACIÓN GENERAL -->
+                        <StackPanel x:Name="SubPanelGeneral" Visibility="Collapsed">
+                            <Border Background="#D9090A0F" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="24,20" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock x:Name="TxtGenBlockTitle" Text="General &amp; Interface" FontSize="18" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,14"/>
+
+                                    <Grid Margin="0,0,0,14">
+                                        <TextBlock x:Name="TxtOptNotifications" Text="Desktop notifications for completed tasks" FontSize="15" Foreground="#E4E8F2" VerticalAlignment="Center"/>
+                                        <CheckBox x:Name="ChkOptNotifications" Style="{StaticResource ModernSwitchStyle}" IsChecked="True" HorizontalAlignment="Right"/>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,14">
+                                        <TextBlock x:Name="TxtOptExperimental" Text="Enable experimental features &amp; preview telemetry" FontSize="15" Foreground="#E4E8F2" VerticalAlignment="Center"/>
+                                        <CheckBox x:Name="ChkOptExperimental" Style="{StaticResource ModernSwitchStyle}" IsChecked="False" HorizontalAlignment="Right"/>
+                                    </Grid>
+
+                                    <Grid>
+                                        <TextBlock x:Name="TxtOptAnalytics" Text="Anonymous diagnostic &amp; performance analytics" FontSize="15" Foreground="#E4E8F2" VerticalAlignment="Center"/>
+                                        <CheckBox x:Name="ChkOptAnalytics" Style="{StaticResource ModernSwitchStyle}" IsChecked="True" HorizontalAlignment="Right"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#D9090A0F" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="24,20">
+                                <StackPanel>
+                                    <TextBlock x:Name="TxtGenSystemBlockTitle" Text="Updates, Feedback &amp; About" FontSize="18" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,14"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button x:Name="BtnCheckUpdates" Content="Check for updates" Style="{StaticResource SoftCardButtonStyle}" Margin="0,0,10,0" Click="BtnSettingsAction_Click"/>
+                                        <Button x:Name="BtnShareFeedback" Content="Share / Feedback" Style="{StaticResource SoftCardButtonStyle}" Margin="0,0,10,0" Click="BtnSettingsAction_Click"/>
+                                        <Button x:Name="BtnResetSettings" Content="Reset settings" Style="{StaticResource SoftCardButtonStyle}" Margin="0,0,10,0" Click="BtnResetSettings_Click"/>
+                                        <Button x:Name="BtnAboutArchon" Content="About Archon" Style="{StaticResource SoftCardButtonStyle}" Click="BtnSettingsAction_Click"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="TxtSettingsStatusMsg" Text="" FontSize="13.5" Foreground="#60A5FA" Margin="0,12,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- VISTA 1C: RENDIMIENTO EN TIEMPO REAL (DISEÑO FLUIDO SIN CAJITAS) -->
                 <ScrollViewer x:Name="PerformanceView" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel Width="1120" HorizontalAlignment="Center" Margin="28,18,28,44">
-                        <Grid Margin="0,0,0,14">
+                    <StackPanel Width="1140" HorizontalAlignment="Center" Margin="28,16,28,44">
+                        <Grid Margin="0,0,0,12">
                             <Button x:Name="BtnBackFromPerformance" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left" Margin="-10,0,0,0" Click="BtnBackFromPerformance_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <Path Data="M19,12 L5,12 M11,6 L5,12 L11,18"
@@ -832,158 +584,197 @@
                                 </StackPanel>
                             </Button>
 
-                            <Border HorizontalAlignment="Right" Background="#0C1726" BorderBrush="#1E3A5F" BorderThickness="1" CornerRadius="12" Padding="12,5" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <Ellipse Width="8" Height="8" Fill="#22C55E" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtPerfLiveBadge" Text="LIVE TELEMETRY · 1.0s" FontSize="12.5" FontWeight="SemiBold" Foreground="#93C5FD"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock x:Name="TxtPerfTitle" Text="Real-time hardware performance" FontSize="28" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,3"/>
+                        <TextBlock x:Name="TxtPerfSubtitle" Text="Continuous system telemetry across processor, graphics, memory, storage and network." FontSize="15" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,18"/>
+
+                        <!-- GRÁFICO PANORÁMICO SUPERIOR ABIERTO -->
+                        <Grid Margin="0,0,0,18">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="130"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
                                 <StackPanel Orientation="Horizontal">
-                                    <Ellipse Width="8" Height="8" Fill="#22C55E" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtPerfLiveBadge" Text="LIVE TELEMETRY · 1.0s" FontSize="12" FontWeight="SemiBold" Foreground="#93C5FD"/>
+                                    <TextBlock x:Name="TxtPerfOverviewTitle" Text="SYSTEM LOAD CURVE" FontSize="12" FontWeight="Bold" Foreground="#5D9BE6" Margin="0,0,18,0" VerticalAlignment="Center"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,14,0">
+                                        <Ellipse Width="8" Height="8" Fill="#3B82F6" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="CPU" FontSize="12" Foreground="#C8D0E0"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,14,0">
+                                        <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="GPU" FontSize="12" Foreground="#C8D0E0"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="8" Height="8" Fill="#A78BFA" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="RAM" FontSize="12" Foreground="#C8D0E0"/>
+                                    </StackPanel>
                                 </StackPanel>
+                                <TextBlock x:Name="TxtPerfOverviewSummary" Text="CPU 0% · GPU 0% · RAM 0%" FontSize="12.5" FontWeight="SemiBold" Foreground="#E4E8F2" HorizontalAlignment="Right"/>
+                            </Grid>
+
+                            <Grid Grid.Row="1" x:Name="PerfOverviewGraphHost">
+                                <Line X1="0" Y1="32" X2="1140" Y2="32" Stroke="#141C2E" StrokeThickness="1" StrokeDashArray="4 4"/>
+                                <Line X1="0" Y1="65" X2="1140" Y2="65" Stroke="#141C2E" StrokeThickness="1" StrokeDashArray="4 4"/>
+                                <Line X1="0" Y1="98" X2="1140" Y2="98" Stroke="#141C2E" StrokeThickness="1" StrokeDashArray="4 4"/>
+                                <Polyline x:Name="PerfRamSparkline" Stroke="#A78BFA" StrokeThickness="2" StrokeLineJoin="Round"/>
+                                <Polyline x:Name="PerfGpuSparkline" Stroke="#10B981" StrokeThickness="2.2" StrokeLineJoin="Round"/>
+                                <Polyline x:Name="PerfCpuSparkline" Stroke="#3B82F6" StrokeThickness="2.5" StrokeLineJoin="Round"/>
+                            </Grid>
+                        </Grid>
+
+                        <Separator Background="#1B2233" Margin="0,0,0,6"/>
+
+                        <!-- FILA 1: CPU -->
+                        <Grid Margin="0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="92"/>
+                                <ColumnDefinition Width="260"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="240"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Width="64" Height="64" CornerRadius="32" Background="#0C1526" BorderBrush="#3B82F6" BorderThickness="2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtPerfCpuPct" Text="0%" FontSize="17" FontWeight="Bold" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
+                                <TextBlock x:Name="TxtPerfCpuHeader" Text="PROCESSOR" FontSize="11.5" FontWeight="Bold" Foreground="#5D9BE6"/>
+                                <TextBlock x:Name="TxtPerfCpuModel" Text="Detecting CPU..." FontSize="14.5" FontWeight="SemiBold" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock x:Name="TxtPerfCpuCores" Text="Threads: --" FontSize="12" Foreground="#8C97AD"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <ProgressBar x:Name="PerfCpuBar" Minimum="0" Maximum="100" Value="0" Height="6" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock x:Name="TxtPerfCpuTemp" Text="Temp: -- °C" FontSize="13" FontWeight="SemiBold" Foreground="#F59E0B" Margin="0,0,22,0"/>
+                                    <TextBlock x:Name="TxtPerfCpuClock" Text="Clock: -- MHz" FontSize="13" Foreground="#D4D6E0"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Border Grid.Column="3" Height="50" Background="#070A12" BorderBrush="#161E30" BorderThickness="1" CornerRadius="6" ClipToBounds="True">
+                                <Grid x:Name="PerfCpuMiniHost">
+                                    <Polyline x:Name="PerfCpuMiniLine" Stroke="#3B82F6" StrokeThickness="2" StrokeLineJoin="Round"/>
+                                </Grid>
                             </Border>
                         </Grid>
 
-                        <TextBlock x:Name="TxtPerfTitle" Text="Real-time hardware performance" FontSize="28" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
-                        <TextBlock x:Name="TxtPerfSubtitle" Text="Live utilization, temperatures, clock speeds, memory and network throughput." FontSize="15" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,22"/>
+                        <Separator Background="#141A26"/>
 
-                        <!-- FILA 1: CPU Y GPU -->
-                        <Grid Margin="0,0,0,16">
+                        <!-- FILA 2: GPU -->
+                        <Grid Margin="0,12">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="92"/>
+                                <ColumnDefinition Width="260"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="16"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="240"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- TARJETA CPU -->
-                            <Border Grid.Column="0" Background="#D9090A0F" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="8" Padding="22,18">
-                                <StackPanel>
-                                    <Grid Margin="0,0,0,10">
-                                        <StackPanel>
-                                            <TextBlock x:Name="TxtPerfCpuHeader" Text="PROCESSOR (CPU)" FontSize="12" FontWeight="Bold" Foreground="#5D9BE6"/>
-                                            <TextBlock x:Name="TxtPerfCpuModel" Text="Detecting CPU..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
-                                        </StackPanel>
-                                        <TextBlock x:Name="TxtPerfCpuPct" Text="0%" FontSize="26" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                    </Grid>
-
-                                    <Border Height="68" Background="#06080E" BorderBrush="#161C2B" BorderThickness="1" CornerRadius="6" Margin="0,0,0,12" ClipToBounds="True">
-                                        <Grid x:Name="PerfCpuGraphHost">
-                                            <Polyline x:Name="PerfCpuSparkline" Stroke="#3B82F6" StrokeThickness="2.2" StrokeLineJoin="Round"/>
-                                        </Grid>
-                                    </Border>
-
-                                    <ProgressBar x:Name="PerfCpuBar" Minimum="0" Maximum="100" Value="0" Height="6" Margin="0,0,0,12"/>
-
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" x:Name="TxtPerfCpuTemp" Text="Temp: -- °C" FontSize="13" FontWeight="SemiBold" Foreground="#F59E0B"/>
-                                        <TextBlock Grid.Column="1" x:Name="TxtPerfCpuClock" Text="Clock: -- MHz" FontSize="13" Foreground="#D4D6E0" HorizontalAlignment="Center"/>
-                                        <TextBlock Grid.Column="2" x:Name="TxtPerfCpuCores" Text="Cores: --" FontSize="13" Foreground="#A6ACBE" HorizontalAlignment="Right"/>
-                                    </Grid>
-                                </StackPanel>
+                            <Border Grid.Column="0" Width="64" Height="64" CornerRadius="32" Background="#0A1D18" BorderBrush="#10B981" BorderThickness="2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtPerfGpuPct" Text="0%" FontSize="17" FontWeight="Bold" Foreground="#34D399" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
 
-                            <!-- TARJETA GPU -->
-                            <Border Grid.Column="2" Background="#D9090A0F" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="8" Padding="22,18">
-                                <StackPanel>
-                                    <Grid Margin="0,0,0,10">
-                                        <StackPanel>
-                                            <TextBlock x:Name="TxtPerfGpuHeader" Text="GRAPHICS (GPU)" FontSize="12" FontWeight="Bold" Foreground="#34D399"/>
-                                            <TextBlock x:Name="TxtPerfGpuModel" Text="Detecting GPU..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
-                                        </StackPanel>
-                                        <TextBlock x:Name="TxtPerfGpuPct" Text="0%" FontSize="26" FontWeight="Bold" Foreground="#10B981" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                    </Grid>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
+                                <TextBlock x:Name="TxtPerfGpuHeader" Text="GRAPHICS" FontSize="11.5" FontWeight="Bold" Foreground="#34D399"/>
+                                <TextBlock x:Name="TxtPerfGpuModel" Text="Detecting GPU..." FontSize="14.5" FontWeight="SemiBold" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock x:Name="TxtPerfGpuDriver" Text="Driver: --" FontSize="12" Foreground="#8C97AD"/>
+                            </StackPanel>
 
-                                    <Border Height="68" Background="#06080E" BorderBrush="#161C2B" BorderThickness="1" CornerRadius="6" Margin="0,0,0,12" ClipToBounds="True">
-                                        <Grid x:Name="PerfGpuGraphHost">
-                                            <Polyline x:Name="PerfGpuSparkline" Stroke="#10B981" StrokeThickness="2.2" StrokeLineJoin="Round"/>
-                                        </Grid>
-                                    </Border>
-
-                                    <ProgressBar x:Name="PerfGpuBar" Foreground="#10B981" Minimum="0" Maximum="100" Value="0" Height="6" Margin="0,0,0,12"/>
-
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" x:Name="TxtPerfGpuTemp" Text="Temp: -- °C" FontSize="13" FontWeight="SemiBold" Foreground="#F59E0B"/>
-                                        <TextBlock Grid.Column="1" x:Name="TxtPerfGpuVram" Text="VRAM: --" FontSize="13" Foreground="#D4D6E0" HorizontalAlignment="Center"/>
-                                        <TextBlock Grid.Column="2" x:Name="TxtPerfGpuDriver" Text="Driver: --" FontSize="13" Foreground="#A6ACBE" HorizontalAlignment="Right"/>
-                                    </Grid>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <ProgressBar x:Name="PerfGpuBar" Foreground="#10B981" Minimum="0" Maximum="100" Value="0" Height="6" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock x:Name="TxtPerfGpuTemp" Text="Temp: -- °C" FontSize="13" FontWeight="SemiBold" Foreground="#F59E0B" Margin="0,0,22,0"/>
+                                    <TextBlock x:Name="TxtPerfGpuVram" Text="VRAM: --" FontSize="13" Foreground="#D4D6E0"/>
                                 </StackPanel>
+                            </StackPanel>
+
+                            <Border Grid.Column="3" Height="50" Background="#070A12" BorderBrush="#161E30" BorderThickness="1" CornerRadius="6" ClipToBounds="True">
+                                <Grid x:Name="PerfGpuMiniHost">
+                                    <Polyline x:Name="PerfGpuMiniLine" Stroke="#10B981" StrokeThickness="2" StrokeLineJoin="Round"/>
+                                </Grid>
                             </Border>
                         </Grid>
 
-                        <!-- FILA 2: RAM, DISCO Y RED -->
-                        <Grid>
+                        <Separator Background="#141A26"/>
+
+                        <!-- FILA 3: RAM -->
+                        <Grid Margin="0,12">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="92"/>
+                                <ColumnDefinition Width="260"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="16"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="16"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="240"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- TARJETA RAM -->
-                            <Border Grid.Column="0" Background="#D9090A0F" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="8" Padding="20,16">
-                                <StackPanel>
-                                    <Grid Margin="0,0,0,8">
-                                        <TextBlock x:Name="TxtPerfRamHeader" Text="MEMORY (RAM)" FontSize="12" FontWeight="Bold" Foreground="#A78BFA"/>
-                                        <TextBlock x:Name="TxtPerfRamPct" Text="0%" FontSize="20" FontWeight="Bold" Foreground="#8B5CF6" HorizontalAlignment="Right"/>
-                                    </Grid>
-                                    <Border Height="54" Background="#06080E" BorderBrush="#161C2B" BorderThickness="1" CornerRadius="6" Margin="0,0,0,10" ClipToBounds="True">
-                                        <Grid x:Name="PerfRamGraphHost">
-                                            <Polyline x:Name="PerfRamSparkline" Stroke="#8B5CF6" StrokeThickness="2" StrokeLineJoin="Round"/>
-                                        </Grid>
-                                    </Border>
-                                    <ProgressBar x:Name="PerfRamBar" Foreground="#8B5CF6" Minimum="0" Maximum="100" Value="0" Height="5" Margin="0,0,0,8"/>
-                                    <TextBlock x:Name="TxtPerfRamUsed" Text="0.0 / 0.0 GB" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF"/>
-                                    <TextBlock x:Name="TxtPerfRamSpeed" Text="Speed: --" FontSize="12" Foreground="#A6ACBE" Margin="0,2,0,0"/>
-                                </StackPanel>
+                            <Border Grid.Column="0" Width="64" Height="64" CornerRadius="32" Background="#140F26" BorderBrush="#A78BFA" BorderThickness="2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtPerfRamPct" Text="0%" FontSize="17" FontWeight="Bold" Foreground="#C4B5FD" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
 
-                            <!-- TARJETA ALMACENAMIENTO -->
-                            <Border Grid.Column="2" Background="#D9090A0F" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="8" Padding="20,16">
-                                <StackPanel>
-                                    <Grid Margin="0,0,0,8">
-                                        <TextBlock x:Name="TxtPerfDiskHeader" Text="STORAGE (SSD / NVMe)" FontSize="12" FontWeight="Bold" Foreground="#FBBF24"/>
-                                        <TextBlock x:Name="TxtPerfDiskPct" Text="0%" FontSize="20" FontWeight="Bold" Foreground="#F59E0B" HorizontalAlignment="Right"/>
-                                    </Grid>
-                                    <Border Height="54" Background="#06080E" BorderBrush="#161C2B" BorderThickness="1" CornerRadius="6" Margin="0,0,0,10" ClipToBounds="True">
-                                        <Grid x:Name="PerfDiskGraphHost">
-                                            <Polyline x:Name="PerfDiskSparkline" Stroke="#F59E0B" StrokeThickness="2" StrokeLineJoin="Round"/>
-                                        </Grid>
-                                    </Border>
-                                    <ProgressBar x:Name="PerfDiskBar" Foreground="#F59E0B" Minimum="0" Maximum="100" Value="0" Height="5" Margin="0,0,0,8"/>
-                                    <TextBlock x:Name="TxtPerfDiskRate" Text="R/W: 0.0 MB/s" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF"/>
-                                    <TextBlock x:Name="TxtPerfDiskModel" Text="Primary Disk" FontSize="12" Foreground="#A6ACBE" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
-                                </StackPanel>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
+                                <TextBlock x:Name="TxtPerfRamHeader" Text="MEMORY RAM" FontSize="11.5" FontWeight="Bold" Foreground="#A78BFA"/>
+                                <TextBlock x:Name="TxtPerfRamUsed" Text="0.0 / 0.0 GB" FontSize="14.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                <TextBlock x:Name="TxtPerfRamSpeed" Text="Speed: --" FontSize="12" Foreground="#8C97AD"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <ProgressBar x:Name="PerfRamBar" Foreground="#A78BFA" Minimum="0" Maximum="100" Value="0" Height="6" Margin="0,0,0,8"/>
+                                <TextBlock x:Name="TxtPerfRamDetail" Text="Physical memory allocation" FontSize="13" Foreground="#D4D6E0"/>
+                            </StackPanel>
+
+                            <Border Grid.Column="3" Height="50" Background="#070A12" BorderBrush="#161E30" BorderThickness="1" CornerRadius="6" ClipToBounds="True">
+                                <Grid x:Name="PerfRamMiniHost">
+                                    <Polyline x:Name="PerfRamMiniLine" Stroke="#A78BFA" StrokeThickness="2" StrokeLineJoin="Round"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <Separator Background="#141A26"/>
+
+                        <!-- FILA 4: ALMACENAMIENTO Y RED -->
+                        <Grid Margin="0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="92"/>
+                                <ColumnDefinition Width="260"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="240"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Width="64" Height="64" CornerRadius="32" Background="#1F1608" BorderBrush="#F59E0B" BorderThickness="2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtPerfDiskPct" Text="0%" FontSize="17" FontWeight="Bold" Foreground="#FBBF24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
 
-                            <!-- TARJETA RED -->
-                            <Border Grid.Column="4" Background="#D9090A0F" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="8" Padding="20,16">
-                                <StackPanel>
-                                    <Grid Margin="0,0,0,8">
-                                        <TextBlock x:Name="TxtPerfNetHeader" Text="NETWORK" FontSize="12" FontWeight="Bold" Foreground="#38BDF8"/>
-                                        <TextBlock x:Name="TxtPerfNetSpeedTag" Text="0 KB/s" FontSize="17" FontWeight="Bold" Foreground="#0EA5E9" HorizontalAlignment="Right"/>
-                                    </Grid>
-                                    <Border Height="54" Background="#06080E" BorderBrush="#161C2B" BorderThickness="1" CornerRadius="6" Margin="0,0,0,10" ClipToBounds="True">
-                                        <Grid x:Name="PerfNetGraphHost">
-                                            <Polyline x:Name="PerfNetSparkline" Stroke="#0EA5E9" StrokeThickness="2" StrokeLineJoin="Round"/>
-                                        </Grid>
-                                    </Border>
-                                    <TextBlock x:Name="TxtPerfNetDown" Text="↓ Download: 0 KB/s" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF"/>
-                                    <TextBlock x:Name="TxtPerfNetUp" Text="↑ Upload: 0 KB/s" FontSize="12.5" Foreground="#D4D6E0" Margin="0,2,0,0"/>
-                                    <TextBlock x:Name="TxtPerfNetAdapter" Text="Adapter: --" FontSize="11.5" Foreground="#A6ACBE" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
+                                <TextBlock x:Name="TxtPerfDiskHeader" Text="STORAGE &amp; NETWORK" FontSize="11.5" FontWeight="Bold" Foreground="#FBBF24"/>
+                                <TextBlock x:Name="TxtPerfDiskModel" Text="Primary Disk" FontSize="14.5" FontWeight="SemiBold" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock x:Name="TxtPerfNetAdapter" Text="Adapter: --" FontSize="12" Foreground="#8C97AD" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <TextBlock x:Name="TxtPerfDiskRate" Text="Disk R/W: 0.0 MB/s" FontSize="13.5" FontWeight="SemiBold" Foreground="#FBBF24" Margin="0,0,0,5"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock x:Name="TxtPerfNetDown" Text="↓ Down: 0 KB/s" FontSize="13" Foreground="#38BDF8" Margin="0,0,20,0"/>
+                                    <TextBlock x:Name="TxtPerfNetUp" Text="↑ Up: 0 KB/s" FontSize="13" Foreground="#93C5FD"/>
+                                    <TextBlock x:Name="TxtPerfNetSpeedTag" Text="0 KB/s" Visibility="Collapsed"/>
                                 </StackPanel>
+                            </StackPanel>
+
+                            <Border Grid.Column="3" Height="50" Background="#070A12" BorderBrush="#161E30" BorderThickness="1" CornerRadius="6" ClipToBounds="True">
+                                <Grid x:Name="PerfDiskMiniHost">
+                                    <Polyline x:Name="PerfDiskSparkline" Stroke="#F59E0B" StrokeThickness="1.8" StrokeLineJoin="Round"/>
+                                    <Polyline x:Name="PerfNetSparkline" Stroke="#38BDF8" StrokeThickness="1.8" StrokeLineJoin="Round"/>
+                                </Grid>
                             </Border>
                         </Grid>
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- VISTA 2: PREPARACIÓN DEL SISTEMA CON ANIMACIÓN ESCALONADA -->
+                <!-- VISTA 2: PREPARACIÓN DEL SISTEMA CON ENTRADA SUAVE ESCALONADA -->
                 <ScrollViewer x:Name="StepZeroView" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <ScrollViewer.Effect>
                         <BlurEffect x:Name="StepZeroBlur" Radius="0"/>
@@ -991,7 +782,6 @@
 
                     <StackPanel Width="1080" HorizontalAlignment="Center" Margin="28,18,28,48">
 
-                        <!-- BLOQUE 1: ENCABEZADO -->
                         <StackPanel x:Name="StepZeroHeaderBlock">
                             <StackPanel.RenderTransform>
                                 <TranslateTransform x:Name="StepZeroHeaderTransform" Y="0"/>
@@ -1011,7 +801,6 @@
                                        FontSize="16" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="24" Margin="0,0,0,24"/>
                         </StackPanel>
 
-                        <!-- AVISO DE BLOATWARE DETECTADO -->
                         <Border x:Name="BloatAlertBox" Visibility="Collapsed" Background="#0C111C" BorderBrush="#23334F" BorderThickness="1" CornerRadius="6" Padding="20,14" Margin="0,0,0,18">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="M12,3 L22,20 H2 Z M12,9 V13 M12,17 H12.01" Stroke="#5D9BE6" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="18" Height="18" Stretch="Uniform" Margin="0,1,12,0" VerticalAlignment="Top"/>
@@ -1022,7 +811,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- BLOQUE 2: OPCIÓN 1 -->
                         <Button x:Name="BtnFreshInstall" Style="{StaticResource PrepOptionButtonStyle}" Margin="0,0,0,0" Click="BtnFreshInstall_Click">
                             <Button.RenderTransform>
                                 <TranslateTransform x:Name="FreshInstallTransform" Y="0"/>
@@ -1062,7 +850,6 @@
 
                         <Border Height="14"/>
 
-                        <!-- BLOQUE 3: OPCIÓN 2 -->
                         <Button x:Name="BtnCleanAndInstall" Style="{StaticResource PrepOptionButtonStyle}" Margin="0,0,0,0" Click="BtnCleanAndInstall_Click">
                             <Button.RenderTransform>
                                 <TranslateTransform x:Name="CleanInstallTransform" Y="0"/>
@@ -1100,7 +887,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- BLOQUE 4: CONTINUACIÓN DIRECTA -->
                         <StackPanel x:Name="StepZeroSkipSection">
                             <StackPanel.RenderTransform>
                                 <TranslateTransform x:Name="SkipSectionTransform" Y="0"/>
@@ -1132,7 +918,6 @@
                             </Button>
                         </StackPanel>
 
-                        <!-- BLOQUE 5: SECCIÓN INFERIOR -->
                         <StackPanel x:Name="StepZeroWhySection">
                             <StackPanel.RenderTransform>
                                 <TranslateTransform x:Name="WhySectionTransform" Y="0"/>
@@ -1185,104 +970,7 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- HUD FLOTANTE MINIMALISTA DE CARGA -->
-                <Grid x:Name="PrepModalOverlay" Visibility="Collapsed" Background="#C8050609">
-                    <StackPanel Width="560" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Grid Width="104" Height="104" HorizontalAlignment="Center" Margin="0,0,0,24">
-                            <Ellipse Width="104" Height="104" Stroke="#182236" StrokeThickness="2.2"/>
-                            <Path Data="M52,2 A50,50 0 0,1 102,52" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
-                                <Path.RenderTransform>
-                                    <RotateTransform x:Name="LoadingRingRotate" Angle="0"/>
-                                </Path.RenderTransform>
-                            </Path>
-
-                            <Ellipse Width="74" Height="74" Stroke="#121A29" StrokeThickness="1.6"/>
-                            <Path Data="M52,89 A37,37 0 0,1 15,52" Stroke="#255EA8" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
-                                <Path.RenderTransform>
-                                    <RotateTransform x:Name="LoadingInnerRingRotate" Angle="0"/>
-                                </Path.RenderTransform>
-                            </Path>
-
-                            <Ellipse Width="8" Height="8" Fill="#3B82F6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Grid>
-
-                        <TextBlock x:Name="TxtModalStepTag" Text="STAGE 1 OF 3 · SYSTEM BACKUP"
-                                   FontSize="12.5" FontWeight="SemiBold" Foreground="#5D9BE6"
-                                   HorizontalAlignment="Center" Margin="0,0,0,8"/>
-
-                        <TextBlock x:Name="TxtModalTitle" Text="Preparing system"
-                                   FontSize="25" FontWeight="SemiBold" Foreground="#FFFFFF"
-                                   HorizontalAlignment="Center" Margin="0,0,0,10"/>
-
-                        <TextBlock x:Name="TxtModalMessage" Text="Creating preventive system restore point..."
-                                   FontSize="15.5" Foreground="{StaticResource TextSecondary}"
-                                   HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,28"/>
-
-                        <Grid Margin="0,0,0,9">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" x:Name="TxtModalProcessingLabel" Text="Processing configuration" FontSize="14" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" x:Name="TxtModalPercent" Text="0%" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
-                        </Grid>
-
-                        <ProgressBar x:Name="ModalProgressBar" Height="9" Minimum="0" Maximum="100" Value="0"/>
-                    </StackPanel>
-                </Grid>
-
-                <!-- MODAL DE INICIO DE SESIÓN / REGISTRO -->
-                <Grid x:Name="AccountModalOverlay" Visibility="Collapsed" Background="#B8050609">
-                    <Border Width="450" HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Background="#0B0D14" BorderBrush="#232B3D" BorderThickness="1" CornerRadius="8" Padding="28,24">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,12">
-                                <TextBlock x:Name="TxtAccountModalTitle" Text="Archon Account" FontSize="20" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
-                                <Button Content="✕" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Right" Padding="8,4" Click="BtnCloseAccountModal_Click"/>
-                            </Grid>
-
-                            <Grid Margin="0,0,0,16">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="8"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Button Grid.Column="0" x:Name="BtnTabSignIn" Content="Sign in" Style="{StaticResource PrimaryButtonStyle}" Padding="10,8" FontSize="13.5" Click="BtnTabSignIn_Click"/>
-                                <Button Grid.Column="2" x:Name="BtnTabRegister" Content="Register" Style="{StaticResource SoftCardButtonStyle}" Padding="10,8" FontSize="13.5" Click="BtnTabRegister_Click"/>
-                            </Grid>
-
-                            <TextBlock x:Name="TxtAccountModalDesc" Text="Sign in to sync your optimization profiles, app presets, and cloud backups."
-                                       FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,16"/>
-
-                            <TextBlock x:Name="TxtAccountUserLabel" Text="Username or Email" FontSize="13.5" FontWeight="Medium" Foreground="#CBD2E3" Margin="0,0,0,6"/>
-                            <Border Background="#07080C" BorderBrush="#1F2433" BorderThickness="1" CornerRadius="6" Margin="0,0,0,12">
-                                <TextBox x:Name="TxtAccountInput" Background="Transparent" Foreground="#FFFFFF" CaretBrush="#FFFFFF"
-                                         BorderThickness="0" Padding="12,10" FontSize="14.5"/>
-                            </Border>
-
-                            <StackPanel x:Name="PanelRegisterExtra" Visibility="Collapsed" Margin="0,0,0,12">
-                                <TextBlock x:Name="TxtAccountPassLabel" Text="Password" FontSize="13.5" FontWeight="Medium" Foreground="#CBD2E3" Margin="0,0,0,6"/>
-                                <Border Background="#07080C" BorderBrush="#1F2433" BorderThickness="1" CornerRadius="6">
-                                    <PasswordBox x:Name="TxtAccountPassInput" Background="Transparent" Foreground="#FFFFFF" CaretBrush="#FFFFFF"
-                                                 BorderThickness="0" Padding="12,10" FontSize="14.5"/>
-                                </Border>
-                            </StackPanel>
-
-                            <Grid Margin="0,4,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <Button Grid.Column="0" x:Name="BtnAccountSignOut" Content="Sign out" Style="{StaticResource SoftCardButtonStyle}" Padding="14,10" Click="BtnAccountSignOut_Click"/>
-                                <Button Grid.Column="2" x:Name="BtnAccountSave" Content="Continue" Style="{StaticResource PrimaryButtonStyle}" Padding="14,10" Click="BtnAccountSave_Click"/>
-                            </Grid>
-                        </StackPanel>
-                    </Border>
-                </Grid>
-
-                <!-- VISTA 3: PANEL DE AJUSTES CON BARRA DE TELEMETRÍA Y PERFIL EN SIDEBAR -->
+                <!-- VISTA 3: PANEL DE SCRIPTS / AJUSTES (SIN CAJITAS ARRIBA Y CON LOGOS REALES) -->
                 <Grid x:Name="MainOptimizerView" Visibility="Collapsed" Margin="26,18,22,24">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="244"/>
@@ -1291,20 +979,34 @@
 
                     <!-- MENÚ LATERAL -->
                     <DockPanel Grid.Column="0" Margin="0,0,24,0">
-                        <!-- TARJETA DE PERFIL CIRCULAR EN SIDEBAR -->
-                        <Button x:Name="BtnSidebarProfile" DockPanel.Dock="Bottom" Style="{StaticResource SoftCardButtonStyle}"
-                                HorizontalContentAlignment="Left" Padding="12,10" Margin="0,12,0,0" Click="BtnOpenSignIn_Click">
+                        <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+                            <Separator Background="#1B2233" Margin="0,0,0,10"/>
                             <StackPanel Orientation="Horizontal">
-                                <Border Width="34" Height="34" CornerRadius="17" Background="#121A2B" BorderBrush="#3B82F6" BorderThickness="1.5" Margin="0,0,10,0">
-                                    <TextBlock x:Name="SidebarAvatarInitial" Text="A" FontSize="14" FontWeight="Bold" Foreground="#60A5FA"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock x:Name="TxtSidebarUser" Text="Guest Profile" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF" MaxWidth="150" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock x:Name="TxtSidebarUserStatus" Text="Manage account" FontSize="11.5" Foreground="#8FA4C7"/>
+                                <Button Background="Transparent" BorderThickness="0" Padding="0" Margin="0,0,10,0" Cursor="Hand" Click="BtnOpenMyProfile_Click">
+                                    <Border Width="38" Height="38" CornerRadius="19" Background="#101829" BorderBrush="#3B82F6" BorderThickness="1.6">
+                                        <Grid>
+                                            <Ellipse Margin="2">
+                                                <Ellipse.Fill>
+                                                    <ImageBrush x:Name="SidebarAvatarBrush" Stretch="UniformToFill"/>
+                                                </Ellipse.Fill>
+                                            </Ellipse>
+                                            <TextBlock x:Name="SidebarAvatarInitial" Text="A" FontSize="14" FontWeight="Bold" Foreground="#60A5FA"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </Button>
+
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,6,0">
+                                    <TextBlock x:Name="TxtSidebarUser" Text="Agustín" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF" MaxWidth="126" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock x:Name="TxtSidebarUserStatus" Text="Active profile" FontSize="11.5" Foreground="#8C97AD"/>
                                 </StackPanel>
+
+                                <Button Style="{StaticResource GhostButtonStyle}" Padding="6" VerticalAlignment="Center" Click="BtnOpenGeneralSettings_Click">
+                                    <Path Data="M12,8.5 A3.5,3.5 0 1,0 15.5,12 A3.5,3.5 0 0,0 12,8.5 Z M19.4,13 L21.5,14.6 L19.8,17.5 L17.3,16.5 A7.6,7.6 0 0,1 15.7,17.4 L15.3,20 H12 L11.6,17.4 A7.6,7.6 0 0,1 10,16.5 L7.5,17.5 L5.8,14.6 L7.9,13 A7.8,7.8 0 0,1 7.9,11 L5.8,9.4 L7.5,6.5 L10,7.5 A7.6,7.6 0 0,1 11.6,6.6 L12,4 H15.3 L15.7,6.6 A7.6,7.6 0 0,1 17.3,7.5 L19.8,6.5 L21.5,9.4 L19.4,11 A7.8,7.8 0 0,1 19.4,13 Z"
+                                          Stroke="#A6ACBE" StrokeThickness="1.5" Width="15" Height="15" Stretch="Uniform"/>
+                                </Button>
                             </StackPanel>
-                        </Button>
+                        </StackPanel>
 
                         <StackPanel x:Name="SidebarMenu">
                             <Button x:Name="BtnBackToStepZero" Style="{StaticResource GhostButtonStyle}"
@@ -1341,55 +1043,35 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- BARRA SUPERIOR DE TELEMETRÍA Y ESTADÍSTICAS EN VIVO -->
-                        <Grid Grid.Row="0" Margin="0,0,22,12">
+                        <!-- LÍNEA DE TELEMETRÍA LIMPIA EN LÍNEA (SIN CAJITAS RECTANGULARES) -->
+                        <Grid Grid.Row="0" Margin="4,0,22,12">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <Border Grid.Column="0" Background="#CC090B12" BorderBrush="#1A2233" BorderThickness="1" CornerRadius="6" Padding="14,10">
-                                <StackPanel>
-                                    <Grid Margin="0,0,0,5">
-                                        <TextBlock x:Name="TxtOptStatCpuLabel" Text="LIVE CPU" FontSize="11" FontWeight="Bold" Foreground="#5D9BE6"/>
-                                        <TextBlock x:Name="TxtOptStatCpuVal" Text="0%" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Right"/>
-                                    </Grid>
-                                    <ProgressBar x:Name="OptStatCpuBar" Minimum="0" Maximum="100" Value="0" Height="4"/>
-                                </StackPanel>
-                            </Border>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtOptStatCpuLabel" Text="CPU " FontSize="12.5" FontWeight="SemiBold" Foreground="#8C97AD"/>
+                                <TextBlock x:Name="TxtOptStatCpuVal" Text="0%" FontSize="13.5" FontWeight="Bold" Foreground="#60A5FA" Margin="0,0,8,0"/>
+                                <ProgressBar x:Name="OptStatCpuBar" Minimum="0" Maximum="100" Value="0" Width="64" Height="5" VerticalAlignment="Center"/>
+                            </StackPanel>
 
-                            <Border Grid.Column="2" Background="#CC090B12" BorderBrush="#1A2233" BorderThickness="1" CornerRadius="6" Padding="14,10">
-                                <StackPanel>
-                                    <Grid Margin="0,0,0,5">
-                                        <TextBlock x:Name="TxtOptStatRamLabel" Text="MEMORY RAM" FontSize="11" FontWeight="Bold" Foreground="#A78BFA"/>
-                                        <TextBlock x:Name="TxtOptStatRamVal" Text="0.0 GB" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Right"/>
-                                    </Grid>
-                                    <ProgressBar x:Name="OptStatRamBar" Foreground="#8B5CF6" Minimum="0" Maximum="100" Value="0" Height="4"/>
-                                </StackPanel>
-                            </Border>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtOptStatRamLabel" Text="RAM " FontSize="12.5" FontWeight="SemiBold" Foreground="#8C97AD"/>
+                                <TextBlock x:Name="TxtOptStatRamVal" Text="0.0 / 0.0 GB" FontSize="13.5" FontWeight="Bold" Foreground="#C4B5FD" Margin="0,0,8,0"/>
+                                <ProgressBar x:Name="OptStatRamBar" Foreground="#A78BFA" Minimum="0" Maximum="100" Value="0" Width="64" Height="5" VerticalAlignment="Center"/>
+                            </StackPanel>
 
-                            <Border Grid.Column="4" Background="#CC090B12" BorderBrush="#1A2233" BorderThickness="1" CornerRadius="6" Padding="14,10">
-                                <StackPanel>
-                                    <TextBlock x:Name="TxtOptStatSelLabel" Text="ACTIVE ITEMS" FontSize="11" FontWeight="Bold" Foreground="#34D399"/>
-                                    <TextBlock x:Name="TxtOptStatSelVal" Text="0 selected" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,3,0,0"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Grid.Column="6" Background="#CC090B12" BorderBrush="#1A2233" BorderThickness="1" CornerRadius="6" Padding="14,10">
-                                <StackPanel>
-                                    <TextBlock x:Name="TxtOptStatBackupLabel" Text="RESTORE GUARD" FontSize="11" FontWeight="Bold" Foreground="#FBBF24"/>
-                                    <TextBlock x:Name="TxtOptStatBackupVal" Text="VSS Protected" FontSize="13.5" FontWeight="SemiBold" Foreground="#4CC38A" Margin="0,3,0,0"/>
-                                </StackPanel>
-                            </Border>
+                            <TextBlock Grid.Column="3" x:Name="TxtOptStatSelVal" Text="0 selected" FontSize="13.5" FontWeight="SemiBold" Foreground="#34D399" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtOptStatBackupVal" Text="VSS Protected" Visibility="Collapsed"/>
+                            <TextBlock x:Name="TxtOptStatSelLabel" Visibility="Collapsed"/>
+                            <TextBlock x:Name="TxtOptStatBackupLabel" Visibility="Collapsed"/>
                         </Grid>
 
                         <!-- BUSCADOR -->
-                        <Border Grid.Row="1" Background="#CC090A0F" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Margin="0,0,22,14">
+                        <Border Grid.Row="1" Background="#CC090A0F" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1" CornerRadius="6" Margin="0,0,22,14">
                             <Grid>
                                 <TextBox x:Name="TxtSearch" Background="Transparent" Foreground="#FFFFFF"
                                          CaretBrush="#FFFFFF" BorderThickness="0"
@@ -1410,7 +1092,7 @@
                             </Grid>
                         </Border>
 
-                        <!-- LISTA AGRUPADA -->
+                        <!-- LISTA AGRUPADA CON LOGOS REALES DE APLICACIONES -->
                         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
                             <ItemsControl x:Name="TweaksItemsControl">
                                 <ItemsControl.GroupStyle>
@@ -1432,7 +1114,7 @@
 
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="#D9090A0F" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,9">
+                                        <Border Background="#D9090A0F" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,9">
                                             <StackPanel>
                                                 <Grid Margin="20,14">
                                                     <Grid.ColumnDefinitions>
@@ -1443,10 +1125,10 @@
                                                     </Grid.ColumnDefinitions>
 
                                                     <Border Grid.Column="0" Visibility="{Binding HasIcon, Converter={StaticResource BoolToVis}}"
-                                                            Width="38" Height="38" CornerRadius="7" Background="#10131C" BorderBrush="#1F2433" BorderThickness="1"
+                                                            Width="38" Height="38" CornerRadius="8" Background="#0D111A" BorderBrush="#1F2638" BorderThickness="1"
                                                             Margin="0,0,15,0" VerticalAlignment="Center">
-                                                        <Path Data="{Binding IconGeometry}" Fill="{Binding IconColor}"
-                                                              Width="20" Height="20" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        <Image Source="{Binding IconUrl}" Width="24" Height="24" Stretch="Uniform"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     </Border>
 
                                                     <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="15.5" FontWeight="Medium" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap"/>
@@ -1488,6 +1170,125 @@
                         </Grid>
                     </Grid>
                 </Grid>
+
+                <!-- OVERLAY DE CARGA CON ARAÑA ANIMADA EN EL CENTRO (Z-INDEX 999) -->
+                <Grid x:Name="PrepModalOverlay" Panel.ZIndex="999" Visibility="Collapsed" Background="#D8050609">
+                    <StackPanel Width="560" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Grid Width="124" Height="124" HorizontalAlignment="Center" Margin="0,0,0,22">
+                            <Ellipse Width="124" Height="124" Stroke="#182236" StrokeThickness="2.2"/>
+                            <Path Data="M62,2 A60,60 0 0,1 122,62" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
+                                <Path.RenderTransform>
+                                    <RotateTransform x:Name="LoadingRingRotate" Angle="0"/>
+                                </Path.RenderTransform>
+                            </Path>
+
+                            <Ellipse Width="96" Height="96" Stroke="#121A29" StrokeThickness="1.6"/>
+                            <Path Data="M62,110 A48,48 0 0,1 14,62" Stroke="#255EA8" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
+                                <Path.RenderTransform>
+                                    <RotateTransform x:Name="LoadingInnerRingRotate" Angle="0"/>
+                                </Path.RenderTransform>
+                            </Path>
+
+                            <!-- ARAÑA CON PATAS ANIMADAS DENTRO DEL CÍRCULO -->
+                            <Viewbox Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Canvas Width="80" Height="80">
+                                    <Path Data="M35,30 L20,15 L10,8 M33,38 L14,30 L4,26 M33,44 L14,48 L4,54 M35,50 L20,64 L11,74"
+                                          Stroke="#60A5FA" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
+                                        <Path.RenderTransform>
+                                            <RotateTransform x:Name="LoadingSpiderLegLeftTransform" Angle="0"/>
+                                        </Path.RenderTransform>
+                                    </Path>
+                                    <Path Data="M45,30 L60,15 L70,8 M47,38 L66,30 L76,26 M47,44 L66,48 L76,54 M45,50 L60,64 L69,74"
+                                          Stroke="#60A5FA" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
+                                        <Path.RenderTransform>
+                                            <RotateTransform x:Name="LoadingSpiderLegRightTransform" Angle="0"/>
+                                        </Path.RenderTransform>
+                                    </Path>
+                                    <Polygon Points="40,18 48,28 40,36 32,28" Fill="#FFFFFF"/>
+                                    <Polygon Points="40,36 49,50 40,66 31,50" Fill="#122E59" Stroke="#FFFFFF" StrokeThickness="2"/>
+                                    <TextBlock Canvas.Left="36" Canvas.Top="40" Text="Σ" FontSize="11" FontWeight="Bold" Foreground="#93C5FD"/>
+                                </Canvas>
+                            </Viewbox>
+                        </Grid>
+
+                        <TextBlock x:Name="TxtModalStepTag" Text="STAGE 1 OF 3 · SYSTEM BACKUP"
+                                   FontSize="12.5" FontWeight="SemiBold" Foreground="#5D9BE6"
+                                   HorizontalAlignment="Center" Margin="0,0,0,8"/>
+
+                        <TextBlock x:Name="TxtModalTitle" Text="Preparing system"
+                                   FontSize="25" FontWeight="SemiBold" Foreground="#FFFFFF"
+                                   HorizontalAlignment="Center" Margin="0,0,0,10"/>
+
+                        <TextBlock x:Name="TxtModalMessage" Text="Creating preventive system restore point..."
+                                   FontSize="15.5" Foreground="{StaticResource TextSecondary}"
+                                   HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,28"/>
+
+                        <Grid Margin="0,0,0,9">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" x:Name="TxtModalProcessingLabel" Text="Processing configuration" FontSize="14" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" x:Name="TxtModalPercent" Text="0%" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <ProgressBar x:Name="ModalProgressBar" Height="9" Minimum="0" Maximum="100" Value="0"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- MODAL DE CUENTA ESTÁNDAR LIMPIO (Z-INDEX 999, SIEMPRE ARRIBA) -->
+                <Grid x:Name="AccountModalOverlay" Panel.ZIndex="999" Visibility="Collapsed" Background="#C8050609">
+                    <Border Width="420" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Background="#0C0F18" BorderBrush="#26314A" BorderThickness="1" CornerRadius="10" Padding="26,22">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,14">
+                                <TextBlock x:Name="TxtAccountModalTitle" Text="Sign in to Archon" FontSize="19" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                <Button Content="✕" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Right" Padding="8,4" Click="BtnCloseAccountModal_Click"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" x:Name="BtnTabSignIn" Content="Sign in" Style="{StaticResource PrimaryButtonStyle}" Padding="10,8" FontSize="13" Click="BtnTabSignIn_Click"/>
+                                <Button Grid.Column="2" x:Name="BtnTabRegister" Content="Create account" Style="{StaticResource SoftCardButtonStyle}" Padding="10,8" FontSize="13" Click="BtnTabRegister_Click"/>
+                            </Grid>
+
+                            <TextBlock x:Name="TxtAccountUserLabel" Text="Email or username" FontSize="13" Foreground="#A6ACBE" Margin="0,0,0,6"/>
+                            <Border Background="#07090F" BorderBrush="#1F2638" BorderThickness="1" CornerRadius="6" Margin="0,0,0,12">
+                                <TextBox x:Name="TxtAccountInput" Background="Transparent" Foreground="#FFFFFF" CaretBrush="#FFFFFF"
+                                         BorderThickness="0" Padding="12,10" FontSize="14"/>
+                            </Border>
+
+                            <TextBlock x:Name="TxtAccountPassLabel" Text="Password" FontSize="13" Foreground="#A6ACBE" Margin="0,0,0,6"/>
+                            <Border Background="#07090F" BorderBrush="#1F2638" BorderThickness="1" CornerRadius="6" Margin="0,0,0,14">
+                                <PasswordBox x:Name="TxtAccountPassInput" Background="Transparent" Foreground="#FFFFFF" CaretBrush="#FFFFFF"
+                                             BorderThickness="0" Padding="12,10" FontSize="14"/>
+                            </Border>
+
+                            <StackPanel x:Name="PanelRegisterExtra" Visibility="Collapsed" Margin="0,0,0,14">
+                                <TextBlock x:Name="TxtAccountConfirmLabel" Text="Display name" FontSize="13" Foreground="#A6ACBE" Margin="0,0,0,6"/>
+                                <Border Background="#07090F" BorderBrush="#1F2638" BorderThickness="1" CornerRadius="6">
+                                    <TextBox x:Name="TxtRegisterDisplayName" Background="Transparent" Foreground="#FFFFFF" CaretBrush="#FFFFFF"
+                                             BorderThickness="0" Padding="12,10" FontSize="14"/>
+                                </Border>
+                            </StackPanel>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" x:Name="BtnAccountSignOut" Content="Sign out" Style="{StaticResource SoftCardButtonStyle}" Padding="12,10" Click="BtnAccountSignOut_Click"/>
+                                <Button Grid.Column="2" x:Name="BtnAccountSave" Content="Continue" Style="{StaticResource PrimaryButtonStyle}" Padding="12,10" Click="BtnAccountSave_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
             </Grid>
         </Grid>
     </Border>
