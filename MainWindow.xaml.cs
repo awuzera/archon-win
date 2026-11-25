@@ -201,64 +201,23 @@ namespace Archon
             TxtPerfSubtitle.Text = isEs ? "Telemetría continua de procesador, gráficos, memoria, almacenamiento y red." : "Continuous system telemetry across processor, graphics, memory, storage and network.";
             TxtPerfOverviewTitle.Text = isEs ? "CURVA DE CARGA DEL SISTEMA" : "SYSTEM LOAD CURVE";
 
-            TxtSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
-            TxtSubTabGeneral.Content = isEs ? "Configuración General" : "General Settings";
-            TxtChooseAvatarPhoto.Content = isEs ? "Cargar foto" : "Load photo";
+BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
+            BtnSubTabGeneral.Content = isEs ? "Configuración General" : "General Settings";
+            BtnChooseAvatarPhoto.Content = isEs ? "Cargar foto" : "Load photo";
             TxtProfileSectionTitle.Text = isEs ? "Cuenta e Identidad" : "Account & Identity";
             TxtProfileNameLabel.Text = isEs ? "Nombre visible" : "Display name";
-            TxtSaveProfileChanges.Content = isEs ? "Guardar perfil" : "Save profile";
-            TxtSignOutProfile.Content = isEs ? "Cerrar sesión" : "Sign out";
+            BtnSaveProfileChanges.Content = isEs ? "Guardar perfil" : "Save profile";
+            BtnSignOutProfile.Content = isEs ? "Cerrar sesión" : "Sign out";
 
             TxtGenBlockTitle.Text = isEs ? "General e Interfaz" : "General & Interface";
             TxtOptNotifications.Text = isEs ? "Notificaciones de escritorio al completar tareas" : "Desktop notifications for completed tasks";
             TxtOptExperimental.Text = isEs ? "Activar funciones de prueba y telemetría experimental" : "Enable experimental features & preview telemetry";
             TxtOptAnalytics.Text = isEs ? "Análisis diagnóstico anónimo de rendimiento" : "Anonymous diagnostic & performance analytics";
             TxtGenSystemBlockTitle.Text = isEs ? "Actualizaciones, Comentarios y Acerca de" : "Updates, Feedback & About";
-            TxtCheckUpdates.Content = isEs ? "Buscar actualizaciones" : "Check for updates";
-            TxtShareFeedback.Content = isEs ? "Compartir / Comentarios" : "Share / Feedback";
-            TxtResetSettings.Content = isEs ? "Restablecer configuraciones" : "Reset settings";
-            TxtAboutArchon.Content = isEs ? "Acerca de Archon" : "About Archon";
-
-            TxtHomeNavLabel.Text = isEs ? "Inicio" : "Home";
-            TxtPrepTitle.Text = isEs ? "Preparación del sistema" : "System preparation";
-            TxtPrepSubtitle.Text = isEs ? "Elegí el estado actual de tu Windows para preparar los controladores antes de entrar al panel de optimización." : "Choose your current Windows state to prepare drivers before entering the optimization panel.";
-            TxtBloatTitle.Text = isEs ? "Software adicional de fabricante detectado" : "OEM additional software detected";
-
-            TxtFreshTitle.Text = isEs ? "Instalación limpia de Windows" : "Fresh Windows installation";
-            TxtFreshDesc.Text = isEs ? "Crea un punto de restauración preventivo e instala únicamente los controladores esenciales sin telemetría ni paneles extra." : "Creates a preventive restore point and installs only essential drivers without telemetry or extra panels.";
-            TxtFreshAction.Text = isEs ? "Instalar" : "Install";
-
-            TxtCleanTitle.Text = isEs ? "Ya instalé controladores o utilidades OEM" : "I already installed drivers or OEM utilities";
-            TxtCleanDesc.Text = isEs ? "Elimina controladores previos y suites como Armoury Crate o GeForce Experience, reinicia y deja una base limpia." : "Removes previous drivers and suites like Armoury Crate or GeForce Experience, reboots, and leaves a clean base.";
-            TxtCleanAction.Text = isEs ? "Limpiar" : "Clean";
-
-            TxtAlreadyReadyPrompt.Text = isEs ? "¿Ya tenés los controladores limpios y configurados?" : "Already have clean, configured drivers?";
-            TxtSkipTitle.Text = isEs ? "Ya tengo mis controladores listos" : "My drivers are already ready";
-            TxtSkipDesc.Text = isEs ? "Crea el punto de restauración preventivo obligatorio y pasa directo al panel de optimización del sistema." : "Creates the mandatory preventive restore point and jumps straight into the system optimization panel.";
-            TxtSkipAction.Text = isEs ? "Continuar" : "Continue";
-
-            TxtWhyTitle.Text = isEs ? "¿Por qué realizamos este paso?" : "Why do we perform this step?";
-            TxtWhy1Title.Text = isEs ? "Respaldo preventivo" : "Preventive backup";
-            TxtWhy1Desc.Text = isEs ? "Guarda una instantánea exacta de Windows antes de modificar ajustes. Cero impacto en rendimiento y usa como máximo 5% de disco." : "Saves an exact snapshot of Windows before modifying any setting. Zero performance impact and uses at most 5% disk space.";
-            TxtWhy2Title.Text = isEs ? "Controladores sin bloatware" : "Bloat-free drivers";
-            TxtWhy2Desc.Text = isEs ? "Evita que Windows Update instale paquetes genéricos y prepara Chipset y GPU sin servicios en segundo plano." : "Prevents Windows Update from pushing generic packages and prepares Chipset and GPU without background services.";
-            TxtWhy3Title.Text = isEs ? "Ajustes reversibles" : "Reversible tweaks";
-            TxtWhy3Desc.Text = isEs ? "Cada ajuste permite revisar su función y restaurar los valores originales de Windows en un clic." : "Every adjustment lets you review its purpose and restore Windows defaults in a single click.";
-
-            TxtNavPrep.Text = isEs ? "Preparación" : "Preparation";
-            TxtNavPerf.Text = isEs ? "Rendimiento" : "Performance";
-            BtnCatApps.Content = "Apps";
-            BtnCatGaming.Content = isEs ? "Gaming y Energía" : "Gaming & Power";
-            BtnCatNetwork.Content = isEs ? "Red y DNS" : "Network & DNS";
-            BtnCatDebloat.Content = "Debloat";
-            BtnCatServices.Content = isEs ? "Servicios" : "Services";
-            BtnCatCleanup.Content = isEs ? "Limpieza" : "Cleanup";
-
-            TxtSearchPlaceholder.Text = isEs ? "Buscar ajuste o aplicación..." : "Search tweak or application...";
-            BtnRestoreOriginal.Content = isEs ? "Restaurar originales" : "Restore defaults";
-            BtnApplyChanges.Content = isEs ? "Aplicar cambios" : "Apply changes";
-
-            RefreshAccountUI();
+            BtnCheckUpdates.Content = isEs ? "Buscar actualizaciones" : "Check for updates";
+            BtnShareFeedback.Content = isEs ? "Compartir / Comentarios" : "Share / Feedback";
+            BtnResetSettings.Content = isEs ? "Restablecer configuraciones" : "Reset settings";
+            BtnAboutArchon.Content = isEs ? "Acerca de Archon" : "About Archon";
             UpdateSelectionCounter();
         }
 
