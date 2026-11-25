@@ -596,7 +596,7 @@ namespace Archon
                 string volLabel = string.IsNullOrWhiteSpace(drive.VolumeLabel) ? "Local" : drive.VolumeLabel;
                 storageSpecs.Add(new HardwareSpecRow
                 {
-                    Label = $"Partición {drive.Name.TrimEnd('\')} ({volLabel})",
+                    Label = $"Partición {drive.Name.TrimEnd('\\')} ({volLabel})",
                     Value = $"{drive.DriveFormat} · {freeGb:0.#} GB libres / {totalGb:0.#} GB"
                 });
             }
