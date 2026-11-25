@@ -1421,5 +1421,52 @@ namespace Archon
             BtnApplyChanges.IsEnabled = true;
             BtnRestoreOriginal.IsEnabled = true;
         }
-    }
+    
+        private void BtnTabSignIn_Click(object sender, RoutedEventArgs e) => SetAccountModalMode(false);
+        private void BtnTabRegister_Click(object sender, RoutedEventArgs e) => SetAccountModalMode(true);
+
+        private void SetAccountModalMode(bool register)
+        {
+            _isRegisterMode = register;
+            BtnTabSignIn.Style = (Style)FindResource(register ? "SoftCardButtonStyle" : "PrimaryButtonStyle");
+            BtnTabRegister.Style = (Style)FindResource(register ? "PrimaryButtonStyle" : "SoftCardButtonStyle");
+            PanelRegisterExtra.Visibility = register ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void BtnCloseAccountModal_Click(object sender, RoutedEventArgs e)
+        {
+            AccountModalOverlay.Visibility = Visibility.Collapsed;
+        }
+
+        private void BtnAccountSave_Click(object sender, RoutedEventArgs e)
+        {
+            string chosenName = _isRegisterMode && !string.IsNullOrWhiteSpace(TxtRegisterDisplayName.Text)
+                ? TxtRegisterDisplayName.Text.Trim()
+                : TxtAccountInput.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(chosenName))
+                return;
+
+            _signedInUser = chosenName;
+            AccountModalOverlay.Visibility = Visibility.Collapsed;
+            RefreshAccountUI();
+        }
+
+        private void BtnAccountSignOut_Click(object sender, RoutedEventArgs e)
+        {
+            _signedInUser = null;
+            _avatarImagePath = null;
+            TxtAccountInput.Text = string.Empty;
+            TxtAccountPassInput.Password = string.Empty;
+            TxtRegisterDisplayName.Text = string.Empty;
+            AccountModalOverlay.Visibility = Visibility.Collapsed;
+            RefreshAccountUI();
+
+            if (SettingsAndProfileView.Visibility == Visibility.Visible)
+            {
+                SettingsAndProfileView.Visibility = Visibility.Collapsed;
+                WelcomeView.Visibility = Visibility.Visible;
+            }
+        }
+}
 }
