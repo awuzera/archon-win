@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Animation;
 using Archon.Core;
 using Archon.Models;
 
@@ -22,9 +24,10 @@ namespace Archon
         private SystemHardwareProfile _hardware = new();
         private OptimizerState _state = new();
         private List<TweakItem> _allTweaks = new();
-        private string _activeCategory = "Instalador Día 0";
+        private string _activeCategory = "Apps";
         private bool _hardwareScanned = false;
         private PrepTarget _currentPrepTarget = PrepTarget.None;
+        private Storyboard? _ambientStoryboard;
 
         public MainWindow()
         {
@@ -34,6 +37,12 @@ namespace Archon
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            if (TryFindResource("AmbientGlowStoryboard") is Storyboard sb)
+            {
+                _ambientStoryboard = sb;
+                _ambientStoryboard.Begin(this, true);
+            }
+
             _state = StepZeroOrchestrator.LoadState();
             _hardware = await Task.Run(() => HardwareDetector.ScanSystem());
             _hardwareScanned = true;
@@ -110,9 +119,16 @@ namespace Archon
 
         private void ShowView(UIElement target)
         {
-            WelcomeView.Visibility = target == WelcomeView ? Visibility.Visible : Visibility.Collapsed;
+            bool isWelcome = target == WelcomeView;
+            WelcomeView.Visibility = isWelcome ? Visibility.Visible : Visibility.Collapsed;
             StepZeroView.Visibility = target == StepZeroView ? Visibility.Visible : Visibility.Collapsed;
             MainOptimizerView.Visibility = target == MainOptimizerView ? Visibility.Visible : Visibility.Collapsed;
+
+            if (_ambientStoryboard != null)
+            {
+                _ambientStoryboard.SetSpeedRatio(this, isWelcome ? 1.0 : 0.35);
+                AmbientGlowLayer.Opacity = isWelcome ? 1.0 : 0.72;
+            }
         }
 
         private void ResetInlineProgressPanels()
@@ -294,8 +310,61 @@ namespace Archon
 
         private void InitOptimizerCatalog()
         {
-            _allTweaks = TweakCatalog.GetAllTweaks();
+            var baseTweaks = TweakCatalog.GetAllTweaks()
+                .Where(t => !string.Equals(t.Category, "Instalador Día 0", StringComparison.OrdinalIgnoreCase) &&
+                            !t.Title.StartsWith("Instalar ", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var appsList = new List<TweakItem>
+            {
+                CreateAppItem("Steam", "Valve.Steam", "Cliente oficial de juegos de Valve."),
+                CreateAppItem("Discord", "Discord.Discord", "Comunicación por voz, texto y pantalla compartida."),
+                CreateAppItem("7-Zip", "7zip.7zip", "Compresor y extractor de archivos ligero y sin publicidad."),
+                CreateAppItem("VLC Media Player", "VideoLAN.VLC", "Reproductor multimedia compatible con todos los formatos."),
+                CreateAppItem("Brave Browser", "Brave.Brave", "Navegador basado en Chromium con bloqueo de rastreadores integrado."),
+                CreateAppItem("Spotify", "Spotify.Spotify", "Cliente de escritorio para reproducción de música."),
+                CreateAppItem("OBS Studio", "OBSProject.OBSStudio", "Grabación de pantalla y transmisión con soporte de aceleración por hardware."),
+                CreateAppItem("Notepad++", "Notepad++.Notepad++", "Editor de texto y código rápido y liviano."),
+                CreateAppItem("ShareX", "ShareX.ShareX", "Herramienta avanzada para capturas y grabación de pantalla."),
+                CreateAppItem("Everything", "voidtools.Everything", "Buscador instantáneo de archivos locales por nombre en NTFS.")
+            };
+
+            _allTweaks = appsList.Concat(baseTweaks).ToList();
             RefreshDisplayedTweaks();
+        }
+
+        private static TweakItem CreateAppItem(string name, string wingetId, string description)
+        {
+            return new TweakItem
+            {
+                Category = "Apps",
+                Title = name,
+                Description = description,
+                TechnicalDetail = $"winget install --id {wingetId} -e --silent",
+                IsEnabled = false,
+                ApplyAction = () => RunWingetInstall(wingetId),
+                RevertAction = () => { }
+            };
+        }
+
+        private static void RunWingetInstall(string packageId)
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "winget",
+                    Arguments = $"install --id {packageId} -e --silent --accept-package-agreements --accept-source-agreements",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
+                using var process = Process.Start(psi);
+                process?.WaitForExit();
+            }
+            catch
+            {
+                // Ignorar si winget no está disponible en el entorno
+            }
         }
 
         private void RefreshDisplayedTweaks()
@@ -319,7 +388,7 @@ namespace Archon
         private void CategoryBtn_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not Button clickedBtn) return;
-            _activeCategory = clickedBtn.Tag?.ToString() ?? "Instalador Día 0";
+            _activeCategory = clickedBtn.Tag?.ToString() ?? "Apps";
             TxtSearch.Text = string.Empty;
 
             foreach (var child in SidebarMenu.Children)
@@ -342,7 +411,7 @@ namespace Archon
             {
                 TxtInspectorTitle.Text = item.Title;
                 TxtInspectorDesc.Text = item.Description;
-                TxtInspectorTech.Text = $"Modifica: {item.TechnicalDetail}";
+                TxtInspectorTech.Text = $"Comando / Registro: {item.TechnicalDetail}";
                 InspectorPanel.Visibility = Visibility.Visible;
             }
         }
@@ -369,8 +438,7 @@ namespace Archon
         {
             TxtActionFeedback.Text = "Restaurando valores originales...";
             await Task.Run(() => RegistryEngine.RestoreAllBackups());
-            _allTweaks = TweakCatalog.GetAllTweaks();
-            RefreshDisplayedTweaks();
+            InitOptimizerCatalog();
             TxtActionFeedback.Text = "Sistema restaurado al estado original";
         }
 

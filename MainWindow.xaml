@@ -21,9 +21,56 @@
         <SolidColorBrush x:Key="BorderHover" Color="#2F3B52"/>
         <SolidColorBrush x:Key="AccentPrimary" Color="#3478C6"/>
         <SolidColorBrush x:Key="AccentPrimaryHover" Color="#4388D6"/>
-        <SolidColorBrush x:Key="AccentSoftText" Color="#72AEF2"/>
         <SolidColorBrush x:Key="TextSecondary" Color="#D0D0DA"/>
         <SolidColorBrush x:Key="TextMuted" Color="#9696A4"/>
+
+        <!-- ANIMACIÓN SUAVE PARA EL FONDO DIFUMINADO -->
+        <Storyboard x:Key="AmbientGlowStoryboard" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetName="GlowTopTransform"
+                             Storyboard.TargetProperty="X"
+                             From="-55" To="55" Duration="0:0:9" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="GlowTopTransform"
+                             Storyboard.TargetProperty="Y"
+                             From="-15" To="25" Duration="0:0:7" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+            <DoubleAnimation Storyboard.TargetName="GlowRightTransform"
+                             Storyboard.TargetProperty="X"
+                             From="35" To="-45" Duration="0:0:11" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="GlowRightTransform"
+                             Storyboard.TargetProperty="Y"
+                             From="20" To="-30" Duration="0:0:8" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+            <DoubleAnimation Storyboard.TargetName="GlowLeftTransform"
+                             Storyboard.TargetProperty="X"
+                             From="-30" To="40" Duration="0:0:10" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="GlowLeftTransform"
+                             Storyboard.TargetProperty="Y"
+                             From="-20" To="25" Duration="0:0:8.5" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
 
         <!-- SCROLLBAR OSCURO DELGADO -->
         <Style TargetType="ScrollBar">
@@ -79,7 +126,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#B0B0BC"/>
             <Setter Property="Width" Value="44"/>
-            <Setter Property="Height" Value="44"/>
+            <Setter Property="Height" Value="43"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
@@ -90,7 +137,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#181A24"/>
+                                <Setter TargetName="bd" Property="Background" Value="#161822"/>
                                 <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -273,518 +320,539 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- FONDO DIFUMINADO AZUL MÁS NOTORIO -->
-            <Grid Grid.RowSpan="2" IsHitTestVisible="False" ClipToBounds="True">
-                <Ellipse x:Name="AmbientGlowTop" Width="760" Height="420" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-130,0,0">
-                    <Ellipse.Fill>
-                        <RadialGradientBrush>
-                            <GradientStop Color="#523478C6" Offset="0"/>
-                            <GradientStop Color="#223478C6" Offset="0.52"/>
-                            <GradientStop Color="#003478C6" Offset="1"/>
-                        </RadialGradientBrush>
-                    </Ellipse.Fill>
-                    <Ellipse.Effect>
-                        <BlurEffect Radius="95"/>
-                    </Ellipse.Effect>
-                </Ellipse>
-
-                <Ellipse Width="640" Height="400" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-130,-110">
-                    <Ellipse.Fill>
-                        <RadialGradientBrush>
-                            <GradientStop Color="#3B2963B8" Offset="0"/>
-                            <GradientStop Color="#162963B8" Offset="0.55"/>
-                            <GradientStop Color="#002963B8" Offset="1"/>
-                        </RadialGradientBrush>
-                    </Ellipse.Fill>
-                    <Ellipse.Effect>
-                        <BlurEffect Radius="100"/>
-                    </Ellipse.Effect>
-                </Ellipse>
-
-                <Ellipse Width="480" Height="320" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-110,0,0,-90">
-                    <Ellipse.Fill>
-                        <RadialGradientBrush>
-                            <GradientStop Color="#283478C6" Offset="0"/>
-                            <GradientStop Color="#003478C6" Offset="1"/>
-                        </RadialGradientBrush>
-                    </Ellipse.Fill>
-                    <Ellipse.Effect>
-                        <BlurEffect Radius="90"/>
-                    </Ellipse.Effect>
-                </Ellipse>
-            </Grid>
-
-            <!-- BARRA SUPERIOR -->
-            <Grid Grid.Row="0" Background="Transparent">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
-                    <Viewbox Width="20" Height="20" Margin="0,0,10,0">
-                        <Canvas Width="64" Height="64">
-                            <Path Data="M32,4 L58,18 L58,46 L32,60 L6,46 L6,18 Z" Fill="#0F1522" Stroke="#3478C6" StrokeThickness="3.5"/>
-                            <Path Data="M32,14 L48,48 L40,48 L32,30 L24,48 L16,48 Z" Fill="#FFFFFF"/>
-                            <Polygon Points="32,37 37,46 27,46" Fill="#3478C6"/>
-                        </Canvas>
-                    </Viewbox>
-                    <TextBlock Text="Archon" FontWeight="SemiBold" FontSize="14.5" Foreground="#F5F5F8" VerticalAlignment="Center"/>
-                    <TextBlock Text="v1.0" FontSize="12.5" Foreground="{StaticResource TextMuted}" Margin="6,1,0,0" VerticalAlignment="Center"/>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" WindowChrome.IsHitTestVisibleInChrome="True">
-                    <Button Content="—" Style="{StaticResource WindowControlButtonStyle}" Click="Minimize_Click"/>
-                    <Button Content="✕" Style="{StaticResource WindowCloseButtonStyle}" Click="Close_Click"/>
-                </StackPanel>
-            </Grid>
-
-            <!-- VISTA 1: PRESENTACIÓN CON LOGO BORDE AZUL Y TRANSICIÓN INTERACTIVA -->
-            <ScrollViewer x:Name="WelcomeView" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel x:Name="WelcomeContentPanel" MaxWidth="720" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="32,16,32,32">
-                    <StackPanel.Triggers>
-                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                            <BeginStoryboard>
-                                <Storyboard>
-                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.45"/>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                    </StackPanel.Triggers>
-
-                    <!-- LOGO ARCHON CON CONTORNO AZUL INTERACTIVO -->
-                    <Border x:Name="WelcomeLogoContainer" Width="86" Height="86" HorizontalAlignment="Center" Margin="0,0,0,16" Background="Transparent" Cursor="Hand">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
-                                <Setter Property="RenderTransform">
-                                    <Setter.Value>
-                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
-                                    </Setter.Value>
-                                </Setter>
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Trigger.EnterActions>
-                                            <BeginStoryboard>
-                                                <Storyboard>
-                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.06" Duration="0:0:0.18"/>
-                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.06" Duration="0:0:0.18"/>
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </Trigger.EnterActions>
-                                        <Trigger.ExitActions>
-                                            <BeginStoryboard>
-                                                <Storyboard>
-                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.0" Duration="0:0:0.18"/>
-                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.0" Duration="0:0:0.18"/>
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </Trigger.ExitActions>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-
-                        <Viewbox Width="76" Height="76">
+            <!-- BARRA SUPERIOR NEGRA CON LÍNEA RECTA DIVISORIA E ÍCONO DE OJO -->
+            <Border Grid.Row="0" Background="#050507" BorderBrush="#1D1F2B" BorderThickness="0,0,0,1">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
+                        <Viewbox Width="22" Height="22" Margin="0,0,10,0">
                             <Canvas Width="64" Height="64">
-                                <Path Data="M32,3 L59,18 L59,46 L32,61 L5,46 L5,18 Z" Fill="#0D131F" Stroke="#3478C6" StrokeThickness="2.8"/>
-                                <Path Data="M32,12 L50,49 L41.5,49 L32,28.5 L22.5,49 L14,49 Z" Fill="#FFFFFF"/>
-                                <Polygon Points="32,36 38,48 26,48" Fill="#3478C6"/>
+                                <Path Data="M4,32 Q32,10 60,32 Q32,54 4,32 Z" Fill="#0D131F" Stroke="#3478C6" StrokeThickness="4" StrokeLineJoin="Round"/>
+                                <Ellipse Canvas.Left="22" Canvas.Top="22" Width="20" Height="20" Stroke="#FFFFFF" StrokeThickness="3" Fill="#090D16"/>
+                                <Ellipse Canvas.Left="28" Canvas.Top="28" Width="8" Height="8" Fill="#3478C6"/>
                             </Canvas>
                         </Viewbox>
-                    </Border>
-
-                    <TextBlock Text="Archon" FontSize="38" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,6"/>
-
-                    <TextBlock Text="Bienvenido" FontSize="17.5" Foreground="{StaticResource TextSecondary}"
-                               HorizontalAlignment="Center" Margin="0,0,0,28"/>
-
-                    <!-- BOTONES PRINCIPALES -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,26">
-                        <Button x:Name="BtnStartStepZero" Style="{StaticResource PrimaryButtonStyle}" Padding="32,13" Margin="0,0,12,0" Click="BtnStartStepZero_Click">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Comenzar" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#FFFFFF" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" Margin="10,1,0,0" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-
-                        <Button x:Name="BtnScanHardware" Style="{StaticResource SoftCardButtonStyle}" Padding="22,13" Click="BtnScanHardware_Click">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="M9,2 V5 M15,2 V5 M9,19 V22 M15,19 V22 M2,9 H5 M2,15 H5 M19,9 H22 M19,15 H22 M6,5 H18 A1,1 0 0 1 19,6 V18 A1,1 0 0 1 18,19 H6 A1,1 0 0 1 5,18 V6 A1,1 0 0 1 6,5 Z M9,9 H15 V15 H9 Z"
-                                      Stroke="#D0D0DA" StrokeThickness="1.7" Width="17" Height="17" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="TxtScanButtonLabel" Text="Ver mis componentes" FontSize="15" FontWeight="Medium" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
+                        <TextBlock Text="Archon" FontWeight="SemiBold" FontSize="14.5" Foreground="#F5F5F8" VerticalAlignment="Center"/>
+                        <TextBlock Text="v1.0" FontSize="12.5" Foreground="{StaticResource TextMuted}" Margin="6,1,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <!-- PANEL INTERACTIVO DE HARDWARE -->
-                    <Border x:Name="HardwareListPanel" Visibility="Collapsed" MinWidth="560" Background="{StaticResource BgCardBlack}"
-                            BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="5" Padding="24,20">
-                        <StackPanel>
-                            <TextBlock Text="Componentes detectados" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,16"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button Content="—" Style="{StaticResource WindowControlButtonStyle}" Click="Minimize_Click"/>
+                        <Button Content="✕" Style="{StaticResource WindowCloseButtonStyle}" Click="Close_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-                            <Grid Margin="0,0,0,11">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="165"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Procesador" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" x:Name="TxtCpuValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
-                            </Grid>
-                            <Separator Background="#1B1C26" Margin="0,0,0,11"/>
+            <!-- CONTENEDOR PRINCIPAL (DEBAJO DE LA BARRA NEGRA) -->
+            <Grid Grid.Row="1">
 
-                            <Grid Margin="0,0,0,11">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="165"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Placa madre" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" x:Name="TxtMotherValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
-                            </Grid>
-                            <Separator Background="#1B1C26" Margin="0,0,0,11"/>
+                <!-- FONDO DIFUMINADO AZUL ANIMADO (3 ESFERAS CON MOVIMIENTO SUAVE) -->
+                <Grid x:Name="AmbientGlowLayer" IsHitTestVisible="False" ClipToBounds="True">
+                    <Ellipse Width="740" Height="400" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-130,0,0">
+                        <Ellipse.RenderTransform>
+                            <TranslateTransform x:Name="GlowTopTransform" X="0" Y="0"/>
+                        </Ellipse.RenderTransform>
+                        <Ellipse.Fill>
+                            <RadialGradientBrush>
+                                <GradientStop Color="#563478C6" Offset="0"/>
+                                <GradientStop Color="#243478C6" Offset="0.52"/>
+                                <GradientStop Color="#003478C6" Offset="1"/>
+                            </RadialGradientBrush>
+                        </Ellipse.Fill>
+                        <Ellipse.Effect>
+                            <BlurEffect Radius="95"/>
+                        </Ellipse.Effect>
+                    </Ellipse>
 
-                            <Grid Margin="0,0,0,11">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="165"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Tarjeta gráfica" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" x:Name="TxtGpuValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
-                            </Grid>
-                            <Separator Background="#1B1C26" Margin="0,0,0,11"/>
+                    <Ellipse Width="620" Height="390" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-120,-100">
+                        <Ellipse.RenderTransform>
+                            <TranslateTransform x:Name="GlowRightTransform" X="0" Y="0"/>
+                        </Ellipse.RenderTransform>
+                        <Ellipse.Fill>
+                            <RadialGradientBrush>
+                                <GradientStop Color="#402963B8" Offset="0"/>
+                                <GradientStop Color="#182963B8" Offset="0.55"/>
+                                <GradientStop Color="#002963B8" Offset="1"/>
+                            </RadialGradientBrush>
+                        </Ellipse.Fill>
+                        <Ellipse.Effect>
+                            <BlurEffect Radius="100"/>
+                        </Ellipse.Effect>
+                    </Ellipse>
 
-                            <Grid Margin="0,0,0,11">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="165"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Memoria RAM" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" x:Name="TxtRamValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
-                            </Grid>
-                            <Separator Background="#1B1C26" Margin="0,0,0,11"/>
+                    <Ellipse Width="480" Height="320" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-90,0,0,-80">
+                        <Ellipse.RenderTransform>
+                            <TranslateTransform x:Name="GlowLeftTransform" X="0" Y="0"/>
+                        </Ellipse.RenderTransform>
+                        <Ellipse.Fill>
+                            <RadialGradientBrush>
+                                <GradientStop Color="#303478C6" Offset="0"/>
+                                <GradientStop Color="#003478C6" Offset="1"/>
+                            </RadialGradientBrush>
+                        </Ellipse.Fill>
+                        <Ellipse.Effect>
+                            <BlurEffect Radius="90"/>
+                        </Ellipse.Effect>
+                    </Ellipse>
+                </Grid>
 
-                            <Grid Margin="0,0,0,11">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="165"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Almacenamiento" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" x:Name="TxtStorageValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
-                            </Grid>
-                            <Separator Background="#1B1C26" Margin="0,0,0,11"/>
+                <!-- VISTA 1: PRESENTACIÓN CON LOGO DE OJO Y TRANSICIÓN -->
+                <ScrollViewer x:Name="WelcomeView" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="WelcomeContentPanel" MaxWidth="720" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="32,16,32,32">
+                        <StackPanel.Triggers>
+                            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.45"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </StackPanel.Triggers>
 
+                        <!-- LOGO DE OJO ARCHON -->
+                        <Border x:Name="WelcomeLogoContainer" Width="96" Height="76" HorizontalAlignment="Center" Margin="0,0,0,16" Background="Transparent" Cursor="Hand">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+                                    <Setter Property="RenderTransform">
+                                        <Setter.Value>
+                                            <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Trigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.06" Duration="0:0:0.18"/>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.06" Duration="0:0:0.18"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.EnterActions>
+                                            <Trigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.0" Duration="0:0:0.18"/>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.0" Duration="0:0:0.18"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.ExitActions>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+
+                            <Viewbox Width="88" Height="68">
+                                <Canvas Width="80" Height="56">
+                                    <!-- Contorno exterior del ojo -->
+                                    <Path Data="M4,28 Q40,2 76,28 Q40,54 4,28 Z" Fill="#0C121E" Stroke="#3478C6" StrokeThickness="2.8" StrokeLineJoin="Round"/>
+                                    <!-- Arco superior sutil -->
+                                    <Path Data="M16,22 Q40,8 64,22" Stroke="#5897E0" StrokeThickness="1.2" Opacity="0.6"/>
+                                    <!-- Iris -->
+                                    <Ellipse Canvas.Left="27" Canvas.Top="15" Width="26" Height="26" Fill="#090D16" Stroke="#FFFFFF" StrokeThickness="2.4"/>
+                                    <!-- Pupila -->
+                                    <Ellipse Canvas.Left="35" Canvas.Top="23" Width="10" Height="10" Fill="#3478C6"/>
+                                    <!-- Reflejo óptico -->
+                                    <Ellipse Canvas.Left="43" Canvas.Top="19" Width="3.5" Height="3.5" Fill="#FFFFFF"/>
+                                </Canvas>
+                            </Viewbox>
+                        </Border>
+
+                        <TextBlock Text="Archon" FontSize="38" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+
+                        <TextBlock Text="Bienvenido" FontSize="17.5" Foreground="{StaticResource TextSecondary}"
+                                   HorizontalAlignment="Center" Margin="0,0,0,28"/>
+
+                        <!-- BOTONES PRINCIPALES -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,26">
+                            <Button x:Name="BtnStartStepZero" Style="{StaticResource PrimaryButtonStyle}" Padding="32,13" Margin="0,0,12,0" Click="BtnStartStepZero_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Comenzar" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#FFFFFF" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" Margin="10,1,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="BtnScanHardware" Style="{StaticResource SoftCardButtonStyle}" Padding="22,13" Click="BtnScanHardware_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="M9,2 V5 M15,2 V5 M9,19 V22 M15,19 V22 M2,9 H5 M2,15 H5 M19,9 H22 M19,15 H22 M6,5 H18 A1,1 0 0 1 19,6 V18 A1,1 0 0 1 18,19 H6 A1,1 0 0 1 5,18 V6 A1,1 0 0 1 6,5 Z M9,9 H15 V15 H9 Z"
+                                          Stroke="#D0D0DA" StrokeThickness="1.7" Width="17" Height="17" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtScanButtonLabel" Text="Ver mis componentes" FontSize="15" FontWeight="Medium" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- PANEL INTERACTIVO DE HARDWARE -->
+                        <Border x:Name="HardwareListPanel" Visibility="Collapsed" MinWidth="560" Background="{StaticResource BgCardBlack}"
+                                BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="5" Padding="24,20">
+                            <StackPanel>
+                                <TextBlock Text="Componentes detectados" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,16"/>
+
+                                <Grid Margin="0,0,0,11">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="165"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Procesador" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtCpuValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                </Grid>
+                                <Separator Background="#1B1C26" Margin="0,0,0,11"/>
+
+                                <Grid Margin="0,0,0,11">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="165"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Placa madre" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtMotherValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                </Grid>
+                                <Separator Background="#1B1C26" Margin="0,0,0,11"/>
+
+                                <Grid Margin="0,0,0,11">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="165"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Tarjeta gráfica" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtGpuValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                </Grid>
+                                <Separator Background="#1B1C26" Margin="0,0,0,11"/>
+
+                                <Grid Margin="0,0,0,11">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="165"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Memoria RAM" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtRamValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                </Grid>
+                                <Separator Background="#1B1C26" Margin="0,0,0,11"/>
+
+                                <Grid Margin="0,0,0,11">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="165"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Almacenamiento" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtStorageValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                </Grid>
+                                <Separator Background="#1B1C26" Margin="0,0,0,11"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="165"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Sistema operativo" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtOsValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- VISTA 2: PREPARACIÓN DEL SISTEMA -->
+                <ScrollViewer x:Name="StepZeroView" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Width="900" HorizontalAlignment="Center" Margin="24,14,24,40">
+
+                        <!-- BOTÓN INICIO -->
+                        <Button x:Name="BtnBackToWelcome" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left" Margin="-10,0,0,12" Click="BtnBackToWelcome_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="M3,10.5 L12,3 L21,10.5 V20 A1,1 0 0 1 20,21 H15 V14 H9 V21 H4 A1,1 0 0 1 3,20 Z"
+                                      Stroke="#D0D0DA" StrokeThickness="1.7" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Inicio" FontSize="14.5" FontWeight="Medium" Foreground="#E4E4EC" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- ENCABEZADO -->
+                        <TextBlock Text="Preparación del sistema" FontSize="26" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+
+                        <TextBlock Text="Elegí el estado actual de tu Windows para preparar los controladores antes de pasar al panel de ajustes."
+                                   FontSize="15.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="23" Margin="0,0,0,20"/>
+
+                        <!-- AVISO DE BLOATWARE DETECTADO -->
+                        <Border x:Name="BloatAlertBox" Visibility="Collapsed" Background="#0C111C" BorderBrush="#23334F" BorderThickness="1" CornerRadius="5" Padding="18,13" Margin="0,0,0,16">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="M12,3 L22,20 H2 Z M12,9 V13 M12,17 H12.01" Stroke="#72AEF2" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="18" Height="18" Stretch="Uniform" Margin="0,1,12,0" VerticalAlignment="Top"/>
+                                <StackPanel>
+                                    <TextBlock Text="Software adicional de fabricante detectado" FontSize="14.5" FontWeight="SemiBold" Foreground="#72AEF2" Margin="0,0,0,2"/>
+                                    <TextBlock x:Name="TxtDetectedBloatList" Text="" FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- OPCIÓN 1: WINDOWS RECIÉN INSTALADO -->
+                        <Button x:Name="BtnFreshInstall" Style="{StaticResource PrepOptionButtonStyle}" Margin="0,0,0,0" Click="BtnFreshInstall_Click">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="165"/>
                                     <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Sistema operativo" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" x:Name="TxtOsValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+
+                                <StackPanel Grid.Column="0" Margin="0,0,24,0">
+                                    <TextBlock Text="Windows recién instalado" FontSize="17.5" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,5"/>
+                                    <TextBlock Text="Crea el punto de restauración preventivo e instala únicamente los controladores esenciales sin telemetría ni paneles extra."
+                                               FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="Instalar" FontSize="14.5" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
+                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3478C6" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
+                                </StackPanel>
                             </Grid>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </ScrollViewer>
+                        </Button>
 
-            <!-- VISTA 2: PREPARACIÓN DEL SISTEMA (PROGRESO DESPLEGABLE POR OPCIÓN + BLOQUE SEPARADO) -->
-            <ScrollViewer x:Name="StepZeroView" Grid.Row="1" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Width="900" HorizontalAlignment="Center" Margin="24,8,24,40">
-
-                    <!-- BOTÓN INICIO -->
-                    <Button x:Name="BtnBackToWelcome" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left" Margin="-10,0,0,12" Click="BtnBackToWelcome_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <Path Data="M3,10.5 L12,3 L21,10.5 V20 A1,1 0 0 1 20,21 H15 V14 H9 V21 H4 A1,1 0 0 1 3,20 Z"
-                                  Stroke="#D0D0DA" StrokeThickness="1.7" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Inicio" FontSize="14.5" FontWeight="Medium" Foreground="#E4E4EC" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-
-                    <!-- ENCABEZADO -->
-                    <TextBlock Text="Preparación del sistema" FontSize="26" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
-
-                    <TextBlock Text="Elegí el estado actual de tu Windows para preparar los controladores antes de pasar al panel de ajustes."
-                               FontSize="15.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="23" Margin="0,0,0,20"/>
-
-                    <!-- AVISO DE BLOATWARE DETECTADO -->
-                    <Border x:Name="BloatAlertBox" Visibility="Collapsed" Background="#0C111C" BorderBrush="#23334F" BorderThickness="1" CornerRadius="5" Padding="18,13" Margin="0,0,0,16">
-                        <StackPanel Orientation="Horizontal">
-                            <Path Data="M12,3 L22,20 H2 Z M12,9 V13 M12,17 H12.01" Stroke="#72AEF2" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="18" Height="18" Stretch="Uniform" Margin="0,1,12,0" VerticalAlignment="Top"/>
+                        <!-- BARRA DESPLEGABLE DE OPCIÓN 1 (PORCENTAJE EN BLANCO) -->
+                        <Border x:Name="ProgressPanelFresh" Visibility="Collapsed" Background="#07080C" BorderBrush="#1D1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,5,5" Padding="24,14" Margin="0,0,0,12">
                             <StackPanel>
-                                <TextBlock Text="Software adicional de fabricante detectado" FontSize="14.5" FontWeight="SemiBold" Foreground="#72AEF2" Margin="0,0,0,2"/>
-                                <TextBlock x:Name="TxtDetectedBloatList" Text="" FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap"/>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" x:Name="TxtStatusFresh" Text="Preparando..." FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtPercentFresh" Text="0%" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                </Grid>
+                                <ProgressBar x:Name="ProgressFresh" Minimum="0" Maximum="100" Value="0"/>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </Border>
 
-                    <!-- OPCIÓN 1: WINDOWS RECIÉN INSTALADO -->
-                    <Button x:Name="BtnFreshInstall" Style="{StaticResource PrepOptionButtonStyle}" Margin="0,0,0,0" Click="BtnFreshInstall_Click">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
+                        <Border Height="12"/>
 
-                            <StackPanel Grid.Column="0" Margin="0,0,24,0">
-                                <TextBlock Text="Windows recién instalado" FontSize="17.5" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,5"/>
-                                <TextBlock Text="Crea el punto de restauración preventivo e instala únicamente los controladores esenciales sin telemetría ni paneles extra."
-                                           FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="Instalar" FontSize="14.5" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
-                                <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3478C6" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
-                            </StackPanel>
-                        </Grid>
-                    </Button>
-
-                    <!-- BARRA DESPLEGABLE DE OPCIÓN 1 -->
-                    <Border x:Name="ProgressPanelFresh" Visibility="Collapsed" Background="#07080C" BorderBrush="#1D1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,5,5" Padding="24,14" Margin="0,0,0,12">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,8">
+                        <!-- OPCIÓN 2: YA INSTALÉ DRIVERS O UTILIDADES -->
+                        <Button x:Name="BtnCleanAndInstall" Style="{StaticResource PrepOptionButtonStyle}" Margin="0,0,0,0" Click="BtnCleanAndInstall_Click">
+                            <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" x:Name="TxtStatusFresh" Text="Preparando..." FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
-                                <TextBlock Grid.Column="1" x:Name="TxtPercentFresh" Text="0%" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource AccentSoftText}"/>
+
+                                <StackPanel Grid.Column="0" Margin="0,0,24,0">
+                                    <TextBlock Text="Ya instalé drivers o utilidades de fabricante" FontSize="17.5" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,5"/>
+                                    <TextBlock Text="Limpia controladores previos y programas como Armoury Crate o GeForce Experience, reinicia el equipo y deja la base limpia."
+                                               FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="Limpiar" FontSize="14.5" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
+                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3478C6" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
+                                </StackPanel>
                             </Grid>
-                            <ProgressBar x:Name="ProgressFresh" Minimum="0" Maximum="100" Value="0"/>
-                        </StackPanel>
-                    </Border>
+                        </Button>
 
-                    <!-- ESPACIO SI ESTÁ COLAPSADO -->
-                    <Border Height="12"/>
-
-                    <!-- OPCIÓN 2: YA INSTALÉ DRIVERS O UTILIDADES (MISMO ESTILO QUE OPCIÓN 1) -->
-                    <Button x:Name="BtnCleanAndInstall" Style="{StaticResource PrepOptionButtonStyle}" Margin="0,0,0,0" Click="BtnCleanAndInstall_Click">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0" Margin="0,0,24,0">
-                                <TextBlock Text="Ya instalé drivers o utilidades de fabricante" FontSize="17.5" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,5"/>
-                                <TextBlock Text="Limpia controladores previos y programas como Armoury Crate o GeForce Experience, reinicia el equipo y deja la base limpia."
-                                           FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
+                        <!-- BARRA DESPLEGABLE DE OPCIÓN 2 (PORCENTAJE EN BLANCO) -->
+                        <Border x:Name="ProgressPanelClean" Visibility="Collapsed" Background="#07080C" BorderBrush="#1D1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,5,5" Padding="24,14">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" x:Name="TxtStatusClean" Text="Preparando..." FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtPercentClean" Text="0%" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                </Grid>
+                                <ProgressBar x:Name="ProgressClean" Minimum="0" Maximum="100" Value="0"/>
                             </StackPanel>
+                        </Border>
 
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="Limpiar" FontSize="14.5" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
-                                <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3478C6" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
-                            </StackPanel>
-                        </Grid>
-                    </Button>
+                        <!-- BLOQUE SEPARADO: CONTINUACIÓN DIRECTA -->
+                        <Separator Background="#1D1E28" Margin="0,24,0,18"/>
 
-                    <!-- BARRA DESPLEGABLE DE OPCIÓN 2 -->
-                    <Border x:Name="ProgressPanelClean" Visibility="Collapsed" Background="#07080C" BorderBrush="#1D1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,5,5" Padding="24,14">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,8">
+                        <TextBlock Text="¿Ya contás con tus controladores limpios y configurados?"
+                                   FontSize="15" FontWeight="Medium" Foreground="#E4E4EC" Margin="2,0,0,10"/>
+
+                        <Button x:Name="BtnSkipDrivers" Style="{StaticResource PrepOptionButtonStyle}" Click="BtnSkipDrivers_Click">
+                            <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" x:Name="TxtStatusClean" Text="Preparando..." FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
-                                <TextBlock Grid.Column="1" x:Name="TxtPercentClean" Text="0%" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource AccentSoftText}"/>
+
+                                <StackPanel Grid.Column="0" Margin="0,0,24,0">
+                                    <TextBlock Text="Ya tengo mis controladores listos" FontSize="17" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Genera el respaldo preventivo obligatorio y pasa directamente al panel de ajustes del sistema."
+                                               FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="Continuar" FontSize="14.5" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
+                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3478C6" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
+                                </StackPanel>
                             </Grid>
-                            <ProgressBar x:Name="ProgressClean" Minimum="0" Maximum="100" Value="0"/>
-                        </StackPanel>
-                    </Border>
+                        </Button>
 
-                    <!-- BLOQUE SEPARADO: CONTINUACIÓN DIRECTA CON TEXTO ARRIBA -->
-                    <Separator Background="#1D1E28" Margin="0,24,0,18"/>
+                        <!-- BARRA DESPLEGABLE DE OPCIÓN 3 (PORCENTAJE EN BLANCO) -->
+                        <Border x:Name="ProgressPanelSkip" Visibility="Collapsed" Background="#07080C" BorderBrush="#1D1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,5,5" Padding="24,14">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" x:Name="TxtStatusSkip" Text="Creando punto de restauración preventivo..." FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtPercentSkip" Text="0%" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                </Grid>
+                                <ProgressBar x:Name="ProgressSkip" Minimum="0" Maximum="100" Value="0"/>
+                            </StackPanel>
+                        </Border>
 
-                    <TextBlock Text="¿Ya contás con tus controladores limpios y configurados?"
-                               FontSize="15" FontWeight="Medium" Foreground="#E4E4EC" Margin="2,0,0,10"/>
+                        <!-- SECCIÓN INFERIOR: ¿POR QUÉ HACEMOS ESTE PASO? -->
+                        <Separator Background="#1D1E28" Margin="0,28,0,22"/>
 
-                    <Button x:Name="BtnSkipDrivers" Style="{StaticResource PrepOptionButtonStyle}" Click="BtnSkipDrivers_Click">
+                        <TextBlock Text="¿Por qué hacemos este paso?" FontSize="19" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,18"/>
+
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0" Margin="0,0,24,0">
-                                <TextBlock Text="Ya tengo mis controladores listos" FontSize="17" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
-                                <TextBlock Text="Genera el respaldo preventivo obligatorio y pasa directamente al panel de ajustes del sistema."
-                                           FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="Continuar" FontSize="14.5" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
-                                <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3478C6" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
-                            </StackPanel>
-                        </Grid>
-                    </Button>
-
-                    <!-- BARRA DESPLEGABLE DE OPCIÓN 3 (SOLO APARECE AL CREAR RESPALDO) -->
-                    <Border x:Name="ProgressPanelSkip" Visibility="Collapsed" Background="#07080C" BorderBrush="#1D1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,5,5" Padding="24,14">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" x:Name="TxtStatusSkip" Text="Creando punto de restauración preventivo..." FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
-                                <TextBlock Grid.Column="1" x:Name="TxtPercentSkip" Text="..." FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource AccentSoftText}"/>
-                            </Grid>
-                            <ProgressBar x:Name="ProgressSkip" Minimum="0" Maximum="100" Value="0"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- SECCIÓN INFERIOR: ¿POR QUÉ HACEMOS ESTE PASO? -->
-                    <Separator Background="#1D1E28" Margin="0,28,0,22"/>
-
-                    <TextBlock Text="¿Por qué hacemos este paso?" FontSize="19" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,18"/>
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="24"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="24"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0">
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <Path Data="M12,2 L20,6 V12 C20,17.5 16.5,21.5 12,23 C7.5,21.5 4,17.5 4,12 V6 L12,2 Z"
-                                      Stroke="#3478C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
-                                <TextBlock Text="Respaldo preventivo" FontSize="15.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
-                            </StackPanel>
-                            <TextBlock Text="Guarda una copia exacta del estado actual de Windows antes de tocar cualquier clave. No consume rendimiento y usa como máximo el 5% del disco."
-                                       FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2">
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <Path Data="M4,6 H20 V18 H4 Z M8,2 V6 M16,2 V6"
-                                      Stroke="#3478C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
-                                <TextBlock Text="Drivers sin basura" FontSize="15.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
-                            </StackPanel>
-                            <TextBlock Text="Evita que Windows Update instale paquetes genéricos y prepara Chipset y GPU sin servicios corriendo en segundo plano."
-                                       FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="4">
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <Path Data="M3,7 A2,2 0 0 1 5,5 H9 L11,7 H19 A2,2 0 0 1 21,9 V17 A2,2 0 0 1 19,19 H5 A2,2 0 0 1 3,17 Z"
-                                      Stroke="#3478C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
-                                <TextBlock Text="Cambios reversibles" FontSize="15.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
-                            </StackPanel>
-                            <TextBlock Text="Cada ajuste permite revisar qué modifica en el Registro y volver al estado original de Windows en un clic."
-                                       FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
-                        </StackPanel>
-                    </Grid>
-                </StackPanel>
-            </ScrollViewer>
-
-            <!-- VISTA 3: PANEL DE AJUSTES -->
-            <Grid x:Name="MainOptimizerView" Grid.Row="1" Visibility="Collapsed" Margin="20,10,20,20">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="215"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- MENÚ LATERAL -->
-                <StackPanel x:Name="SidebarMenu" Grid.Column="0" Margin="0,0,18,0">
-                    <Button x:Name="BtnBackToStepZero" Style="{StaticResource GhostButtonStyle}"
-                            HorizontalContentAlignment="Left" Margin="0,0,0,14" Click="BtnBackToStepZero_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <Path Data="M3,10.5 L12,3 L21,10.5 V20 H15 V14 H9 V20 H3 Z" Stroke="#D0D0DA" StrokeThickness="1.7" Width="15" Height="15" Stretch="Uniform" Margin="0,0,9,0"/>
-                            <TextBlock Text="Preparación" FontWeight="SemiBold" Foreground="#E4E4EC"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button Content="Instalador Día 0" Tag="Instalador Día 0" Style="{StaticResource PrimaryButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
-                    <Button Content="Gaming y Energía" Tag="Gaming y Energía" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
-                    <Button Content="Red y DNS" Tag="Red y DNS" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
-                    <Button Content="Debloat" Tag="Debloat" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
-                    <Button Content="Servicios" Tag="Servicios" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
-                    <Button Content="Limpieza" Tag="Limpieza" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
-                </StackPanel>
-
-                <!-- CONTENIDO CENTRAL -->
-                <Grid Grid.Column="1">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- BUSCADOR -->
-                    <Border Grid.Row="0" Background="{StaticResource BgCardBlack}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="5" Margin="0,0,0,14">
-                        <Grid>
-                            <TextBox x:Name="TxtSearch" Background="Transparent" Foreground="#FFFFFF"
-                                     CaretBrush="#FFFFFF" BorderThickness="0"
-                                     Padding="14,11" FontSize="14.5" TextChanged="TxtSearch_TextChanged"/>
-                            <TextBlock Text="Buscar ajuste..." Foreground="{StaticResource TextMuted}" FontSize="14.5"
-                                       Margin="15,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Text, ElementName=TxtSearch}" Value="">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </Grid>
-                    </Border>
-
-                    <!-- LISTA DE AJUSTES -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <ItemsControl x:Name="TweaksItemsControl">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="{StaticResource BgCardBlack}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="5" Padding="18,14" Margin="0,0,0,8">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-
-                                            <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="15" FontWeight="Medium" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap"/>
-
-                                            <Button Grid.Column="1" Style="{StaticResource GhostButtonStyle}" Padding="10,6" Margin="10,0" Tag="{Binding}" Click="BtnInfo_Click">
-                                                <TextBlock Text="ⓘ" FontSize="15" Foreground="{StaticResource TextMuted}"/>
-                                            </Button>
-
-                                            <CheckBox Grid.Column="2" Style="{StaticResource ModernSwitchStyle}" IsChecked="{Binding IsEnabled, Mode=TwoWay}" VerticalAlignment="Center"/>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-
-                    <!-- INSPECTOR DE DETALLE -->
-                    <Border x:Name="InspectorPanel" Grid.Row="2" Visibility="Collapsed" Background="#0A0B10" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="5" Padding="18,14" Margin="0,10,0,6">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="24"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
+
                             <StackPanel Grid.Column="0">
-                                <TextBlock x:Name="TxtInspectorTitle" FontSize="14.5" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
-                                <TextBlock x:Name="TxtInspectorDesc" FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,6"/>
-                                <TextBlock x:Name="TxtInspectorTech" FontSize="13" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Path Data="M12,2 L20,6 V12 C20,17.5 16.5,21.5 12,23 C7.5,21.5 4,17.5 4,12 V6 L12,2 Z"
+                                          Stroke="#3478C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Respaldo preventivo" FontSize="15.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                </StackPanel>
+                                <TextBlock Text="Guarda una copia exacta del estado actual de Windows antes de tocar cualquier clave. No consume rendimiento y usa como máximo el 5% del disco."
+                                           FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
                             </StackPanel>
-                            <Button Grid.Column="1" Content="Cerrar" Style="{StaticResource GhostButtonStyle}" VerticalAlignment="Top" Margin="12,0,0,0" Click="BtnCloseInspector_Click"/>
+
+                            <StackPanel Grid.Column="2">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Path Data="M4,6 H20 V18 H4 Z M8,2 V6 M16,2 V6"
+                                          Stroke="#3478C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Drivers sin basura" FontSize="15.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                </StackPanel>
+                                <TextBlock Text="Evita que Windows Update instale paquetes genéricos y prepara Chipset y GPU sin servicios corriendo en segundo plano."
+                                           FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Path Data="M3,7 A2,2 0 0 1 5,5 H9 L11,7 H19 A2,2 0 0 1 21,9 V17 A2,2 0 0 1 19,19 H5 A2,2 0 0 1 3,17 Z"
+                                          Stroke="#3478C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Cambios reversibles" FontSize="15.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                </StackPanel>
+                                <TextBlock Text="Cada ajuste permite revisar qué modifica en el Registro y volver al estado original de Windows en un clic."
+                                           FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
+                            </StackPanel>
                         </Grid>
-                    </Border>
+                    </StackPanel>
+                </ScrollViewer>
 
-                    <!-- BARRA INFERIOR -->
-                    <Grid Grid.Row="3" Margin="0,14,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                <!-- VISTA 3: PANEL DE AJUSTES (CATEGORÍA "APPS" EN LUGAR DE "INSTALADOR DÍA 0") -->
+                <Grid x:Name="MainOptimizerView" Visibility="Collapsed" Margin="20,14,20,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="215"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                        <Button Grid.Column="0" Content="Restaurar original" Style="{StaticResource SoftCardButtonStyle}" Padding="18,11" Click="BtnRestoreAll_Click"/>
-                        <TextBlock x:Name="TxtActionFeedback" Grid.Column="1" Text="" FontSize="14" FontWeight="SemiBold" Foreground="#4CC38A"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="12,0"/>
-                        <Button Grid.Column="2" Content="Aplicar cambios" Style="{StaticResource PrimaryButtonStyle}" Padding="24,11" Click="BtnApplyChanges_Click"/>
+                    <!-- MENÚ LATERAL -->
+                    <StackPanel x:Name="SidebarMenu" Grid.Column="0" Margin="0,0,18,0">
+                        <Button x:Name="BtnBackToStepZero" Style="{StaticResource GhostButtonStyle}"
+                                HorizontalContentAlignment="Left" Margin="0,0,0,14" Click="BtnBackToStepZero_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="M3,10.5 L12,3 L21,10.5 V20 H15 V14 H9 V20 H3 Z" Stroke="#D0D0DA" StrokeThickness="1.7" Width="15" Height="15" Stretch="Uniform" Margin="0,0,9,0"/>
+                                <TextBlock Text="Preparación" FontWeight="SemiBold" Foreground="#E4E4EC"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Content="Apps" Tag="Apps" Style="{StaticResource PrimaryButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
+                        <Button Content="Gaming y Energía" Tag="Gaming y Energía" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
+                        <Button Content="Red y DNS" Tag="Red y DNS" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
+                        <Button Content="Debloat" Tag="Debloat" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
+                        <Button Content="Servicios" Tag="Servicios" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
+                        <Button Content="Limpieza" Tag="Limpieza" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
+                    </StackPanel>
+
+                    <!-- CONTENIDO CENTRAL -->
+                    <Grid Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- BUSCADOR -->
+                        <Border Grid.Row="0" Background="{StaticResource BgCardBlack}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="5" Margin="0,0,0,14">
+                            <Grid>
+                                <TextBox x:Name="TxtSearch" Background="Transparent" Foreground="#FFFFFF"
+                                         CaretBrush="#FFFFFF" BorderThickness="0"
+                                         Padding="14,11" FontSize="14.5" TextChanged="TxtSearch_TextChanged"/>
+                                <TextBlock Text="Buscar ajuste o aplicación..." Foreground="{StaticResource TextMuted}" FontSize="14.5"
+                                           Margin="15,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=TxtSearch}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                        </Border>
+
+                        <!-- LISTA DE AJUSTES / APPS -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="TweaksItemsControl">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource BgCardBlack}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="5" Padding="18,14" Margin="0,0,0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="15" FontWeight="Medium" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap"/>
+
+                                                <Button Grid.Column="1" Style="{StaticResource GhostButtonStyle}" Padding="10,6" Margin="10,0" Tag="{Binding}" Click="BtnInfo_Click">
+                                                    <TextBlock Text="ⓘ" FontSize="15" Foreground="{StaticResource TextMuted}"/>
+                                                </Button>
+
+                                                <CheckBox Grid.Column="2" Style="{StaticResource ModernSwitchStyle}" IsChecked="{Binding IsEnabled, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <!-- INSPECTOR DE DETALLE -->
+                        <Border x:Name="InspectorPanel" Grid.Row="2" Visibility="Collapsed" Background="#0A0B10" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="5" Padding="18,14" Margin="0,10,0,6">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock x:Name="TxtInspectorTitle" FontSize="14.5" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                    <TextBlock x:Name="TxtInspectorDesc" FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="TxtInspectorTech" FontSize="13" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Cerrar" Style="{StaticResource GhostButtonStyle}" VerticalAlignment="Top" Margin="12,0,0,0" Click="BtnCloseInspector_Click"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- BARRA INFERIOR -->
+                        <Grid Grid.Row="3" Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Grid.Column="0" Content="Restaurar original" Style="{StaticResource SoftCardButtonStyle}" Padding="18,11" Click="BtnRestoreAll_Click"/>
+                            <TextBlock x:Name="TxtActionFeedback" Grid.Column="1" Text="" FontSize="14" FontWeight="SemiBold" Foreground="#4CC38A"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="12,0"/>
+                            <Button Grid.Column="2" Content="Aplicar cambios" Style="{StaticResource PrimaryButtonStyle}" Padding="24,11" Click="BtnApplyChanges_Click"/>
+                        </Grid>
                     </Grid>
                 </Grid>
             </Grid>
