@@ -1210,9 +1210,9 @@ namespace Archon
                     item.Category = "Apps";
                     _appSubGroups[item.Id] = "Runtimes & Essentials";
                     if (item.Id == "install_vcredist")
-                        item.IconUrl = "https://learn.microsoft.com/favicon.ico";
+                        item.IconGeometry = "https://learn.microsoft.com/favicon.ico";
                     else if (item.Id == "install_directx")
-                        item.IconUrl = "https://www.microsoft.com/favicon.ico";
+                        item.IconGeometry = "https://www.microsoft.com/favicon.ico";
                 }
                 catalog.Add(item);
             }
@@ -1268,7 +1268,7 @@ namespace Archon
                     Risk = TweakRisk.Seguro,
                     Description = app.desc,
                     TechnicalDetail = $"winget install --id {app.pkg} -e --silent",
-                    IconUrl = app.iconUrl,
+                    IconGeometry = app.iconUrl,
                     ApplyAction = () => RegistryEngine.RunCommandHidden("winget.exe",
                         $"install --id {app.pkg} -e --silent --accept-package-agreements --accept-source-agreements")
                 });
