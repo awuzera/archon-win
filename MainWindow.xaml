@@ -99,7 +99,7 @@
             </Setter>
         </Style>
 
-        <!-- BOTÓN PRINCIPAL (SIN BORDE BLANCO EN PUNTAS) -->
+        <!-- BOTÓN PRINCIPAL -->
         <Style x:Key="PrimaryButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
@@ -151,6 +151,37 @@
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="border" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- FILA INTERACTIVA CON INDICADOR LATERAL PARA PREPARACIÓN -->
+        <Style x:Key="ActionRowButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#F2F2F5"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="RowBg" Background="{TemplateBinding Background}">
+                            <Grid>
+                                <Border x:Name="LeftAccent" Width="3" HorizontalAlignment="Left" Background="Transparent"/>
+                                <Border Padding="24,18">
+                                    <ContentPresenter/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RowBg" Property="Background" Value="#181820"/>
+                                <Setter TargetName="LeftAccent" Property="Background" Value="#C83741"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="RowBg" Property="Opacity" Value="0.45"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -269,9 +300,9 @@
                 </StackPanel>
             </Grid>
 
-            <!-- VISTA 1: PRESENTACIÓN LIMPIA -->
+            <!-- VISTA 1: PRESENTACIÓN CON TABLA DE COMPONENTES CORREGIDA -->
             <ScrollViewer x:Name="WelcomeView" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel MaxWidth="660" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="32,16,32,32">
+                <StackPanel MaxWidth="720" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="32,16,32,32">
 
                     <!-- LOGO ARCHON -->
                     <Viewbox Width="72" Height="72" HorizontalAlignment="Center" Margin="0,0,0,18">
@@ -305,56 +336,80 @@
                         </Button>
                     </StackPanel>
 
-                    <!-- PANEL INTERACTIVO DE HARDWARE -->
-                    <Border x:Name="HardwareListPanel" Visibility="Collapsed" Background="{StaticResource BgPanel}"
+                    <!-- PANEL INTERACTIVO DE HARDWARE CON COLUMNAS SEPARADAS -->
+                    <Border x:Name="HardwareListPanel" Visibility="Collapsed" MinWidth="560" Background="{StaticResource BgPanel}"
                             BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1" CornerRadius="5" Padding="24,20">
                         <StackPanel>
                             <TextBlock Text="Componentes detectados" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,16"/>
 
                             <Grid Margin="0,0,0,11">
-                                <TextBlock Text="Procesador" FontSize="14.5" Foreground="{StaticResource TextMuted}"/>
-                                <TextBlock x:Name="TxtCpuValue" Text="Detectando..." FontSize="14.5" Foreground="#F2F2F5" HorizontalAlignment="Right"/>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="165"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Procesador" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" x:Name="TxtCpuValue" Text="Detectando..." FontSize="14.5" Foreground="#F2F2F5" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                             </Grid>
                             <Separator Background="#202029" Margin="0,0,0,11"/>
 
                             <Grid Margin="0,0,0,11">
-                                <TextBlock Text="Placa madre" FontSize="14.5" Foreground="{StaticResource TextMuted}"/>
-                                <TextBlock x:Name="TxtMotherValue" Text="Detectando..." FontSize="14.5" Foreground="#F2F2F5" HorizontalAlignment="Right"/>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="165"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Placa madre" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" x:Name="TxtMotherValue" Text="Detectando..." FontSize="14.5" Foreground="#F2F2F5" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                             </Grid>
                             <Separator Background="#202029" Margin="0,0,0,11"/>
 
                             <Grid Margin="0,0,0,11">
-                                <TextBlock Text="Tarjeta gráfica" FontSize="14.5" Foreground="{StaticResource TextMuted}"/>
-                                <TextBlock x:Name="TxtGpuValue" Text="Detectando..." FontSize="14.5" Foreground="#F2F2F5" HorizontalAlignment="Right"/>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="165"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Tarjeta gráfica" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" x:Name="TxtGpuValue" Text="Detectando..." FontSize="14.5" Foreground="#F2F2F5" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                             </Grid>
                             <Separator Background="#202029" Margin="0,0,0,11"/>
 
                             <Grid Margin="0,0,0,11">
-                                <TextBlock Text="Memoria RAM" FontSize="14.5" Foreground="{StaticResource TextMuted}"/>
-                                <TextBlock x:Name="TxtRamValue" Text="Detectando..." FontSize="14.5" Foreground="#F2F2F5" HorizontalAlignment="Right"/>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="165"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Memoria RAM" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" x:Name="TxtRamValue" Text="Detectando..." FontSize="14.5" Foreground="#F2F2F5" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                             </Grid>
                             <Separator Background="#202029" Margin="0,0,0,11"/>
 
                             <Grid Margin="0,0,0,11">
-                                <TextBlock Text="Almacenamiento" FontSize="14.5" Foreground="{StaticResource TextMuted}"/>
-                                <TextBlock x:Name="TxtStorageValue" Text="Detectando..." FontSize="14.5" Foreground="#F2F2F5" HorizontalAlignment="Right"/>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="165"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Almacenamiento" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" x:Name="TxtStorageValue" Text="Detectando..." FontSize="14.5" Foreground="#F2F2F5" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                             </Grid>
                             <Separator Background="#202029" Margin="0,0,0,11"/>
 
                             <Grid>
-                                <TextBlock Text="Sistema operativo" FontSize="14.5" Foreground="{StaticResource TextMuted}"/>
-                                <TextBlock x:Name="TxtOsValue" Text="Detectando..." FontSize="14.5" Foreground="#F2F2F5" HorizontalAlignment="Right"/>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="165"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Sistema operativo" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" x:Name="TxtOsValue" Text="Detectando..." FontSize="14.5" Foreground="#F2F2F5" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                             </Grid>
                         </StackPanel>
                     </Border>
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- VISTA 2: PREPARACIÓN DEL SISTEMA (DOS PANELES LADO A LADO + ÍCONOS) -->
+            <!-- VISTA 2: PREPARACIÓN DEL SISTEMA (DISEÑO SECUENCIAL CON IDENTIDAD PROPIA) -->
             <ScrollViewer x:Name="StepZeroView" Grid.Row="1" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel MaxWidth="820" HorizontalAlignment="Center" Margin="32,8,32,40">
 
-                    <!-- BOTÓN INICIO CON ÍCONO DE CASITA -->
+                    <!-- BOTÓN INICIO -->
                     <Button x:Name="BtnBackToWelcome" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left" Margin="-10,0,0,14" Click="BtnBackToWelcome_Click">
                         <StackPanel Orientation="Horizontal">
                             <Path Data="M3,10.5 L12,3 L21,10.5 V20 A1,1 0 0 1 20,21 H15 V14 H9 V21 H4 A1,1 0 0 1 3,20 Z"
@@ -363,14 +418,14 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- ENCABEZADO PROFESIONAL -->
+                    <!-- ENCABEZADO -->
                     <TextBlock Text="Preparación del sistema" FontSize="26" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
 
-                    <TextBlock Text="Seleccioná el estado actual de tu instalación para crear un punto de seguridad y configurar los controladores."
+                    <TextBlock Text="Elegí cómo querés preparar la base de Windows antes de pasar al panel de ajustes."
                                FontSize="15.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="23" Margin="0,0,0,22"/>
 
                     <!-- AVISO DE BLOATWARE DETECTADO -->
-                    <Border x:Name="BloatAlertBox" Visibility="Collapsed" Background="#1D1418" BorderBrush="#3A2228" BorderThickness="1" CornerRadius="5" Padding="18,14" Margin="0,0,0,20">
+                    <Border x:Name="BloatAlertBox" Visibility="Collapsed" Background="#1D1418" BorderBrush="#3A2228" BorderThickness="1" CornerRadius="4" Padding="18,13" Margin="0,0,0,18">
                         <StackPanel Orientation="Horizontal">
                             <Path Data="M12,3 L22,20 H2 Z M12,9 V13 M12,17 H12.01" Stroke="#E06C75" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="18" Height="18" Stretch="Uniform" Margin="0,1,12,0" VerticalAlignment="Top"/>
                             <StackPanel>
@@ -380,75 +435,100 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- DOS PANELES / WIDGETS LADO A LADO -->
-                    <Grid Margin="0,0,0,22">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="16"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                    <!-- SELECTOR SECUENCIAL NUMERADO (01 / 02 / 03) -->
+                    <Border Background="#121217" BorderBrush="#23232E" BorderThickness="1" CornerRadius="4" Margin="0,0,0,18">
+                        <StackPanel>
+                            <!-- RUTA 01 -->
+                            <Button x:Name="BtnFreshInstall" Style="{StaticResource ActionRowButtonStyle}" Click="BtnFreshInstall_Click">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="46"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-                        <!-- PANEL IZQUIERDO: INSTALACIÓN LIMPIA -->
-                        <Button x:Name="BtnFreshInstall" Grid.Column="0" Style="{StaticResource SoftCardButtonStyle}"
-                                HorizontalContentAlignment="Stretch" VerticalContentAlignment="Top" Padding="24,22" Click="BtnFreshInstall_Click">
-                            <StackPanel>
-                                <Border Width="40" Height="40" CornerRadius="5" Background="#1F171B" HorizontalAlignment="Left" Margin="0,0,0,16">
-                                    <Path Data="M12,2 L20,6 V12 C20,17.5 16.5,21.5 12,23 C7.5,21.5 4,17.5 4,12 V6 L12,2 Z M9,12 L11,14 L15,10"
-                                          Stroke="#D94852" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                                          Width="20" Height="20" Stretch="Uniform"/>
-                                </Border>
+                                    <TextBlock Grid.Column="0" Text="01" FontSize="16" FontWeight="Bold" Foreground="#C83741" VerticalAlignment="Top" Margin="0,2,0,0"/>
 
-                                <TextBlock Text="Windows recién instalado" FontSize="18" FontWeight="SemiBold" Foreground="#FFFFFF" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                    <StackPanel Grid.Column="1" Margin="0,0,20,0">
+                                        <TextBlock Text="Windows recién instalado" FontSize="17" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Crea el punto de restauración preventivo e instala únicamente los controladores esenciales sin telemetría ni paneles extra."
+                                                   FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
+                                    </StackPanel>
 
-                                <TextBlock Text="Todavía no instalé controladores. Crea un punto de seguridad e instala únicamente los drivers esenciales sin telemetría."
-                                           FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="22"/>
-                            </StackPanel>
-                        </Button>
-
-                        <!-- PANEL DERECHO: LIMPIEZA DE DRIVERS Y BLOAT -->
-                        <Button x:Name="BtnCleanAndInstall" Grid.Column="2" Style="{StaticResource SoftCardButtonStyle}"
-                                HorizontalContentAlignment="Stretch" VerticalContentAlignment="Top" Padding="24,22" Click="BtnCleanAndInstall_Click">
-                            <StackPanel>
-                                <Border Width="40" Height="40" CornerRadius="5" Background="#1B1B24" HorizontalAlignment="Left" Margin="0,0,0,16">
-                                    <Path Data="M16,3 L21,8 L10,19 H5 V14 L16,3 Z M3,21 H21"
-                                          Stroke="#A8A8B3" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                                          Width="20" Height="20" Stretch="Uniform"/>
-                                </Border>
-
-                                <TextBlock Text="Ya instalé drivers o utilidades" FontSize="18" FontWeight="SemiBold" Foreground="#FFFFFF" TextWrapping="Wrap" Margin="0,0,0,8"/>
-
-                                <TextBlock Text="Elimina controladores previos y software de fabricante como Armoury Crate o GeForce Experience antes de dejar la base limpia."
-                                           FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="22"/>
-                            </StackPanel>
-                        </Button>
-                    </Grid>
-
-                    <!-- ESTADO Y BARRA DE PROGRESO -->
-                    <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1" CornerRadius="5" Padding="20,16" Margin="0,0,0,22">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0" Margin="0,0,20,0" VerticalAlignment="Center">
-                                <TextBlock x:Name="TxtStepZeroStatus" Text="Listo para comenzar"
-                                           FontSize="14.5" FontWeight="Medium" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                                <ProgressBar x:Name="StepZeroProgress" Height="6" Minimum="0" Maximum="100" Value="0"
-                                             Background="#22222C" Foreground="{StaticResource AccentPrimary}" BorderThickness="0"/>
-                            </StackPanel>
-
-                            <Button x:Name="BtnSkipDrivers" Grid.Column="1" Style="{StaticResource SoftCardButtonStyle}" Padding="18,11" VerticalAlignment="Center" Click="BtnSkipDrivers_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Ir al optimizador" FontSize="14.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#F2F2F5" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="15" Height="15" Stretch="Uniform" Margin="8,1,0,0" VerticalAlignment="Center"/>
-                                </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="Instalar" FontSize="14" FontWeight="SemiBold" Foreground="#D4D4DC" Margin="0,0,8,0"/>
+                                        <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#C83741" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="15" Height="15" Stretch="Uniform"/>
+                                    </StackPanel>
+                                </Grid>
                             </Button>
-                        </Grid>
+
+                            <Border Height="1" Background="#1F1F28"/>
+
+                            <!-- RUTA 02 -->
+                            <Button x:Name="BtnCleanAndInstall" Style="{StaticResource ActionRowButtonStyle}" Click="BtnCleanAndInstall_Click">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="46"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0" Text="02" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextMuted}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+
+                                    <StackPanel Grid.Column="1" Margin="0,0,20,0">
+                                        <TextBlock Text="Ya instalé drivers o utilidades de fabricante" FontSize="17" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Limpia controladores previos y programas como Armoury Crate o GeForce Experience, reinicia el equipo y deja la base limpia."
+                                                   FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="Limpiar" FontSize="14" FontWeight="SemiBold" Foreground="#A8A8B3" Margin="0,0,8,0"/>
+                                        <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#A8A8B3" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="15" Height="15" Stretch="Uniform"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                            <Border Height="1" Background="#1F1F28"/>
+
+                            <!-- RUTA 03 -->
+                            <Button x:Name="BtnSkipDrivers" Style="{StaticResource ActionRowButtonStyle}" Click="BtnSkipDrivers_Click">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="46"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0" Text="03" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextMuted}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+
+                                    <StackPanel Grid.Column="1" Margin="0,0,20,0">
+                                        <TextBlock Text="Ya tengo mis controladores listos" FontSize="17" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Genera el respaldo preventivo obligatorio y pasa directamente al panel de ajustes del sistema."
+                                                   FontSize="14" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="Continuar" FontSize="14" FontWeight="SemiBold" Foreground="#A8A8B3" Margin="0,0,8,0"/>
+                                        <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#A8A8B3" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="15" Height="15" Stretch="Uniform"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                        </StackPanel>
                     </Border>
 
+                    <!-- BARRA DE ESTADO INTEGRADA SIN CAJA -->
+                    <StackPanel Margin="2,0,2,26">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Ellipse Width="7" Height="7" Fill="#C83741" Margin="0,0,9,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtStepZeroStatus" Text="Listo para comenzar"
+                                       FontSize="13.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <ProgressBar x:Name="StepZeroProgress" Height="4" Minimum="0" Maximum="100" Value="0"
+                                     Background="#1D1D26" Foreground="{StaticResource AccentPrimary}" BorderThickness="0"/>
+                    </StackPanel>
+
                     <!-- SECCIÓN INFERIOR: ¿POR QUÉ HACEMOS ESTE PASO? -->
-                    <Separator Background="#202029" Margin="0,12,0,26"/>
+                    <Separator Background="#202029" Margin="0,6,0,26"/>
 
                     <TextBlock Text="¿Por qué hacemos este paso?" FontSize="19" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,18"/>
 
@@ -501,7 +581,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- MENÚ LATERAL CON ÍCONOS -->
+                <!-- MENÚ LATERAL -->
                 <StackPanel x:Name="SidebarMenu" Grid.Column="0" Margin="0,0,18,0">
                     <Button x:Name="BtnBackToStepZero" Style="{StaticResource GhostButtonStyle}"
                             HorizontalContentAlignment="Left" Margin="0,0,0,14" Click="BtnBackToStepZero_Click">
