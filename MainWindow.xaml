@@ -399,7 +399,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="22,0,0,0">
                         <Viewbox Width="24" Height="24" Margin="0,0,10,0">
                             <Canvas Width="64" Height="64">
-                                <Ellipse cx="32" cy="32" rx="28" ry="28" Stroke="#1D3B6E" StrokeThickness="1.6" StrokeDashArray="4 2"/>
+                                <Ellipse Canvas.Left="4" Canvas.Top="4" Width="56" Height="56" Stroke="#1D3B6E" StrokeThickness="1.6" StrokeDashArray="4 2"/>
                                 <Path Data="M26,24 L14,12 L8,5 M38,24 L50,12 L56,5" Stroke="#3B82F6" StrokeThickness="2.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
                                 <Path Data="M23,29 L9,23 L4,16 M41,29 L55,23 L60,16" Stroke="#3B82F6" StrokeThickness="2.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
                                 <Path Data="M23,35 L9,41 L4,49 M41,35 L55,41 L60,49" Stroke="#3B82F6" StrokeThickness="2.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
