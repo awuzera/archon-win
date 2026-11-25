@@ -27,7 +27,7 @@
         <SolidColorBrush x:Key="TextSecondary" Color="#D4D6E0"/>
         <SolidColorBrush x:Key="TextMuted" Color="#A6ACBE"/>
 
-        <!-- ILUMINACIÓN AMBIENTAL DE FONDO MÁS VISIBLE Y FLUIDA -->
+        <!-- ILUMINACIÓN AMBIENTAL DE FONDO -->
         <Storyboard x:Key="AmbientGlowStoryboard" RepeatBehavior="Forever">
             <DoubleAnimation Storyboard.TargetName="AuroraTopTransform"
                              Storyboard.TargetProperty="X"
@@ -143,7 +143,7 @@
         <Style x:Key="WindowControlButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#A8A8B6"/>
-            <Setter Property="Width" Value="48"/>
+            <Setter Property="Width" Value="46"/>
             <Setter Property="Height" Value="45"/>
             <Setter Property="FontSize" Value="13.5"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -156,6 +156,31 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="#14161F"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TopBarUtilityButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#0E111A"/>
+            <Setter Property="Foreground" Value="#D4D6E0"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="#1F2433" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#171C2B"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#345080"/>
                                 <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -182,7 +207,7 @@
             </Setter>
         </Style>
 
-        <!-- BOTÓN PRINCIPAL CON ACABADO TRANSLÚCIDO Y BRILLO SUTIL (NO SÓLIDO PLANO) -->
+        <!-- BOTÓN PRINCIPAL UNIFORME (SIN LÍNEA INFERIOR RESALTADA) -->
         <Style x:Key="PrimaryButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="Padding" Value="26,13"/>
@@ -192,29 +217,14 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" BorderBrush="#3B79CC" BorderThickness="1" CornerRadius="7" Padding="{TemplateBinding Padding}">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Color="#CC235EB0" Offset="0.0"/>
-                                    <GradientStop Color="#D9163E78" Offset="0.55"/>
-                                    <GradientStop Color="#E6102F5C" Offset="1.0"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
+                        <Border x:Name="border" Background="#D9194785" BorderBrush="#26599E" BorderThickness="1" CornerRadius="7" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="BorderBrush" Value="#5C9BF0"/>
-                                <Setter TargetName="border" Property="Background">
-                                    <Setter.Value>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                            <GradientStop Color="#E02D6EC9" Offset="0.0"/>
-                                            <GradientStop Color="#EB1D4E94" Offset="0.55"/>
-                                            <GradientStop Color="#F2153B73" Offset="1.0"/>
-                                        </LinearGradientBrush>
-                                    </Setter.Value>
-                                </Setter>
+                                <Setter TargetName="border" Property="Background" Value="#EB2157A1"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#326EBD"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="border" Property="Opacity" Value="0.45"/>
@@ -352,17 +362,23 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- BARRA SUPERIOR CON NUEVO EMBLEMA AERODINÁMICO -->
+            <!-- BARRA SUPERIOR CON EMBLEMA DE ARAÑA, IDIOMA Y USUARIO -->
             <Border Grid.Row="0" Background="#050507" BorderBrush="#12141C" BorderThickness="0,0,0,1" CornerRadius="8,8,0,0">
                 <Grid>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="22,0,0,0">
-                        <Viewbox Width="22" Height="22" Margin="0,0,10,0">
+                        <Viewbox Width="23" Height="23" Margin="0,0,10,0">
                             <Canvas Width="64" Height="64">
-                                <Path Data="M10,50 C14,26 26,12 32,8 C38,12 50,26 54,50 C44,41 38,38 32,38 C26,38 20,41 10,50 Z"
-                                      Fill="#13294B" Stroke="#3B82F6" StrokeThickness="3.2" StrokeLineJoin="Round"/>
-                                <Path Data="M20,46 L32,20 L44,46"
-                                      Stroke="#FFFFFF" StrokeThickness="3.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                <Ellipse Canvas.Left="28.5" Canvas.Top="45" Width="7" Height="7" Fill="#3B82F6"/>
+                                <!-- Patas superiores -->
+                                <Path Data="M26,25 L14,13 L9,5 M38,25 L50,13 L55,5" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                <!-- Patas medio-superiores -->
+                                <Path Data="M24,29 L9,24 L4,17 M40,29 L55,24 L60,17" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                <!-- Patas medio-inferiores -->
+                                <Path Data="M24,35 L9,40 L4,48 M40,35 L55,40 L60,48" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                <!-- Patas inferiores -->
+                                <Path Data="M26,39 L15,51 L10,59 M38,39 L49,51 L54,59" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                <!-- Cefalotórax y abdomen -->
+                                <Polygon Points="32,16 38,23 32,29 26,23" Fill="#FFFFFF"/>
+                                <Polygon Points="32,29 41,40 32,52 23,40" Fill="#1B4985" Stroke="#FFFFFF" StrokeThickness="2.4" StrokeLineJoin="Round"/>
                             </Canvas>
                         </Viewbox>
                         <TextBlock Text="Archon" FontWeight="SemiBold" FontSize="15" Foreground="#F5F5F8" VerticalAlignment="Center"/>
@@ -370,6 +386,24 @@
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <!-- SELECTOR DE IDIOMA -->
+                        <Button x:Name="BtnLanguageCycle" Style="{StaticResource TopBarUtilityButtonStyle}" Margin="0,0,8,0" Click="BtnLanguageCycle_Click" ToolTip="Change language / Cambiar idioma">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M2,12 H22 M12,2 C14.8,5 16,8.4 16,12 C16,15.6 14.8,19 12,22 C9.2,19 8,15.6 8,12 C8,8.4 9.2,5 12,2 Z"
+                                      Stroke="#5D9BE6" StrokeThickness="1.6" Width="14" Height="14" Stretch="Uniform" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtCurrentLangCode" Text="EN" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- BOTÓN DE CUENTA DE USUARIO -->
+                        <Button x:Name="BtnUserAccount" Style="{StaticResource TopBarUtilityButtonStyle}" Margin="0,0,10,0" Click="BtnUserAccount_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="M12,12 A4,4 0 1,0 12,4 A4,4 0 0,0 12,12 Z M4,20 C4,16.5 7.6,14.5 12,14.5 C16.4,14.5 20,16.5 20,20"
+                                      Stroke="#D4D6E0" StrokeThickness="1.7" StrokeStartLineCap="Round" Width="14" Height="14" Stretch="Uniform" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtTopUserLabel" Text="Account" FontWeight="Medium" FontSize="12.5" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
                         <Button Content="—" Style="{StaticResource WindowControlButtonStyle}" Click="Minimize_Click"/>
                         <Button Content="✕" Style="{StaticResource WindowCloseButtonStyle}" Click="Close_Click"/>
                     </StackPanel>
@@ -379,7 +413,7 @@
             <!-- CONTENEDOR PRINCIPAL -->
             <Grid Grid.Row="1">
 
-                <!-- ILUMINACIÓN AMBIENTAL DE FONDO MÁS VISIBLE -->
+                <!-- ILUMINACIÓN AMBIENTAL DE FONDO -->
                 <Grid x:Name="AmbientGlowLayer" IsHitTestVisible="False" ClipToBounds="True">
                     <Rectangle x:Name="AuroraTop" Width="1560" Height="720" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="-140,-180,-140,0">
                         <Rectangle.RenderTransform>
@@ -436,8 +470,8 @@
                             </EventTrigger>
                         </StackPanel.Triggers>
 
-                        <!-- NUEVO EMBLEMA AERODINÁMICO DE ARCHON -->
-                        <Border x:Name="WelcomeLogoContainer" Width="92" Height="92" HorizontalAlignment="Center" Margin="0,0,0,6" Background="Transparent" Cursor="Hand">
+                        <!-- EMBLEMA DE ARAÑA GEOMÉTRICA DE ARCHON -->
+                        <Border x:Name="WelcomeLogoContainer" Width="96" Height="96" HorizontalAlignment="Center" Margin="0,0,0,6" Background="Transparent" Cursor="Hand">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
@@ -469,43 +503,46 @@
                                 </Style>
                             </Border.Style>
 
-                            <Viewbox Width="88" Height="88">
+                            <Viewbox Width="92" Height="92">
                                 <Canvas Width="96" Height="96">
-                                    <!-- Halo orbital sutil -->
-                                    <Ellipse Canvas.Left="8" Canvas.Top="8" Width="80" Height="80" Stroke="#1D355E" StrokeThickness="1.3"/>
-                                    <!-- Silueta principal de doble ala ascendente -->
-                                    <Path Data="M16,74 C21,39 38,18 48,12 C58,18 75,39 80,74 C65,61 56,56 48,56 C40,56 31,61 16,74 Z"
-                                          Stroke="#3B82F6" StrokeThickness="2.6" StrokeLineJoin="Round">
-                                        <Path.Fill>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#2B4B8CE0" Offset="0.0"/>
-                                                <GradientStop Color="#1214284D" Offset="1.0"/>
-                                            </LinearGradientBrush>
-                                        </Path.Fill>
-                                    </Path>
-                                    <!-- Trazo interno de precisión -->
-                                    <Path Data="M30,66 L48,29 L66,66"
-                                          Stroke="#FFFFFF" StrokeThickness="3.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                    <!-- Puente transversal sutil -->
-                                    <Path Data="M36,53 C42,49 54,49 60,53"
-                                          Stroke="#6CA6F0" StrokeThickness="2.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                    <!-- Nodo central luminoso -->
-                                    <Ellipse Canvas.Left="43" Canvas.Top="64" Width="10" Height="10" Fill="#1B4985" Stroke="#5D9BE6" StrokeThickness="1.6"/>
-                                    <Ellipse Canvas.Left="46.2" Canvas.Top="67.2" Width="3.6" Height="3.6" Fill="#FFFFFF"/>
+                                    <!-- Patas delanteras -->
+                                    <Path Data="M40,36 L22,19 L14,7 M56,36 L74,19 L82,7"
+                                          Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                    <!-- Patas medio-delanteras -->
+                                    <Path Data="M37,43 L15,35 L6,25 M59,43 L81,35 L90,25"
+                                          Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                    <!-- Patas medio-traseras -->
+                                    <Path Data="M37,52 L15,60 L6,72 M59,52 L81,60 L90,72"
+                                          Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                    <!-- Patas traseras -->
+                                    <Path Data="M40,59 L23,77 L15,89 M56,59 L73,77 L81,89"
+                                          Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+
+                                    <!-- Quelíceros frontales -->
+                                    <Path Data="M44,23 L42,16 M52,23 L54,16" Stroke="#6CA6F0" StrokeThickness="2.2" StrokeStartLineCap="Round"/>
+
+                                    <!-- Cefalotórax -->
+                                    <Polygon Points="48,22 57,33 48,43 39,33" Fill="#FFFFFF"/>
+
+                                    <!-- Abdomen afilado -->
+                                    <Polygon Points="48,43 62,60 48,79 34,60" Fill="#122B52" Stroke="#FFFFFF" StrokeThickness="2.5" StrokeLineJoin="Round"/>
+
+                                    <!-- Marca dorsal de precisión -->
+                                    <Polygon Points="48,52 53,60 48,68 43,60" Fill="#3B82F6"/>
                                 </Canvas>
                             </Viewbox>
                         </Border>
 
                         <TextBlock Text="Archon" FontSize="44" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,4"/>
 
-                        <TextBlock Text="Bienvenido" FontSize="18.5" Foreground="{StaticResource TextSecondary}"
+                        <TextBlock x:Name="TxtWelcomeSubtitle" Text="Welcome" FontSize="18.5" Foreground="{StaticResource TextSecondary}"
                                    HorizontalAlignment="Center" Margin="0,0,0,30"/>
 
                         <!-- BOTONES PRINCIPALES -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,28">
                             <Button x:Name="BtnStartStepZero" Style="{StaticResource PrimaryButtonStyle}" Padding="36,14" Margin="0,0,14,0" Click="BtnStartStepZero_Click">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Comenzar" FontSize="15.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtStartButtonLabel" Text="Get Started" FontSize="15.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                     <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#FFFFFF" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" Margin="10,1,0,0" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
@@ -514,12 +551,12 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Path Data="M9,2 V5 M15,2 V5 M9,19 V22 M15,19 V22 M2,9 H5 M2,15 H5 M19,9 H22 M19,15 H22 M6,5 H18 A1,1 0 0 1 19,6 V18 A1,1 0 0 1 18,19 H6 A1,1 0 0 1 5,18 V6 A1,1 0 0 1 6,5 Z M9,9 H15 V15 H9 Z"
                                           Stroke="#E2E5F0" StrokeThickness="1.7" Width="17" Height="17" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtScanButtonLabel" Text="Ver mis componentes" FontSize="15.5" FontWeight="Medium" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtScanButtonLabel" Text="View my components" FontSize="15.5" FontWeight="Medium" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>
 
-                        <!-- PANEL INTERACTIVO DE HARDWARE CON ETIQUETAS MÁS RESALTADAS -->
+                        <!-- PANEL INTERACTIVO DE HARDWARE -->
                         <Border x:Name="HardwareListPanel" Visibility="Collapsed" MinWidth="660" Background="#CC090A0F"
                                 BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="7" Padding="26,22">
                             <StackPanel>
@@ -529,11 +566,11 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBlock Grid.Column="0" Text="Componentes detectados" FontSize="17" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="0" x:Name="TxtDetectedComponentsTitle" Text="Detected components" FontSize="17" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
 
                                     <Button Grid.Column="1" x:Name="BtnViewAllHardware" Style="{StaticResource GhostButtonStyle}" Padding="10,5" Click="BtnViewAllHardware_Click">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="Ver más" FontSize="14.5" FontWeight="SemiBold" Foreground="#5D9BE6" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="TxtSeeMoreLabel" Text="See more" FontSize="14.5" FontWeight="SemiBold" Foreground="#5D9BE6" VerticalAlignment="Center"/>
                                             <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#5D9BE6" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="14" Height="14" Stretch="Uniform" Margin="6,1,0,0" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -544,8 +581,8 @@
                                         <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Procesador" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtCpuValue" Text="Detectando..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="0" x:Name="TxtLblCpu" Text="Processor" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtCpuValue" Text="Detecting..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                                 </Grid>
                                 <Separator Background="#1B1E2B" Margin="0,0,0,12"/>
 
@@ -554,8 +591,8 @@
                                         <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Placa madre" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtMotherValue" Text="Detectando..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="0" x:Name="TxtLblMother" Text="Motherboard" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtMotherValue" Text="Detecting..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                                 </Grid>
                                 <Separator Background="#1B1E2B" Margin="0,0,0,12"/>
 
@@ -564,8 +601,8 @@
                                         <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Tarjeta gráfica" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtGpuValue" Text="Detectando..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="0" x:Name="TxtLblGpu" Text="Graphics card" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtGpuValue" Text="Detecting..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                                 </Grid>
                                 <Separator Background="#1B1E2B" Margin="0,0,0,12"/>
 
@@ -574,8 +611,8 @@
                                         <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Memoria RAM" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtRamValue" Text="Detectando..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="0" x:Name="TxtLblRam" Text="Memory RAM" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtRamValue" Text="Detecting..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                                 </Grid>
                                 <Separator Background="#1B1E2B" Margin="0,0,0,12"/>
 
@@ -584,8 +621,8 @@
                                         <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Almacenamiento" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtStorageValue" Text="Detectando..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="0" x:Name="TxtLblStorage" Text="Storage" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtStorageValue" Text="Detecting..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                                 </Grid>
                                 <Separator Background="#1B1E2B" Margin="0,0,0,12"/>
 
@@ -594,15 +631,15 @@
                                         <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Sistema operativo" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtOsValue" Text="Detectando..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="0" x:Name="TxtLblOs" Text="Operating system" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtOsValue" Text="Detecting..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- VISTA 1B: INVENTARIO COMPLETO DE HARDWARE ("VER MÁS") CON LETRA MÁS GRANDE Y CLARA -->
+                <!-- VISTA 1B: ESPECIFICACIONES COMPLETAS DEL EQUIPO (SIN SUBTÍTULO EXTRA) -->
                 <ScrollViewer x:Name="FullHardwareView" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel x:Name="FullHardwareContainer" Width="1080" HorizontalAlignment="Center" Margin="28,18,28,48">
                         <StackPanel.RenderTransform>
@@ -614,13 +651,11 @@
                                 <Path Data="M19,12 L5,12 M11,6 L5,12 L11,18"
                                       Stroke="#E4E7F2" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                                       Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Volver al inicio" FontSize="15" FontWeight="Medium" Foreground="#EEF1FA" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtBackHomeLabel" Text="Back to home" FontSize="15" FontWeight="Medium" Foreground="#EEF1FA" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
-                        <TextBlock Text="Especificaciones completas del equipo" FontSize="29" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
-                        <TextBlock Text="Inventario detallado de hardware, estado de TPM 2.0 y opciones de BIOS para gaming, memoria, discos, red y entorno de Windows."
-                                   FontSize="16" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,24"/>
+                        <TextBlock x:Name="TxtFullSpecsTitle" Text="Full system specifications" FontSize="29" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,22"/>
 
                         <ItemsControl x:Name="FullHardwareSectionsControl">
                             <ItemsControl.ItemTemplate>
@@ -669,14 +704,14 @@
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="M3,10.5 L12,3 L21,10.5 V20 A1,1 0 0 1 20,21 H15 V14 H9 V21 H4 A1,1 0 0 1 3,20 Z"
                                       Stroke="#D0D0DA" StrokeThickness="1.7" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Inicio" FontSize="14.5" FontWeight="Medium" Foreground="#E4E4EC" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtHomeNavLabel" Text="Home" FontSize="14.5" FontWeight="Medium" Foreground="#E4E4EC" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
                         <!-- ENCABEZADO -->
-                        <TextBlock Text="Preparación del sistema" FontSize="28" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+                        <TextBlock x:Name="TxtPrepTitle" Text="System preparation" FontSize="28" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
 
-                        <TextBlock Text="Elegí el estado actual de tu Windows para preparar los controladores antes de pasar al panel de ajustes."
+                        <TextBlock x:Name="TxtPrepSubtitle" Text="Choose your current Windows state to prepare drivers before entering the optimization panel."
                                    FontSize="16" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="24" Margin="0,0,0,24"/>
 
                         <!-- AVISO DE BLOATWARE DETECTADO -->
@@ -684,7 +719,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="M12,3 L22,20 H2 Z M12,9 V13 M12,17 H12.01" Stroke="#5D9BE6" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="18" Height="18" Stretch="Uniform" Margin="0,1,12,0" VerticalAlignment="Top"/>
                                 <StackPanel>
-                                    <TextBlock Text="Software adicional de fabricante detectado" FontSize="14.5" FontWeight="SemiBold" Foreground="#5D9BE6" Margin="0,0,0,2"/>
+                                    <TextBlock x:Name="TxtBloatTitle" Text="OEM additional software detected" FontSize="14.5" FontWeight="SemiBold" Foreground="#5D9BE6" Margin="0,0,0,2"/>
                                     <TextBlock x:Name="TxtDetectedBloatList" Text="" FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </StackPanel>
@@ -699,13 +734,13 @@
                                 </Grid.ColumnDefinitions>
 
                                 <StackPanel Grid.Column="0" Margin="0,0,28,0">
-                                    <TextBlock Text="Windows recién instalado" FontSize="18" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
-                                    <TextBlock Text="Crea el punto de restauración preventivo e instala únicamente los controladores esenciales sin telemetría ni paneles extra."
+                                    <TextBlock x:Name="TxtFreshTitle" Text="Fresh Windows installation" FontSize="18" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="TxtFreshDesc" Text="Creates a preventive restore point and installs only essential drivers without telemetry or extra panels."
                                                FontSize="15" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="22"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="Instalar" FontSize="15" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
+                                    <TextBlock x:Name="TxtFreshAction" Text="Install" FontSize="15" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
                                     <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3474C6" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
                                 </StackPanel>
                             </Grid>
@@ -719,7 +754,7 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" x:Name="TxtStatusFresh" Text="Completado" FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Column="0" x:Name="TxtStatusFresh" Text="Completed" FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
                                     <TextBlock Grid.Column="1" x:Name="TxtPercentFresh" Text="100%" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 </Grid>
                                 <ProgressBar x:Name="ProgressFresh" Minimum="0" Maximum="100" Value="0"/>
@@ -737,13 +772,13 @@
                                 </Grid.ColumnDefinitions>
 
                                 <StackPanel Grid.Column="0" Margin="0,0,28,0">
-                                    <TextBlock Text="Ya instalé drivers o utilidades de fabricante" FontSize="18" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
-                                    <TextBlock Text="Limpia controladores previos y programas como Armoury Crate o GeForce Experience, reinicia el equipo y deja la base limpia."
+                                    <TextBlock x:Name="TxtCleanTitle" Text="I already installed drivers or OEM utilities" FontSize="18" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="TxtCleanDesc" Text="Removes previous drivers and suites like Armoury Crate or GeForce Experience, reboots, and leaves a clean base."
                                                FontSize="15" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="22"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="Limpiar" FontSize="15" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
+                                    <TextBlock x:Name="TxtCleanAction" Text="Clean" FontSize="15" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
                                     <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3474C6" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
                                 </StackPanel>
                             </Grid>
@@ -757,17 +792,17 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" x:Name="TxtStatusClean" Text="Completado" FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Column="0" x:Name="TxtStatusClean" Text="Completed" FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
                                     <TextBlock Grid.Column="1" x:Name="TxtPercentClean" Text="100%" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 </Grid>
                                 <ProgressBar x:Name="ProgressClean" Minimum="0" Maximum="100" Value="0"/>
                             </StackPanel>
                         </Border>
 
-                        <!-- BLOQUE SEPARADO: CONTINUACIÓN DIRECTA (SIN BARRA AZUL DEBAJO) -->
+                        <!-- BLOQUE SEPARADO: CONTINUACIÓN DIRECTA -->
                         <Separator Background="#1C1E28" Margin="0,28,0,22"/>
 
-                        <TextBlock Text="¿Ya contás con tus controladores limpios y configurados?"
+                        <TextBlock x:Name="TxtAlreadyReadyPrompt" Text="Already have clean, configured drivers?"
                                    FontSize="15.5" FontWeight="Medium" Foreground="#E4E4EC" Margin="2,0,0,12"/>
 
                         <Button x:Name="BtnSkipDrivers" Style="{StaticResource PrepOptionButtonStyle}" Click="BtnSkipDrivers_Click">
@@ -778,22 +813,22 @@
                                 </Grid.ColumnDefinitions>
 
                                 <StackPanel Grid.Column="0" Margin="0,0,28,0">
-                                    <TextBlock Text="Ya tengo mis controladores listos" FontSize="17.5" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,5"/>
-                                    <TextBlock Text="Genera el respaldo preventivo obligatorio y pasa directamente al panel de ajustes del sistema."
+                                    <TextBlock x:Name="TxtSkipTitle" Text="My drivers are already ready" FontSize="17.5" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,5"/>
+                                    <TextBlock x:Name="TxtSkipDesc" Text="Creates the mandatory preventive restore point and jumps straight into the system optimization panel."
                                                FontSize="15" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="22"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="Continuar" FontSize="15" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
+                                    <TextBlock x:Name="TxtSkipAction" Text="Continue" FontSize="15" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
                                     <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3474C6" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
                                 </StackPanel>
                             </Grid>
                         </Button>
 
-                        <!-- SECCIÓN INFERIOR: ¿POR QUÉ HACEMOS ESTE PASO? -->
+                        <!-- SECCIÓN INFERIOR -->
                         <Separator Background="#1C1E28" Margin="0,32,0,26"/>
 
-                        <TextBlock Text="¿Por qué hacemos este paso?" FontSize="20" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,20"/>
+                        <TextBlock x:Name="TxtWhyTitle" Text="Why do we perform this step?" FontSize="20" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,20"/>
 
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -808,9 +843,9 @@
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Path Data="M12,2 L20,6 V12 C20,17.5 16.5,21.5 12,23 C7.5,21.5 4,17.5 4,12 V6 L12,2 Z"
                                           Stroke="#3474C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Respaldo preventivo" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock x:Name="TxtWhy1Title" Text="Preventive backup" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 </StackPanel>
-                                <TextBlock Text="Guarda una copia exacta del estado actual de Windows antes de tocar cualquier clave. No consume rendimiento y usa como máximo el 5% del disco."
+                                <TextBlock x:Name="TxtWhy1Desc" Text="Saves an exact snapshot of Windows before modifying any setting. Zero performance impact and uses at most 5% disk space."
                                            FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="22"/>
                             </StackPanel>
 
@@ -818,9 +853,9 @@
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Path Data="M4,6 H20 V18 H4 Z M8,2 V6 M16,2 V6"
                                           Stroke="#3474C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Drivers sin basura" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock x:Name="TxtWhy2Title" Text="Bloat-free drivers" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 </StackPanel>
-                                <TextBlock Text="Evita que Windows Update instale paquetes genéricos y prepara Chipset y GPU sin servicios corriendo en segundo plano."
+                                <TextBlock x:Name="TxtWhy2Desc" Text="Prevents Windows Update from pushing generic packages and prepares Chipset and GPU without background services."
                                            FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="22"/>
                             </StackPanel>
 
@@ -828,16 +863,16 @@
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Path Data="M3,7 A2,2 0 0 1 5,5 H9 L11,7 H19 A2,2 0 0 1 21,9 V17 A2,2 0 0 1 19,19 H5 A2,2 0 0 1 3,17 Z"
                                           Stroke="#3474C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Cambios reversibles" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock x:Name="TxtWhy3Title" Text="Reversible tweaks" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 </StackPanel>
-                                <TextBlock Text="Cada ajuste permite revisar qué modifica en el Registro y volver al estado original de Windows en un clic."
+                                <TextBlock x:Name="TxtWhy3Desc" Text="Every adjustment lets you review its purpose and restore Windows defaults in a single click."
                                            FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="22"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- HUD FLOTANTE MINIMALISTA CON ANILLO DOBLE DE TELEMETRÍA CENTRADO -->
+                <!-- HUD FLOTANTE MINIMALISTA DE CARGA -->
                 <Grid x:Name="PrepModalOverlay" Visibility="Collapsed" Background="#C8050609">
                     <StackPanel Width="560" HorizontalAlignment="Center" VerticalAlignment="Center">
 
@@ -859,15 +894,15 @@
                             <Ellipse Width="8" Height="8" Fill="#3B82F6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Grid>
 
-                        <TextBlock x:Name="TxtModalStepTag" Text="ETAPA 1 DE 3 · RESPALDO DEL SISTEMA"
+                        <TextBlock x:Name="TxtModalStepTag" Text="STAGE 1 OF 3 · SYSTEM BACKUP"
                                    FontSize="12.5" FontWeight="SemiBold" Foreground="#5D9BE6"
                                    HorizontalAlignment="Center" Margin="0,0,0,8"/>
 
-                        <TextBlock x:Name="TxtModalTitle" Text="Preparando sistema"
+                        <TextBlock x:Name="TxtModalTitle" Text="Preparing system"
                                    FontSize="25" FontWeight="SemiBold" Foreground="#FFFFFF"
                                    HorizontalAlignment="Center" Margin="0,0,0,10"/>
 
-                        <TextBlock x:Name="TxtModalMessage" Text="Creando punto de restauración preventivo en el sistema..."
+                        <TextBlock x:Name="TxtModalMessage" Text="Creating preventive system restore point..."
                                    FontSize="15.5" Foreground="{StaticResource TextSecondary}"
                                    HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,28"/>
 
@@ -876,12 +911,45 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Procesando configuración" FontSize="14" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" x:Name="TxtModalProcessingLabel" Text="Processing configuration" FontSize="14" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
                             <TextBlock Grid.Column="1" x:Name="TxtModalPercent" Text="0%" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
                         </Grid>
 
                         <ProgressBar x:Name="ModalProgressBar" Height="9" Minimum="0" Maximum="100" Value="0"/>
                     </StackPanel>
+                </Grid>
+
+                <!-- MODAL LIGERO DE CUENTA DE USUARIO -->
+                <Grid x:Name="AccountModalOverlay" Visibility="Collapsed" Background="#B8050609">
+                    <Border Width="440" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Background="#0B0D14" BorderBrush="#232B3D" BorderThickness="1" CornerRadius="8" Padding="28,24">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,14">
+                                <TextBlock x:Name="TxtAccountModalTitle" Text="Archon Account" FontSize="20" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                <Button Content="✕" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Right" Padding="8,4" Click="BtnCloseAccountModal_Click"/>
+                            </Grid>
+
+                            <TextBlock x:Name="TxtAccountModalDesc" Text="Sign in to sync your optimization profiles, app presets, and cloud backups across Windows installations."
+                                       FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21" Margin="0,0,0,18"/>
+
+                            <TextBlock x:Name="TxtAccountUserLabel" Text="Username or Email" FontSize="13.5" FontWeight="Medium" Foreground="#CBD2E3" Margin="0,0,0,6"/>
+                            <Border Background="#07080C" BorderBrush="#1F2433" BorderThickness="1" CornerRadius="6" Margin="0,0,0,16">
+                                <TextBox x:Name="TxtAccountInput" Background="Transparent" Foreground="#FFFFFF" CaretBrush="#FFFFFF"
+                                         BorderThickness="0" Padding="12,10" FontSize="14.5"/>
+                            </Border>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Button Grid.Column="0" x:Name="BtnAccountSignOut" Content="Sign out" Style="{StaticResource SoftCardButtonStyle}" Padding="14,10" Click="BtnAccountSignOut_Click"/>
+                                <Button Grid.Column="2" x:Name="BtnAccountSave" Content="Continue" Style="{StaticResource PrimaryButtonStyle}" Padding="14,10" Click="BtnAccountSave_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
                 </Grid>
 
                 <!-- VISTA 3: PANEL DE AJUSTES -->
@@ -897,16 +965,16 @@
                                 HorizontalContentAlignment="Left" Margin="0,0,0,16" Click="BtnBackToStepZero_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="M3,10.5 L12,3 L21,10.5 V20 H15 V14 H9 V20 H3 Z" Stroke="#D0D0DA" StrokeThickness="1.7" Width="15" Height="15" Stretch="Uniform" Margin="0,0,9,0"/>
-                                <TextBlock Text="Preparación" FontWeight="SemiBold" Foreground="#E4E4EC"/>
+                                <TextBlock x:Name="TxtNavPrep" Text="Preparation" FontWeight="SemiBold" Foreground="#E4E4EC"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Content="Apps" Tag="Apps" Style="{StaticResource PrimaryButtonStyle}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,0,0,7" Click="CategoryBtn_Click"/>
-                        <Button Content="Gaming y Energía" Tag="Gaming y Energía" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,0,0,7" Click="CategoryBtn_Click"/>
-                        <Button Content="Red y DNS" Tag="Red y DNS" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,0,0,7" Click="CategoryBtn_Click"/>
-                        <Button Content="Debloat" Tag="Debloat" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,0,0,7" Click="CategoryBtn_Click"/>
-                        <Button Content="Servicios" Tag="Servicios" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,0,0,7" Click="CategoryBtn_Click"/>
-                        <Button Content="Limpieza" Tag="Limpieza" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,0,0,7" Click="CategoryBtn_Click"/>
+                        <Button x:Name="BtnCatApps" Content="Apps" Tag="Apps" Style="{StaticResource PrimaryButtonStyle}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,0,0,7" Click="CategoryBtn_Click"/>
+                        <Button x:Name="BtnCatGaming" Content="Gaming &amp; Power" Tag="Gaming y Energía" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,0,0,7" Click="CategoryBtn_Click"/>
+                        <Button x:Name="BtnCatNetwork" Content="Network &amp; DNS" Tag="Red y DNS" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,0,0,7" Click="CategoryBtn_Click"/>
+                        <Button x:Name="BtnCatDebloat" Content="Debloat" Tag="Debloat" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,0,0,7" Click="CategoryBtn_Click"/>
+                        <Button x:Name="BtnCatServices" Content="Services" Tag="Servicios" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,0,0,7" Click="CategoryBtn_Click"/>
+                        <Button x:Name="BtnCatCleanup" Content="Cleanup" Tag="Limpieza" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,0,0,7" Click="CategoryBtn_Click"/>
                     </StackPanel>
 
                     <!-- CONTENIDO CENTRAL -->
@@ -923,7 +991,7 @@
                                 <TextBox x:Name="TxtSearch" Background="Transparent" Foreground="#FFFFFF"
                                          CaretBrush="#FFFFFF" BorderThickness="0"
                                          Padding="16,13" FontSize="15" TextChanged="TxtSearch_TextChanged"/>
-                                <TextBlock Text="Buscar ajuste o aplicación..." Foreground="{StaticResource TextMuted}" FontSize="15"
+                                <TextBlock x:Name="TxtSearchPlaceholder" Text="Search tweak or application..." Foreground="{StaticResource TextMuted}" FontSize="15"
                                            Margin="17,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
@@ -939,14 +1007,14 @@
                             </Grid>
                         </Border>
 
-                        <!-- LISTA AGRUPADA CON ACORDEÓN DE INFORMACIÓN DEBAJO DE CADA TARJETA -->
+                        <!-- LISTA AGRUPADA CON ACORDEÓN MÚLTIPLE SIN COMANDOS TÉCNICOS -->
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
                             <ItemsControl x:Name="TweaksItemsControl">
                                 <ItemsControl.GroupStyle>
                                     <GroupStyle>
                                         <GroupStyle.HeaderTemplate>
                                             <DataTemplate>
-                                                <StackPanel Margin="2,8,0,10">
+                                                <StackPanel Margin="2,10,0,10">
                                                     <TextBlock Text="{Binding Name}" FontSize="14.5" FontWeight="SemiBold" Foreground="#98A9C7"/>
                                                 </StackPanel>
                                             </DataTemplate>
@@ -988,16 +1056,13 @@
                                                     <CheckBox Grid.Column="3" Style="{StaticResource ModernSwitchStyle}" IsChecked="{Binding IsEnabled, Mode=TwoWay}" VerticalAlignment="Center"/>
                                                 </Grid>
 
-                                                <!-- PANEL DESPLEGABLE INLINE DEBAJO DE ESTE ÍTEM -->
+                                                <!-- TARJETA INFORMATIVA LIMPIA (SIN COMANDOS TÉCNICOS) -->
                                                 <Border Visibility="{Binding IsDetailsOpen, Converter={StaticResource BoolToVis}}"
                                                         Background="#0D1019" BorderBrush="#1C2334" BorderThickness="0,1,0,0"
                                                         CornerRadius="0,0,6,6" Padding="20,14">
-                                                    <StackPanel>
-                                                        <TextBlock Text="{Binding Description}" FontSize="14.5" Foreground="#E4E8F2" TextWrapping="Wrap" LineHeight="21" Margin="0,0,0,7"/>
-                                                        <TextBlock FontSize="13.5" Foreground="#A6B0C6" TextWrapping="Wrap">
-                                                            <Run Text="Detalle técnico: " FontWeight="SemiBold" Foreground="#5D9BE6"/>
-                                                            <Run Text="{Binding TechnicalDetail}"/>
-                                                        </TextBlock>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Width="3" CornerRadius="1.5" Background="#3B82F6" Margin="0,2,12,2"/>
+                                                        <TextBlock Text="{Binding Description}" FontSize="14.5" Foreground="#E4E8F2" TextWrapping="Wrap" LineHeight="21"/>
                                                     </StackPanel>
                                                 </Border>
                                             </StackPanel>
@@ -1015,10 +1080,10 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <Button Grid.Column="0" Content="Restaurar original" Style="{StaticResource SoftCardButtonStyle}" Padding="20,12" Click="BtnRestoreAll_Click"/>
+                            <Button Grid.Column="0" x:Name="BtnRestoreOriginal" Content="Restore defaults" Style="{StaticResource SoftCardButtonStyle}" Padding="20,12" Click="BtnRestoreAll_Click"/>
                             <TextBlock x:Name="TxtActionFeedback" Grid.Column="1" Text="" FontSize="14.5" FontWeight="SemiBold" Foreground="#4CC38A"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="12,0"/>
-                            <Button Grid.Column="2" Content="Aplicar cambios" Style="{StaticResource PrimaryButtonStyle}" Padding="26,12" Click="BtnApplyChanges_Click"/>
+                            <Button Grid.Column="2" x:Name="BtnApplyChanges" Content="Apply changes" Style="{StaticResource PrimaryButtonStyle}" Padding="26,12" Click="BtnApplyChanges_Click"/>
                         </Grid>
                     </Grid>
                 </Grid>
