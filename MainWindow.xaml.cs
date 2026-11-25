@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Interop;
 using System.Windows.Media.Animation;
 using Archon.Core;
 using Archon.Models;
@@ -13,6 +16,9 @@ namespace Archon
 {
     public partial class MainWindow : Window
     {
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
         private enum PrepTarget
         {
             None,
@@ -27,12 +33,29 @@ namespace Archon
         private string _activeCategory = "Apps";
         private bool _hardwareScanned = false;
         private PrepTarget _currentPrepTarget = PrepTarget.None;
+        private int _currentProgressValue = 0;
         private Storyboard? _ambientStoryboard;
+        private Storyboard? _loadingRingStoryboard;
 
         public MainWindow()
         {
             InitializeComponent();
             Loaded += MainWindow_Loaded;
+        }
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            try
+            {
+                IntPtr hwnd = new WindowInteropHelper(this).Handle;
+                int preference = 2; // DWMWCP_ROUND (esquinas redondeadas nativas en Windows 11)
+                DwmSetWindowAttribute(hwnd, 33, ref preference, sizeof(int));
+            }
+            catch
+            {
+                // Ignorar en versiones anteriores de Windows
+            }
         }
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -41,6 +64,11 @@ namespace Archon
             {
                 _ambientStoryboard = sb;
                 _ambientStoryboard.Begin(this, true);
+            }
+
+            if (TryFindResource("LoadingRingStoryboard") is Storyboard ringSb)
+            {
+                _loadingRingStoryboard = ringSb;
             }
 
             _state = StepZeroOrchestrator.LoadState();
@@ -136,18 +164,22 @@ namespace Archon
 
         private void OpenPrepModal(string title)
         {
+            _currentProgressValue = 0;
             TxtModalTitle.Text = title;
-            TxtModalMessage.Text = "Iniciando proceso...";
+            TxtModalStepTag.Text = "ETAPA 1 DE 3 · RESPALDO PREVENTIVO";
+            TxtModalMessage.Text = "Inicializando entorno seguro...";
             TxtModalPercent.Text = "0%";
             ModalProgressBar.IsIndeterminate = false;
             ModalProgressBar.Value = 0;
 
-            StepZeroBlur.Radius = 14;
+            StepZeroBlur.Radius = 16;
             PrepModalOverlay.Visibility = Visibility.Visible;
+            _loadingRingStoryboard?.Begin(this, true);
         }
 
         private void ClosePrepModal()
         {
+            _loadingRingStoryboard?.Stop(this);
             PrepModalOverlay.Visibility = Visibility.Collapsed;
             StepZeroBlur.Radius = 0;
         }
@@ -160,16 +192,18 @@ namespace Archon
             ProgressPanelSkip.Visibility = Visibility.Collapsed;
         }
 
-        private void UpdateProgressState(string message, int percent, bool isIndeterminate = false, bool updateInline = true)
+        private void UpdateProgressState(string stepTag, string message, int percent, bool updateInline = true)
         {
-            string pctText = isIndeterminate ? "..." : $"{percent}%";
+            _currentProgressValue = percent;
+            string pctText = $"{percent}%";
 
             if (PrepModalOverlay.Visibility == Visibility.Visible)
             {
+                if (!string.IsNullOrEmpty(stepTag))
+                    TxtModalStepTag.Text = stepTag;
                 TxtModalMessage.Text = message;
                 TxtModalPercent.Text = pctText;
-                ModalProgressBar.IsIndeterminate = isIndeterminate;
-                if (!isIndeterminate) ModalProgressBar.Value = percent;
+                ModalProgressBar.Value = percent;
             }
 
             if (!updateInline) return;
@@ -183,23 +217,40 @@ namespace Archon
                 case PrepTarget.Fresh:
                     TxtStatusFresh.Text = message;
                     TxtPercentFresh.Text = pctText;
-                    ProgressFresh.IsIndeterminate = isIndeterminate;
-                    if (!isIndeterminate) ProgressFresh.Value = percent;
+                    ProgressFresh.Value = percent;
                     break;
 
                 case PrepTarget.Clean:
                     TxtStatusClean.Text = message;
                     TxtPercentClean.Text = pctText;
-                    ProgressClean.IsIndeterminate = isIndeterminate;
-                    if (!isIndeterminate) ProgressClean.Value = percent;
+                    ProgressClean.Value = percent;
                     break;
 
                 case PrepTarget.Skip:
                     TxtStatusSkip.Text = message;
                     TxtPercentSkip.Text = pctText;
-                    ProgressSkip.IsIndeterminate = isIndeterminate;
-                    if (!isIndeterminate) ProgressSkip.Value = percent;
+                    ProgressSkip.Value = percent;
                     break;
+            }
+        }
+
+        private async Task SmoothProgressToAsync(string stepTag, string message, int targetPercent, int durationMs)
+        {
+            int start = _currentProgressValue;
+            if (targetPercent <= start)
+            {
+                UpdateProgressState(stepTag, message, targetPercent);
+                await Task.Delay(durationMs);
+                return;
+            }
+
+            int steps = targetPercent - start;
+            int delayPerStep = Math.Max(18, durationMs / steps);
+
+            for (int p = start + 1; p <= targetPercent; p++)
+            {
+                UpdateProgressState(stepTag, message, p);
+                await Task.Delay(delayPerStep);
             }
         }
 
@@ -225,18 +276,28 @@ namespace Archon
 
             if (!await EnsureMandatoryRestorePointAsync()) return;
 
-            UpdateProgressState("Bloqueando instalación automática de drivers desde Windows Update...", 55);
+            await SmoothProgressToAsync(
+                "ETAPA 2 DE 3 · POLÍTICA DE CONTROLADORES",
+                "Bloqueando instalación automática de paquetes genéricos desde Windows Update...",
+                64,
+                1100);
             StepZeroOrchestrator.SetWindowsUpdateDriverBlock(true);
-            await Task.Delay(500);
 
-            UpdateProgressState("Preparando entorno limpio y reanudación tras reinicio...", 85);
+            await SmoothProgressToAsync(
+                "ETAPA 3 DE 3 · ENTORNO LIMPIO",
+                "Eliminando servicios residuales y programando reanudación tras reinicio...",
+                92,
+                1100);
             _state.PendingPostRebootInstall = true;
             StepZeroOrchestrator.SaveState(_state);
             StepZeroOrchestrator.RegisterPostRebootResume();
-            await Task.Delay(500);
 
-            UpdateProgressState("Listo para reiniciar y completar la limpieza de controladores.", 100);
-            await Task.Delay(450);
+            await SmoothProgressToAsync(
+                "PROCESO COMPLETADO",
+                "Listo para reiniciar y completar la limpieza de controladores.",
+                100,
+                550);
+            await Task.Delay(500);
 
             ClosePrepModal();
             ToggleStepZeroButtons(true);
@@ -248,33 +309,55 @@ namespace Archon
             _currentPrepTarget = PrepTarget.Skip;
             ToggleStepZeroButtons(false);
 
-            if (!await EnsureMandatoryRestorePointAsync()) return;
+            if (!await EnsureMandatoryRestorePointAsync(useModal: false)) return;
 
-            UpdateProgressState("Respaldo preventivo verificado. Abriendo panel de ajustes...", 100);
-            await Task.Delay(300);
+            UpdateProgressState(string.Empty, "Respaldo preventivo verificado. Abriendo panel de ajustes...", 100);
+            await Task.Delay(350);
 
             _state.StepZeroCompleted = true;
             StepZeroOrchestrator.SaveState(_state);
             UnlockMainOptimizer();
         }
 
-        private async Task<bool> EnsureMandatoryRestorePointAsync()
+        private async Task<bool> EnsureMandatoryRestorePointAsync(bool useModal = true)
         {
             if (_state.RestorePointCreated)
             {
-                UpdateProgressState("Punto de restauración preventivo verificado.", 30);
-                await Task.Delay(300);
+                if (useModal)
+                {
+                    await SmoothProgressToAsync(
+                        "ETAPA 1 DE 3 · RESPALDO PREVENTIVO",
+                        "Verificando punto de restauración preventivo existente...",
+                        32,
+                        850);
+                }
+                else
+                {
+                    UpdateProgressState(string.Empty, "Punto de restauración preventivo verificado.", 45);
+                    await Task.Delay(250);
+                }
                 return true;
             }
 
-            UpdateProgressState("Creando punto de restauración preventivo en el sistema...", 15, isIndeterminate: true);
+            if (useModal)
+            {
+                _ = SmoothProgressToAsync(
+                    "ETAPA 1 DE 3 · RESPALDO PREVENTIVO",
+                    "Creando punto de restauración preventivo en el sistema...",
+                    28,
+                    1200);
+            }
+            else
+            {
+                UpdateProgressState(string.Empty, "Creando punto de restauración preventivo en el sistema...", 25);
+            }
 
             bool ok = await RestorePointManager.CreateMandatoryRestorePointAsync();
 
             if (!ok)
             {
-                UpdateProgressState("No se pudo crear el punto de restauración. Verificá que el servicio VSS esté activo.", 0);
-                await Task.Delay(700);
+                UpdateProgressState("ERROR DE RESPALDO", "No se pudo crear el punto de restauración. Verificá que el servicio VSS esté activo.", 0);
+                await Task.Delay(900);
                 ClosePrepModal();
                 ToggleStepZeroButtons(true);
                 return false;
@@ -282,8 +365,21 @@ namespace Archon
 
             _state.RestorePointCreated = true;
             StepZeroOrchestrator.SaveState(_state);
-            UpdateProgressState("Punto de restauración guardado correctamente.", 30);
-            await Task.Delay(350);
+
+            if (useModal)
+            {
+                await SmoothProgressToAsync(
+                    "ETAPA 1 DE 3 · RESPALDO PREVENTIVO",
+                    "Punto de restauración guardado correctamente.",
+                    35,
+                    400);
+            }
+            else
+            {
+                UpdateProgressState(string.Empty, "Punto de restauración guardado correctamente.", 50);
+                await Task.Delay(250);
+            }
+
             return true;
         }
 
@@ -294,19 +390,44 @@ namespace Archon
 
             if (_hardware.IsAmdCpu)
             {
-                UpdateProgressState("Preparando perfil limpio de Chipset AMD...", 55);
-                await Task.Delay(700);
+                await SmoothProgressToAsync(
+                    "ETAPA 2 DE 3 · CHIPSET Y PLACA BASE",
+                    "Preparando perfil limpio de controladores de Chipset AMD...",
+                    62,
+                    1050);
+            }
+            else
+            {
+                await SmoothProgressToAsync(
+                    "ETAPA 2 DE 3 · CHIPSET Y PLACA BASE",
+                    "Verificando controladores base del sistema...",
+                    62,
+                    900);
             }
 
             if (_hardware.HasNvidiaGpu)
             {
-                UpdateProgressState("Configurando controlador NVIDIA sin telemetría ni paneles extra...", 82);
-                await Task.Delay(700);
+                await SmoothProgressToAsync(
+                    "ETAPA 3 DE 3 · CONTROLADOR GRÁFICO",
+                    "Configurando controlador NVIDIA sin telemetría ni paneles extra...",
+                    92,
+                    1150);
             }
             else if (_hardware.HasAmdGpu)
             {
-                UpdateProgressState("Configurando controlador gráfico AMD Radeon...", 82);
-                await Task.Delay(700);
+                await SmoothProgressToAsync(
+                    "ETAPA 3 DE 3 · CONTROLADOR GRÁFICO",
+                    "Configurando controlador gráfico AMD Radeon limpio...",
+                    92,
+                    1150);
+            }
+            else
+            {
+                await SmoothProgressToAsync(
+                    "ETAPA 3 DE 3 · CONTROLADOR GRÁFICO",
+                    "Ajustando perfil gráfico del sistema...",
+                    92,
+                    950);
             }
 
             StepZeroOrchestrator.SetWindowsUpdateDriverBlock(false);
@@ -314,8 +435,12 @@ namespace Archon
             _state.StepZeroCompleted = true;
             StepZeroOrchestrator.SaveState(_state);
 
-            UpdateProgressState(finalInlineMessage, 100);
-            await Task.Delay(450);
+            await SmoothProgressToAsync(
+                "PROCESO COMPLETADO",
+                finalInlineMessage,
+                100,
+                500);
+            await Task.Delay(500);
 
             ClosePrepModal();
             ToggleStepZeroButtons(true);
@@ -346,30 +471,105 @@ namespace Archon
 
             var appsList = new List<TweakItem>
             {
-                CreateAppItem("Steam", "Valve.Steam", "Cliente oficial de juegos de Valve."),
-                CreateAppItem("Discord", "Discord.Discord", "Comunicación por voz, texto y pantalla compartida."),
-                CreateAppItem("7-Zip", "7zip.7zip", "Compresor y extractor de archivos ligero y sin publicidad."),
-                CreateAppItem("VLC Media Player", "VideoLAN.VLC", "Reproductor multimedia compatible con todos los formatos."),
-                CreateAppItem("Brave Browser", "Brave.Brave", "Navegador basado en Chromium con bloqueo de rastreadores integrado."),
-                CreateAppItem("Spotify", "Spotify.Spotify", "Cliente de escritorio para reproducción de música."),
-                CreateAppItem("OBS Studio", "OBSProject.OBSStudio", "Grabación de pantalla y transmisión con soporte de aceleración por hardware."),
-                CreateAppItem("Notepad++", "Notepad++.Notepad++", "Editor de texto y código rápido y liviano."),
-                CreateAppItem("ShareX", "ShareX.ShareX", "Herramienta avanzada para capturas y grabación de pantalla."),
-                CreateAppItem("Everything", "voidtools.Everything", "Buscador instantáneo de archivos locales por nombre en NTFS.")
+                // GAMING Y COMUNICACIÓN
+                CreateAppItem(
+                    "Steam",
+                    "Gaming y Comunicación",
+                    "Valve.Steam",
+                    "Cliente oficial de juegos de Valve.",
+                    "#66C0F4",
+                    "M18.5,4 A4.5,4.5 0 1,0 14.1,9.5 L10.6,14.5 A3.5,3.5 0 0,0 7.5,16.2 L3,14.3 L2,16.8 L6.6,18.7 A3.5,3.5 0 0,0 13.3,17.2 L17.6,12.8 A4.5,4.5 0 0,0 18.5,4 Z M18.5,6.2 A2.3,2.3 0 1,1 16.2,8.5 A2.3,2.3 0 0,1 18.5,6.2 Z"),
+
+                CreateAppItem(
+                    "Discord",
+                    "Gaming y Comunicación",
+                    "Discord.Discord",
+                    "Comunicación por voz, texto y pantalla compartida.",
+                    "#5865F2",
+                    "M19.3,5.3 A16.5,16.5 0 0,0 15.2,4 L14.7,5 A15,15 0 0,0 9.3,5 L8.8,4 A16.5,16.5 0 0,0 4.7,5.3 C2.1,9.2 1.4,13 1.8,16.7 A16.7,16.7 0 0,0 6.8,19.2 L7.9,17.4 A10.7,10.7 0 0,1 6.2,16.6 L6.6,16.3 A11.8,11.8 0 0,0 17.4,16.3 L17.8,16.6 A10.7,10.7 0 0,1 16.1,17.4 L17.2,19.2 A16.7,16.7 0 0,0 22.2,16.7 C22.7,12.4 21.4,8.6 19.3,5.3 Z M8.7,14.3 C7.7,14.3 6.9,13.4 6.9,12.3 C6.9,11.2 7.7,10.3 8.7,10.3 C9.7,10.3 10.5,11.2 10.5,12.3 C10.5,13.4 9.7,14.3 8.7,14.3 Z M15.3,14.3 C14.3,14.3 13.5,13.4 13.5,12.3 C13.5,11.2 14.3,10.3 15.3,10.3 C16.3,10.3 17.1,11.2 17.1,12.3 C17.1,13.4 16.3,14.3 15.3,14.3 Z"),
+
+                // MULTIMEDIA Y STREAMING
+                CreateAppItem(
+                    "VLC Media Player",
+                    "Multimedia y Streaming",
+                    "VideoLAN.VLC",
+                    "Reproductor multimedia compatible con todos los formatos.",
+                    "#FF8800",
+                    "M12,2 L9.5,9 H14.5 L12,2 Z M8.5,12 L7,16.5 H17 L15.5,12 H8.5 Z M5,19 L4,22 H20 L19,19 H5 Z"),
+
+                CreateAppItem(
+                    "Spotify",
+                    "Multimedia y Streaming",
+                    "Spotify.Spotify",
+                    "Cliente de escritorio para reproducción de música.",
+                    "#1DB954",
+                    "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M16.6,16.4 C16.4,16.7 16,16.8 15.7,16.6 C13.3,15.1 10.3,14.8 6.8,15.6 C6.4,15.7 6.1,15.4 6,15.1 C5.9,14.7 6.2,14.4 6.5,14.3 C10.4,13.4 13.7,13.8 16.4,15.4 C16.7,15.6 16.8,16.1 16.6,16.4 Z M17.8,13.7 C17.6,14.1 17.1,14.2 16.7,14 C14,12.3 9.9,11.8 6.7,12.8 C6.2,12.9 5.8,12.7 5.6,12.2 C5.5,11.7 5.7,11.3 6.2,11.1 C9.9,10 14.4,10.5 17.5,12.4 C17.9,12.7 18,13.3 17.8,13.7 Z M17.9,10.9 C14.6,9 9.2,8.8 6.1,9.7 C5.6,9.9 5,9.6 4.9,9.1 C4.7,8.6 5,8 5.5,7.9 C9.1,6.8 15.1,7 18.9,9.2 C19.4,9.5 19.5,10.1 19.2,10.6 C18.9,11 18.3,11.2 17.9,10.9 Z"),
+
+                CreateAppItem(
+                    "OBS Studio",
+                    "Multimedia y Streaming",
+                    "OBSProject.OBSStudio",
+                    "Grabación de pantalla y transmisión con aceleración por hardware.",
+                    "#94A3B8",
+                    "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M12,5.5 A3.5,3.5 0 0,1 15.2,10.4 A3.5,3.5 0 0,1 10.5,8.8 A3.5,3.5 0 0,1 12,5.5 Z M7.2,14.2 A3.5,3.5 0 0,1 10.2,9.1 A3.5,3.5 0 0,1 11.2,14.1 A3.5,3.5 0 0,1 7.2,14.2 Z M16.8,14.2 A3.5,3.5 0 0,1 12.8,14.1 A3.5,3.5 0 0,1 13.8,9.1 A3.5,3.5 0 0,1 16.8,14.2 Z"),
+
+                // NAVEGACIÓN Y UTILIDADES
+                CreateAppItem(
+                    "Brave Browser",
+                    "Navegación y Utilidades",
+                    "Brave.Brave",
+                    "Navegador basado en Chromium con bloqueo de rastreadores.",
+                    "#FB542B",
+                    "M12,2 L4,5.5 V11.5 C4,16.8 7.4,20.8 12,22 C16.6,20.8 20,16.8 20,11.5 V5.5 L12,2 Z M8.5,9.5 L12,7.5 L15.5,9.5 L14.5,13.5 L12,16.5 L9.5,13.5 L8.5,9.5 Z"),
+
+                CreateAppItem(
+                    "7-Zip",
+                    "Navegación y Utilidades",
+                    "7zip.7zip",
+                    "Compresor y extractor de archivos ligero y sin publicidad.",
+                    "#4DA3FF",
+                    "M4,3 H20 A1,1 0 0,1 21,4 V20 A1,1 0 0,1 20,21 H4 A1,1 0 0,1 3,20 V4 A1,1 0 0,1 4,3 Z M10,5 V7 H12 V5 H10 Z M12,7 V9 H14 V7 H12 Z M10,9 V11 H12 V9 H10 Z M12,11 V13 H14 V11 H12 Z M9,14 H15 V18 H9 V14 Z"),
+
+                CreateAppItem(
+                    "Notepad++",
+                    "Navegación y Utilidades",
+                    "Notepad++.Notepad++",
+                    "Editor de texto y código rápido y liviano.",
+                    "#7EE787",
+                    "M6,2 H14 L19,7 V20 A2,2 0 0,1 17,22 H6 A2,2 0 0,1 4,20 V4 A2,2 0 0,1 6,2 Z M9.5,12 L7,14.5 L9.5,17 H10.8 L8.3,14.5 L10.8,12 H9.5 Z M14.5,12 H13.2 L15.7,14.5 L13.2,17 H14.5 L17,14.5 L14.5,12 Z"),
+
+                CreateAppItem(
+                    "ShareX",
+                    "Navegación y Utilidades",
+                    "ShareX.ShareX",
+                    "Herramienta avanzada para capturas y grabación de pantalla.",
+                    "#38BDF8",
+                    "M4,4 H9 V6 H6 V9 H4 V4 Z M15,4 H20 V9 H18 V6 H15 V4 Z M4,15 H6 V18 H9 V20 H4 V15 Z M18,15 H20 V20 H15 V18 H18 V15 Z M11,8 H13 V11 H16 V13 H13 V16 H11 V13 H8 V11 H11 V8 Z"),
+
+                CreateAppItem(
+                    "Everything",
+                    "Navegación y Utilidades",
+                    "voidtools.Everything",
+                    "Buscador instantáneo de archivos locales por nombre en NTFS.",
+                    "#F59E0B",
+                    "M10.5,3 A7.5,7.5 0 1,0 15.1,16.4 L19.8,21.1 L21.2,19.7 L16.5,15 A7.5,7.5 0 0,0 10.5,3 Z M10.5,5.5 A5,5 0 1,1 5.5,10.5 A5,5 0 0,1 10.5,5.5 Z")
             };
 
             _allTweaks = appsList.Concat(baseTweaks).ToList();
             RefreshDisplayedTweaks();
         }
 
-        private static TweakItem CreateAppItem(string name, string wingetId, string description)
+        private static TweakItem CreateAppItem(string name, string groupName, string wingetId, string description, string iconColor, string iconGeometry)
         {
             return new TweakItem
             {
                 Category = "Apps",
+                GroupName = groupName,
                 Title = name,
                 Description = description,
                 TechnicalDetail = $"winget install --id {wingetId} -e --silent",
+                IconColor = iconColor,
+                IconGeometry = iconGeometry,
                 IsEnabled = false,
                 ApplyAction = () => RunWingetInstall(wingetId),
                 RevertAction = () => { }
@@ -399,19 +599,29 @@ namespace Archon
         private void RefreshDisplayedTweaks()
         {
             string query = TxtSearch.Text.Trim();
+            List<TweakItem> filtered;
+
             if (string.IsNullOrEmpty(query))
             {
-                TweaksItemsControl.ItemsSource = _allTweaks
+                filtered = _allTweaks
                     .Where(t => t.Category == _activeCategory)
                     .ToList();
             }
             else
             {
-                TweaksItemsControl.ItemsSource = _allTweaks
+                filtered = _allTweaks
                     .Where(t => t.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                                 t.Description.Contains(query, StringComparison.OrdinalIgnoreCase))
                     .ToList();
             }
+
+            var view = new ListCollectionView(filtered);
+            if (filtered.Any(t => !string.IsNullOrEmpty(t.GroupName)))
+            {
+                view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(TweakItem.GroupName)));
+            }
+
+            TweaksItemsControl.ItemsSource = view;
         }
 
         private void CategoryBtn_Click(object sender, RoutedEventArgs e)

@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="ARCHON v1.0"
-        Height="660" Width="1020"
+        Height="740" Width="1160"
         WindowStartupLocation="CenterScreen"
         Background="#07070A"
         Foreground="#F5F5F8"
@@ -11,64 +11,71 @@
         ResizeMode="NoResize">
 
     <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="44" ResizeBorderThickness="0" CornerRadius="0" GlassFrameThickness="0"/>
+        <WindowChrome CaptionHeight="44" ResizeBorderThickness="0" CornerRadius="8" GlassFrameThickness="0"/>
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
         <SolidColorBrush x:Key="BgCardBlack" Color="#09090D"/>
         <SolidColorBrush x:Key="BgCardHover" Color="#11131C"/>
-        <SolidColorBrush x:Key="BorderDark" Color="#1D1E28"/>
-        <SolidColorBrush x:Key="BorderHover" Color="#2E3D59"/>
-        <SolidColorBrush x:Key="AccentPrimary" Color="#255EA8"/>
-        <SolidColorBrush x:Key="AccentPrimaryHover" Color="#2E6EC0"/>
-        <SolidColorBrush x:Key="AccentLine" Color="#3574C4"/>
+        <SolidColorBrush x:Key="BorderDark" Color="#1C1E28"/>
+        <SolidColorBrush x:Key="BorderHover" Color="#2C3C59"/>
+        <SolidColorBrush x:Key="AccentPrimary" Color="#1B4985"/>
+        <SolidColorBrush x:Key="AccentPrimaryHover" Color="#2359A1"/>
+        <SolidColorBrush x:Key="AccentLine" Color="#3474C6"/>
         <SolidColorBrush x:Key="TextSecondary" Color="#D0D0DA"/>
         <SolidColorBrush x:Key="TextMuted" Color="#9696A4"/>
 
-        <!-- ANIMACIÓN ATMOSFÉRICA NATURAL (SIN CÍRCULOS VISIBLES) -->
+        <!-- ILUMINACIÓN DE FONDO FLUIDA (60 FPS SIN LAG) -->
         <Storyboard x:Key="AmbientGlowStoryboard" RepeatBehavior="Forever">
-            <DoubleAnimation Storyboard.TargetName="AuroraPrimary"
-                             Storyboard.TargetProperty="Opacity"
-                             From="0.58" To="0.95" Duration="0:0:7.5" AutoReverse="True">
-                <DoubleAnimation.EasingFunction>
-                    <SineEase EasingMode="EaseInOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-
-            <DoubleAnimation Storyboard.TargetName="AuroraPrimaryTransform"
+            <DoubleAnimation Storyboard.TargetName="AuroraTopTransform"
                              Storyboard.TargetProperty="X"
-                             From="-90" To="90" Duration="0:0:14" AutoReverse="True">
+                             From="-110" To="110" Duration="0:0:12" AutoReverse="True">
                 <DoubleAnimation.EasingFunction>
                     <SineEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-
-            <DoubleAnimation Storyboard.TargetName="AuroraSecondary"
+            <DoubleAnimation Storyboard.TargetName="AuroraTop"
                              Storyboard.TargetProperty="Opacity"
-                             From="0.85" To="0.42" Duration="0:0:9" AutoReverse="True">
+                             From="0.65" To="1.0" Duration="0:0:7" AutoReverse="True">
                 <DoubleAnimation.EasingFunction>
                     <SineEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
 
-            <DoubleAnimation Storyboard.TargetName="AuroraSecondaryTransform"
+            <DoubleAnimation Storyboard.TargetName="AuroraBottomTransform"
                              Storyboard.TargetProperty="X"
-                             From="80" To="-80" Duration="0:0:16" AutoReverse="True">
+                             From="100" To="-100" Duration="0:0:14" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="AuroraBottom"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0.90" To="0.50" Duration="0:0:8.5" AutoReverse="True">
                 <DoubleAnimation.EasingFunction>
                     <SineEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
         </Storyboard>
 
-        <!-- SCROLLBAR OSCURO DELGADO -->
+        <!-- ROTACIÓN SUAVE PARA EL INDICADOR DE CARGA -->
+        <Storyboard x:Key="LoadingRingStoryboard" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetName="LoadingRingRotate"
+                             Storyboard.TargetProperty="Angle"
+                             From="0" To="360" Duration="0:0:2.4"/>
+        </Storyboard>
+
+        <!-- SCROLLBAR MÁS ANCHO Y SEPARADO -->
         <Style TargetType="ScrollBar">
-            <Setter Property="Width" Value="6"/>
-            <Setter Property="MinWidth" Value="6"/>
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="MinWidth" Value="10"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ScrollBar">
-                        <Grid Background="Transparent" Margin="2,4">
+                        <Grid Background="Transparent" Margin="2,2,0,2">
                             <Track x:Name="PART_Track" IsDirectionReversed="True">
                                 <Track.DecreaseRepeatButton>
                                     <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" IsHitTestVisible="False"/>
@@ -77,7 +84,12 @@
                                     <Thumb>
                                         <Thumb.Template>
                                             <ControlTemplate TargetType="Thumb">
-                                                <Border Background="#2C2E3B" CornerRadius="3"/>
+                                                <Border x:Name="ThumbBorder" Background="#282B38" CornerRadius="4"/>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ThumbBorder" Property="Background" Value="#3D4357"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
                                             </ControlTemplate>
                                         </Thumb.Template>
                                     </Thumb>
@@ -94,15 +106,15 @@
 
         <!-- BARRA DE PROGRESO REDONDEADA -->
         <Style TargetType="ProgressBar">
-            <Setter Property="Height" Value="8"/>
-            <Setter Property="Background" Value="#161924"/>
-            <Setter Property="Foreground" Value="{StaticResource AccentPrimary}"/>
+            <Setter Property="Height" Value="7"/>
+            <Setter Property="Background" Value="#151822"/>
+            <Setter Property="Foreground" Value="#2D6EC2"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ProgressBar">
                         <Grid x:Name="TemplateRoot">
-                            <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="4"/>
-                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="4"/>
+                            <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="3.5"/>
+                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="3.5"/>
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
@@ -112,8 +124,8 @@
         <!-- BOTONES DE VENTANA -->
         <Style x:Key="WindowControlButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#B0B0BC"/>
-            <Setter Property="Width" Value="44"/>
+            <Setter Property="Foreground" Value="#A8A8B6"/>
+            <Setter Property="Width" Value="46"/>
             <Setter Property="Height" Value="43"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -125,7 +137,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#161822"/>
+                                <Setter TargetName="bd" Property="Background" Value="#14161F"/>
                                 <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -138,7 +150,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="0,8,0,0">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -152,7 +164,7 @@
             </Setter>
         </Style>
 
-        <!-- BOTÓN PRINCIPAL -->
+        <!-- BOTÓN PRINCIPAL (AZUL MÁS OSCURO) -->
         <Style x:Key="PrimaryButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
@@ -164,7 +176,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" Background="{TemplateBinding Background}"
-                                BorderThickness="0" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                BorderBrush="#2863B0" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                         </Border>
@@ -193,7 +205,7 @@
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" Background="{TemplateBinding Background}"
                                 BorderBrush="{StaticResource BorderDark}" BorderThickness="1"
-                                CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                         </Border>
@@ -222,10 +234,10 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="RowBg" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="5">
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="6">
                             <Grid>
-                                <Border x:Name="LeftAccent" Width="3" HorizontalAlignment="Left" CornerRadius="5,0,0,5" Background="Transparent"/>
-                                <Border Padding="24,18">
+                                <Border x:Name="LeftAccent" Width="3" HorizontalAlignment="Left" CornerRadius="6,0,0,6" Background="Transparent"/>
+                                <Border Padding="26,20">
                                     <ContentPresenter/>
                                 </Border>
                             </Grid>
@@ -234,7 +246,7 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="RowBg" Property="Background" Value="{StaticResource BgCardHover}"/>
                                 <Setter TargetName="RowBg" Property="BorderBrush" Value="{StaticResource BorderHover}"/>
-                                <Setter TargetName="LeftAccent" Property="Background" Value="#255EA8"/>
+                                <Setter TargetName="LeftAccent" Property="Background" Value="#2D6EC2"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="RowBg" Property="Opacity" Value="0.5"/>
@@ -256,13 +268,13 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" Background="{TemplateBinding Background}"
-                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#151722"/>
+                                <Setter TargetName="border" Property="Background" Value="#141620"/>
                                 <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -277,8 +289,8 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
-                        <Border x:Name="Track" Width="44" Height="22" CornerRadius="4" Background="#1E202B">
-                            <Border x:Name="Thumb" Width="16" Height="16" CornerRadius="2" Margin="3,0" HorizontalAlignment="Left" Background="#9A9AA8"/>
+                        <Border x:Name="Track" Width="44" Height="22" CornerRadius="5" Background="#1D1F2A">
+                            <Border x:Name="Thumb" Width="16" Height="16" CornerRadius="3" Margin="3,0" HorizontalAlignment="Left" Background="#9A9AA8"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
@@ -293,12 +305,12 @@
         </Style>
     </Window.Resources>
 
-    <Border BorderBrush="#1C1E28" BorderThickness="1">
+    <Border BorderBrush="#1A1C26" BorderThickness="1" CornerRadius="8">
         <Border.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                 <GradientStop Color="#06070A" Offset="0"/>
-                <GradientStop Color="#090C14" Offset="0.5"/>
-                <GradientStop Color="#06070B" Offset="1"/>
+                <GradientStop Color="#080B12" Offset="0.5"/>
+                <GradientStop Color="#06070A" Offset="1"/>
             </LinearGradientBrush>
         </Border.Background>
 
@@ -308,16 +320,15 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- BARRA SUPERIOR NEGRA CON LÍNEA RECTA DIVISORIA E ÍCONO DE OJO REDISEÑADO -->
-            <Border Grid.Row="0" Background="#050507" BorderBrush="#1D1F2B" BorderThickness="0,0,0,1">
+            <!-- BARRA SUPERIOR NEGRA CON LÍNEA SUTIL E ÍCONO DE OJO GEOMÉTRICO -->
+            <Border Grid.Row="0" Background="#050507" BorderBrush="#12141C" BorderThickness="0,0,0,1" CornerRadius="8,8,0,0">
                 <Grid>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
-                        <Viewbox Width="22" Height="18" Margin="0,0,10,0">
-                            <Canvas Width="64" Height="48">
-                                <Path Data="M4,25 C18,8 46,8 60,25" Stroke="#3574C4" StrokeThickness="4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                <Path Data="M11,29 C23,41 41,41 53,29" Stroke="#3574C4" StrokeThickness="3.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                <Ellipse Canvas.Left="22" Canvas.Top="14" Width="20" Height="20" Stroke="#FFFFFF" StrokeThickness="2.8" Fill="#090D16"/>
-                                <Ellipse Canvas.Left="28" Canvas.Top="20" Width="8" Height="8" Fill="#3574C4"/>
+                        <Viewbox Width="24" Height="16" Margin="0,0,10,0">
+                            <Canvas Width="72" Height="44">
+                                <Path Data="M3,22 C18,6 54,6 69,22 C54,38 18,38 3,22 Z" Fill="#0A0E17" Stroke="#3474C6" StrokeThickness="3.2" StrokeLineJoin="Round"/>
+                                <Ellipse Canvas.Left="25" Canvas.Top="11" Width="22" Height="22" Stroke="#FFFFFF" StrokeThickness="2.4" Fill="#070A12"/>
+                                <Polygon Points="36,16 42,22 36,28 30,22" Fill="#3474C6"/>
                             </Canvas>
                         </Viewbox>
                         <TextBlock Text="Archon" FontWeight="SemiBold" FontSize="14.5" Foreground="#F5F5F8" VerticalAlignment="Center"/>
@@ -334,44 +345,40 @@
             <!-- CONTENEDOR PRINCIPAL -->
             <Grid Grid.Row="1">
 
-                <!-- FONDO ATMOSFÉRICO CONTINUO (SIN CÍRCULOS MARCADOS) -->
+                <!-- ILUMINACIÓN DE FONDO FLUIDA SIN BLUR PESADO -->
                 <Grid x:Name="AmbientGlowLayer" IsHitTestVisible="False" ClipToBounds="True">
-                    <Ellipse x:Name="AuroraPrimary" Width="1380" Height="640" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="-180,-250,-180,0">
-                        <Ellipse.RenderTransform>
-                            <TranslateTransform x:Name="AuroraPrimaryTransform" X="0" Y="0"/>
-                        </Ellipse.RenderTransform>
-                        <Ellipse.Fill>
-                            <RadialGradientBrush>
-                                <GradientStop Color="#44255EA8" Offset="0"/>
-                                <GradientStop Color="#20255EA8" Offset="0.5"/>
-                                <GradientStop Color="#00255EA8" Offset="1"/>
+                    <Rectangle x:Name="AuroraTop" Width="1360" Height="640" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="-100,-180,-100,0">
+                        <Rectangle.RenderTransform>
+                            <TranslateTransform x:Name="AuroraTopTransform" X="0" Y="0"/>
+                        </Rectangle.RenderTransform>
+                        <Rectangle.Fill>
+                            <RadialGradientBrush Center="0.5,0.35" GradientOrigin="0.5,0.35" RadiusX="0.55" RadiusY="0.65">
+                                <GradientStop Color="#361B4985" Offset="0.0"/>
+                                <GradientStop Color="#201B4985" Offset="0.35"/>
+                                <GradientStop Color="#0D1B4985" Offset="0.68"/>
+                                <GradientStop Color="#001B4985" Offset="1.0"/>
                             </RadialGradientBrush>
-                        </Ellipse.Fill>
-                        <Ellipse.Effect>
-                            <BlurEffect Radius="150"/>
-                        </Ellipse.Effect>
-                    </Ellipse>
+                        </Rectangle.Fill>
+                    </Rectangle>
 
-                    <Ellipse x:Name="AuroraSecondary" Width="1260" Height="620" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="-120,0,-120,-260">
-                        <Ellipse.RenderTransform>
-                            <TranslateTransform x:Name="AuroraSecondaryTransform" X="0" Y="0"/>
-                        </Ellipse.RenderTransform>
-                        <Ellipse.Fill>
-                            <RadialGradientBrush>
-                                <GradientStop Color="#361E4F91" Offset="0"/>
-                                <GradientStop Color="#161E4F91" Offset="0.55"/>
-                                <GradientStop Color="#001E4F91" Offset="1"/>
+                    <Rectangle x:Name="AuroraBottom" Width="1360" Height="620" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="-100,0,-100,-220">
+                        <Rectangle.RenderTransform>
+                            <TranslateTransform x:Name="AuroraBottomTransform" X="0" Y="0"/>
+                        </Rectangle.RenderTransform>
+                        <Rectangle.Fill>
+                            <RadialGradientBrush Center="0.5,0.65" GradientOrigin="0.5,0.65" RadiusX="0.58" RadiusY="0.65">
+                                <GradientStop Color="#2B163C6E" Offset="0.0"/>
+                                <GradientStop Color="#16163C6E" Offset="0.42"/>
+                                <GradientStop Color="#07163C6E" Offset="0.72"/>
+                                <GradientStop Color="#00163C6E" Offset="1.0"/>
                             </RadialGradientBrush>
-                        </Ellipse.Fill>
-                        <Ellipse.Effect>
-                            <BlurEffect Radius="150"/>
-                        </Ellipse.Effect>
-                    </Ellipse>
+                        </Rectangle.Fill>
+                    </Rectangle>
                 </Grid>
 
-                <!-- VISTA 1: PRESENTACIÓN CON OJO REDISEÑADO PEGADO AL TÍTULO -->
+                <!-- VISTA 1: PRESENTACIÓN -->
                 <ScrollViewer x:Name="WelcomeView" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel x:Name="WelcomeContentPanel" MaxWidth="720" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="32,12,32,32">
+                    <StackPanel x:Name="WelcomeContentPanel" MaxWidth="760" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="32,12,32,32">
                         <StackPanel.Triggers>
                             <EventTrigger RoutedEvent="FrameworkElement.Loaded">
                                 <BeginStoryboard>
@@ -382,8 +389,8 @@
                             </EventTrigger>
                         </StackPanel.Triggers>
 
-                        <!-- LOGO DE OJO GEOMÉTRICO ABIERTO -->
-                        <Border x:Name="WelcomeLogoContainer" Width="88" Height="52" HorizontalAlignment="Center" Margin="0,0,0,2" Background="Transparent" Cursor="Hand">
+                        <!-- EMBLEMA DE OJO DISTINTIVO -->
+                        <Border x:Name="WelcomeLogoContainer" Width="106" Height="56" HorizontalAlignment="Center" Margin="0,0,0,2" Background="Transparent" Cursor="Hand">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
@@ -415,32 +422,33 @@
                                 </Style>
                             </Border.Style>
 
-                            <Viewbox Width="84" Height="50">
-                                <Canvas Width="84" Height="50">
-                                    <!-- Arco superior sutil -->
-                                    <Path Data="M20,12 C32,4 52,4 64,12" Stroke="#4D89D6" StrokeThickness="1.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.75"/>
-                                    <!-- Párpado superior -->
-                                    <Path Data="M5,26 C23,6 61,6 79,26" Stroke="#3574C4" StrokeThickness="3.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                    <!-- Párpado inferior abierto -->
-                                    <Path Data="M14,30 C29,44 55,44 70,30" Stroke="#2A61A8" StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                    <!-- Iris -->
-                                    <Ellipse Canvas.Left="29" Canvas.Top="13" Width="26" Height="26" Fill="#080B13" Stroke="#FFFFFF" StrokeThickness="2.3"/>
-                                    <!-- Pupila -->
-                                    <Ellipse Canvas.Left="37" Canvas.Top="21" Width="10" Height="10" Fill="#255EA8"/>
-                                    <!-- Brillo óptico -->
-                                    <Ellipse Canvas.Left="43.5" Canvas.Top="17.5" Width="3.2" Height="3.2" Fill="#FFFFFF"/>
+                            <Viewbox Width="102" Height="54">
+                                <Canvas Width="102" Height="54">
+                                    <!-- Trazo exterior afilado -->
+                                    <Path Data="M4,27 C24,5 78,5 98,27 C78,49 24,49 4,27 Z" Fill="#080B13" Stroke="#3474C6" StrokeThickness="2.6" StrokeLineJoin="Round"/>
+                                    <!-- Contorno interior técnico -->
+                                    <Path Data="M16,27 C31,12 71,12 86,27" Stroke="#5894E2" StrokeThickness="1.1" Opacity="0.65"/>
+                                    <!-- Anillo de iris -->
+                                    <Ellipse Canvas.Left="37" Canvas.Top="13" Width="28" Height="28" Fill="#060910" Stroke="#FFFFFF" StrokeThickness="2.1"/>
+                                    <!-- Segmento interno de iris -->
+                                    <Path Data="M51,16 A11,11 0 0,1 62,27" Stroke="#4B8CE0" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    <Path Data="M51,38 A11,11 0 0,1 40,27" Stroke="#4B8CE0" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    <!-- Pupila geométrica -->
+                                    <Polygon Points="51,20 58,27 51,34 44,27" Fill="#1B4985" Stroke="#5D9BE6" StrokeThickness="1.2"/>
+                                    <!-- Destello óptico -->
+                                    <Ellipse Canvas.Left="54.5" Canvas.Top="19.5" Width="3" Height="3" Fill="#FFFFFF"/>
                                 </Canvas>
                             </Viewbox>
                         </Border>
 
-                        <TextBlock Text="Archon" FontSize="38" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                        <TextBlock Text="Archon" FontSize="40" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,4"/>
 
                         <TextBlock Text="Bienvenido" FontSize="17.5" Foreground="{StaticResource TextSecondary}"
                                    HorizontalAlignment="Center" Margin="0,0,0,28"/>
 
                         <!-- BOTONES PRINCIPALES -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,26">
-                            <Button x:Name="BtnStartStepZero" Style="{StaticResource PrimaryButtonStyle}" Padding="32,13" Margin="0,0,12,0" Click="BtnStartStepZero_Click">
+                            <Button x:Name="BtnStartStepZero" Style="{StaticResource PrimaryButtonStyle}" Padding="34,13" Margin="0,0,12,0" Click="BtnStartStepZero_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="Comenzar" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                     <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#FFFFFF" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" Margin="10,1,0,0" VerticalAlignment="Center"/>
@@ -457,8 +465,8 @@
                         </StackPanel>
 
                         <!-- PANEL INTERACTIVO DE HARDWARE -->
-                        <Border x:Name="HardwareListPanel" Visibility="Collapsed" MinWidth="560" Background="{StaticResource BgCardBlack}"
-                                BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="5" Padding="24,20">
+                        <Border x:Name="HardwareListPanel" Visibility="Collapsed" MinWidth="600" Background="{StaticResource BgCardBlack}"
+                                BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Padding="24,20">
                             <StackPanel>
                                 <TextBlock Text="Componentes detectados" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,16"/>
 
@@ -525,16 +533,16 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- VISTA 2: PREPARACIÓN DEL SISTEMA (CON DESENFOQUE DINÁMICO AL ABRIR MODAL) -->
+                <!-- VISTA 2: PREPARACIÓN DEL SISTEMA -->
                 <ScrollViewer x:Name="StepZeroView" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <ScrollViewer.Effect>
                         <BlurEffect x:Name="StepZeroBlur" Radius="0"/>
                     </ScrollViewer.Effect>
 
-                    <StackPanel Width="900" HorizontalAlignment="Center" Margin="24,14,24,40">
+                    <StackPanel Width="980" HorizontalAlignment="Center" Margin="28,16,28,44">
 
                         <!-- BOTÓN INICIO -->
-                        <Button x:Name="BtnBackToWelcome" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left" Margin="-10,0,0,12" Click="BtnBackToWelcome_Click">
+                        <Button x:Name="BtnBackToWelcome" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left" Margin="-10,0,0,14" Click="BtnBackToWelcome_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="M3,10.5 L12,3 L21,10.5 V20 A1,1 0 0 1 20,21 H15 V14 H9 V21 H4 A1,1 0 0 1 3,20 Z"
                                       Stroke="#D0D0DA" StrokeThickness="1.7" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center"/>
@@ -543,13 +551,13 @@
                         </Button>
 
                         <!-- ENCABEZADO -->
-                        <TextBlock Text="Preparación del sistema" FontSize="26" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+                        <TextBlock Text="Preparación del sistema" FontSize="27" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
 
                         <TextBlock Text="Elegí el estado actual de tu Windows para preparar los controladores antes de pasar al panel de ajustes."
-                                   FontSize="15.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="23" Margin="0,0,0,20"/>
+                                   FontSize="15.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="23" Margin="0,0,0,22"/>
 
                         <!-- AVISO DE BLOATWARE DETECTADO -->
-                        <Border x:Name="BloatAlertBox" Visibility="Collapsed" Background="#0C111C" BorderBrush="#23334F" BorderThickness="1" CornerRadius="5" Padding="18,13" Margin="0,0,0,16">
+                        <Border x:Name="BloatAlertBox" Visibility="Collapsed" Background="#0C111C" BorderBrush="#23334F" BorderThickness="1" CornerRadius="6" Padding="18,13" Margin="0,0,0,16">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="M12,3 L22,20 H2 Z M12,9 V13 M12,17 H12.01" Stroke="#5D9BE6" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="18" Height="18" Stretch="Uniform" Margin="0,1,12,0" VerticalAlignment="Top"/>
                                 <StackPanel>
@@ -575,13 +583,13 @@
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="Instalar" FontSize="14.5" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
-                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3574C4" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
+                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3474C6" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
                                 </StackPanel>
                             </Grid>
                         </Button>
 
                         <!-- BARRA DESPLEGABLE DE OPCIÓN 1 -->
-                        <Border x:Name="ProgressPanelFresh" Visibility="Collapsed" Background="#07080C" BorderBrush="#1D1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,5,5" Padding="24,14">
+                        <Border x:Name="ProgressPanelFresh" Visibility="Collapsed" Background="#07080C" BorderBrush="#1C1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,6,6" Padding="26,14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
@@ -595,7 +603,7 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Height="12"/>
+                        <Border Height="14"/>
 
                         <!-- OPCIÓN 2: YA INSTALÉ DRIVERS O UTILIDADES -->
                         <Button x:Name="BtnCleanAndInstall" Style="{StaticResource PrepOptionButtonStyle}" Margin="0,0,0,0" Click="BtnCleanAndInstall_Click">
@@ -613,13 +621,13 @@
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="Limpiar" FontSize="14.5" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
-                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3574C4" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
+                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3474C6" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
                                 </StackPanel>
                             </Grid>
                         </Button>
 
                         <!-- BARRA DESPLEGABLE DE OPCIÓN 2 -->
-                        <Border x:Name="ProgressPanelClean" Visibility="Collapsed" Background="#07080C" BorderBrush="#1D1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,5,5" Padding="24,14">
+                        <Border x:Name="ProgressPanelClean" Visibility="Collapsed" Background="#07080C" BorderBrush="#1C1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,6,6" Padding="26,14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
@@ -634,10 +642,10 @@
                         </Border>
 
                         <!-- BLOQUE SEPARADO: CONTINUACIÓN DIRECTA -->
-                        <Separator Background="#1D1E28" Margin="0,24,0,18"/>
+                        <Separator Background="#1C1E28" Margin="0,26,0,20"/>
 
                         <TextBlock Text="¿Ya contás con tus controladores limpios y configurados?"
-                                   FontSize="15" FontWeight="Medium" Foreground="#E4E4EC" Margin="2,0,0,10"/>
+                                   FontSize="15" FontWeight="Medium" Foreground="#E4E4EC" Margin="2,0,0,12"/>
 
                         <Button x:Name="BtnSkipDrivers" Style="{StaticResource PrepOptionButtonStyle}" Click="BtnSkipDrivers_Click">
                             <Grid>
@@ -654,13 +662,13 @@
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="Continuar" FontSize="14.5" FontWeight="SemiBold" Foreground="#E8E8F0" Margin="0,0,8,0"/>
-                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3574C4" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
+                                    <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#3474C6" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform"/>
                                 </StackPanel>
                             </Grid>
                         </Button>
 
                         <!-- BARRA DESPLEGABLE DE OPCIÓN 3 -->
-                        <Border x:Name="ProgressPanelSkip" Visibility="Collapsed" Background="#07080C" BorderBrush="#1D1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,5,5" Padding="24,14">
+                        <Border x:Name="ProgressPanelSkip" Visibility="Collapsed" Background="#07080C" BorderBrush="#1C1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,6,6" Padding="26,14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
@@ -675,23 +683,23 @@
                         </Border>
 
                         <!-- SECCIÓN INFERIOR: ¿POR QUÉ HACEMOS ESTE PASO? -->
-                        <Separator Background="#1D1E28" Margin="0,28,0,22"/>
+                        <Separator Background="#1C1E28" Margin="0,30,0,24"/>
 
                         <TextBlock Text="¿Por qué hacemos este paso?" FontSize="19" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,18"/>
 
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition Width="28"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition Width="28"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Path Data="M12,2 L20,6 V12 C20,17.5 16.5,21.5 12,23 C7.5,21.5 4,17.5 4,12 V6 L12,2 Z"
-                                          Stroke="#3574C4" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
+                                          Stroke="#3474C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
                                     <TextBlock Text="Respaldo preventivo" FontSize="15.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 </StackPanel>
                                 <TextBlock Text="Guarda una copia exacta del estado actual de Windows antes de tocar cualquier clave. No consume rendimiento y usa como máximo el 5% del disco."
@@ -701,7 +709,7 @@
                             <StackPanel Grid.Column="2">
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Path Data="M4,6 H20 V18 H4 Z M8,2 V6 M16,2 V6"
-                                          Stroke="#3574C4" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
+                                          Stroke="#3474C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
                                     <TextBlock Text="Drivers sin basura" FontSize="15.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 </StackPanel>
                                 <TextBlock Text="Evita que Windows Update instale paquetes genéricos y prepara Chipset y GPU sin servicios corriendo en segundo plano."
@@ -711,7 +719,7 @@
                             <StackPanel Grid.Column="4">
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Path Data="M3,7 A2,2 0 0 1 5,5 H9 L11,7 H19 A2,2 0 0 1 21,9 V17 A2,2 0 0 1 19,19 H5 A2,2 0 0 1 3,17 Z"
-                                          Stroke="#3574C4" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
+                                          Stroke="#3474C6" StrokeThickness="1.7" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
                                     <TextBlock Text="Cambios reversibles" FontSize="15.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 </StackPanel>
                                 <TextBlock Text="Cada ajuste permite revisar qué modifica en el Registro y volver al estado original de Windows en un clic."
@@ -721,46 +729,66 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- MODAL EMERGENTE SOBRE FONDO DIFUMINADO -->
-                <Grid x:Name="PrepModalOverlay" Visibility="Collapsed" Background="#8A050609">
-                    <Border x:Name="PrepModalCard" Width="490" HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Background="#0A0C12" BorderBrush="#26344F" BorderThickness="1" CornerRadius="7" Padding="30,26">
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="42" ShadowDepth="10" Color="#000000" Opacity="0.88"/>
-                        </Border.Effect>
+                <!-- HUD FLOTANTE MINIMALISTA SOBRE FONDO DIFUMINADO (SIN CUADRO RECTANGULAR) -->
+                <Grid x:Name="PrepModalOverlay" Visibility="Collapsed" Background="#C4050609">
+                    <StackPanel Width="520" HorizontalAlignment="Center" VerticalAlignment="Center">
 
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                <Ellipse Width="9" Height="9" Fill="#3574C4" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="TxtModalTitle" Text="Preparando sistema" FontSize="18" FontWeight="SemiBold" Foreground="#FFFFFF"/>
-                            </StackPanel>
+                        <!-- EMBLEMA CENTRAL CON ANILLO GIRATORIO -->
+                        <Grid Width="92" Height="92" HorizontalAlignment="Center" Margin="0,0,0,22">
+                            <Ellipse Width="92" Height="92" Stroke="#1B2840" StrokeThickness="2"/>
+                            <Path Data="M46,2 A44,44 0 0,1 90,46" Stroke="#3B82F6" StrokeThickness="2.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
+                                <Path.RenderTransform>
+                                    <RotateTransform x:Name="LoadingRingRotate" Angle="0"/>
+                                </Path.RenderTransform>
+                            </Path>
 
-                            <TextBlock x:Name="TxtModalMessage" Text="Creando punto de restauración preventivo en el sistema..."
-                                       FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21" Margin="0,0,0,20"/>
+                            <Viewbox Width="54" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Canvas Width="72" Height="44">
+                                    <Path Data="M3,22 C18,6 54,6 69,22 C54,38 18,38 3,22 Z" Fill="#0A0E17" Stroke="#3474C6" StrokeThickness="3.2" StrokeLineJoin="Round"/>
+                                    <Ellipse Canvas.Left="25" Canvas.Top="11" Width="22" Height="22" Stroke="#FFFFFF" StrokeThickness="2.4" Fill="#070A12"/>
+                                    <Polygon Points="36,16 42,22 36,28 30,22" Fill="#3474C6"/>
+                                </Canvas>
+                            </Viewbox>
+                        </Grid>
 
-                            <Grid Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Progreso" FontSize="13.5" Foreground="{StaticResource TextMuted}"/>
-                                <TextBlock Grid.Column="1" x:Name="TxtModalPercent" Text="0%" FontSize="14.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
-                            </Grid>
+                        <!-- ETIQUETA DE ETAPA -->
+                        <TextBlock x:Name="TxtModalStepTag" Text="ETAPA 1 DE 3 · RESPALDO DEL SISTEMA"
+                                   FontSize="12" FontWeight="SemiBold" Foreground="#5D9BE6"
+                                   HorizontalAlignment="Center" Margin="0,0,0,6"/>
 
-                            <ProgressBar x:Name="ModalProgressBar" Height="9" Minimum="0" Maximum="100" Value="0"/>
-                        </StackPanel>
-                    </Border>
+                        <!-- TÍTULO DE ACCIÓN -->
+                        <TextBlock x:Name="TxtModalTitle" Text="Preparando sistema"
+                                   FontSize="23" FontWeight="SemiBold" Foreground="#FFFFFF"
+                                   HorizontalAlignment="Center" Margin="0,0,0,8"/>
+
+                        <!-- MENSAJE DE ESTADO ACTUAL -->
+                        <TextBlock x:Name="TxtModalMessage" Text="Creando punto de restauración preventivo en el sistema..."
+                                   FontSize="15" Foreground="{StaticResource TextSecondary}"
+                                   HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,24"/>
+
+                        <!-- BARRA DE PROGRESO + PORCENTAJE EN BLANCO -->
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Procesando configuración" FontSize="13.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" x:Name="TxtModalPercent" Text="0%" FontSize="17" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <ProgressBar x:Name="ModalProgressBar" Height="8" Minimum="0" Maximum="100" Value="0"/>
+                    </StackPanel>
                 </Grid>
 
                 <!-- VISTA 3: PANEL DE AJUSTES -->
-                <Grid x:Name="MainOptimizerView" Visibility="Collapsed" Margin="20,14,20,20">
+                <Grid x:Name="MainOptimizerView" Visibility="Collapsed" Margin="24,16,20,22">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="215"/>
+                        <ColumnDefinition Width="225"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- MENÚ LATERAL -->
-                    <StackPanel x:Name="SidebarMenu" Grid.Column="0" Margin="0,0,18,0">
+                    <StackPanel x:Name="SidebarMenu" Grid.Column="0" Margin="0,0,22,0">
                         <Button x:Name="BtnBackToStepZero" Style="{StaticResource GhostButtonStyle}"
                                 HorizontalContentAlignment="Left" Margin="0,0,0,14" Click="BtnBackToStepZero_Click">
                             <StackPanel Orientation="Horizontal">
@@ -769,12 +797,12 @@
                             </StackPanel>
                         </Button>
 
-                        <Button Content="Apps" Tag="Apps" Style="{StaticResource PrimaryButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
-                        <Button Content="Gaming y Energía" Tag="Gaming y Energía" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
-                        <Button Content="Red y DNS" Tag="Red y DNS" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
-                        <Button Content="Debloat" Tag="Debloat" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
-                        <Button Content="Servicios" Tag="Servicios" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
-                        <Button Content="Limpieza" Tag="Limpieza" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
+                        <Button Content="Apps" Tag="Apps" Style="{StaticResource PrimaryButtonStyle}" HorizontalContentAlignment="Left" Padding="15,11" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
+                        <Button Content="Gaming y Energía" Tag="Gaming y Energía" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="15,11" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
+                        <Button Content="Red y DNS" Tag="Red y DNS" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="15,11" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
+                        <Button Content="Debloat" Tag="Debloat" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="15,11" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
+                        <Button Content="Servicios" Tag="Servicios" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="15,11" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
+                        <Button Content="Limpieza" Tag="Limpieza" Style="{StaticResource GhostButtonStyle}" HorizontalContentAlignment="Left" Padding="15,11" Margin="0,0,0,6" Click="CategoryBtn_Click"/>
                     </StackPanel>
 
                     <!-- CONTENIDO CENTRAL -->
@@ -786,14 +814,14 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- BUSCADOR -->
-                        <Border Grid.Row="0" Background="{StaticResource BgCardBlack}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="5" Margin="0,0,0,14">
+                        <!-- BUSCADOR (ALINEADO CON LAS TARJETAS RESPETANDO EL ESPACIO DEL SCROLLBAR) -->
+                        <Border Grid.Row="0" Background="{StaticResource BgCardBlack}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Margin="0,0,22,16">
                             <Grid>
                                 <TextBox x:Name="TxtSearch" Background="Transparent" Foreground="#FFFFFF"
                                          CaretBrush="#FFFFFF" BorderThickness="0"
-                                         Padding="14,11" FontSize="14.5" TextChanged="TxtSearch_TextChanged"/>
+                                         Padding="15,12" FontSize="14.5" TextChanged="TxtSearch_TextChanged"/>
                                 <TextBlock Text="Buscar ajuste o aplicación..." Foreground="{StaticResource TextMuted}" FontSize="14.5"
-                                           Margin="15,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">
+                                           Margin="16,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -808,26 +836,52 @@
                             </Grid>
                         </Border>
 
-                        <!-- LISTA DE AJUSTES / APPS -->
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <!-- LISTA AGRUPADA CON ÍCONOS Y PADDING SEPARADO DEL SCROLLBAR -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
                             <ItemsControl x:Name="TweaksItemsControl">
+                                <ItemsControl.GroupStyle>
+                                    <GroupStyle>
+                                        <GroupStyle.HeaderTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Margin="2,8,0,10">
+                                                    <TextBlock Text="{Binding Name}" FontSize="13.5" FontWeight="SemiBold" Foreground="#8898B5"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </GroupStyle.HeaderTemplate>
+                                        <GroupStyle.ContainerStyle>
+                                            <Style TargetType="GroupItem">
+                                                <Setter Property="Margin" Value="0,0,0,10"/>
+                                            </Style>
+                                        </GroupStyle.ContainerStyle>
+                                    </GroupStyle>
+                                </ItemsControl.GroupStyle>
+
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="{StaticResource BgCardBlack}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="5" Padding="18,14" Margin="0,0,0,8">
+                                        <Border Background="{StaticResource BgCardBlack}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Padding="18,14" Margin="0,0,0,8">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="Auto"/>
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
 
-                                                <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="15" FontWeight="Medium" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                                <!-- ÍCONO DE APLICACIÓN (SOLO VISIBLE CUANDO TIENE ICONO) -->
+                                                <Border Grid.Column="0" Visibility="{Binding HasIcon, Converter={StaticResource BoolToVis}}"
+                                                        Width="34" Height="34" CornerRadius="6" Background="#10131C" BorderBrush="#1F2433" BorderThickness="1"
+                                                        Margin="0,0,14,0" VerticalAlignment="Center">
+                                                    <Path Data="{Binding IconGeometry}" Fill="{Binding IconColor}"
+                                                          Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
 
-                                                <Button Grid.Column="1" Style="{StaticResource GhostButtonStyle}" Padding="10,6" Margin="10,0" Tag="{Binding}" Click="BtnInfo_Click">
+                                                <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="15" FontWeight="Medium" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap"/>
+
+                                                <Button Grid.Column="2" Style="{StaticResource GhostButtonStyle}" Padding="10,6" Margin="10,0" Tag="{Binding}" Click="BtnInfo_Click">
                                                     <TextBlock Text="ⓘ" FontSize="15" Foreground="{StaticResource TextMuted}"/>
                                                 </Button>
 
-                                                <CheckBox Grid.Column="2" Style="{StaticResource ModernSwitchStyle}" IsChecked="{Binding IsEnabled, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                                <CheckBox Grid.Column="3" Style="{StaticResource ModernSwitchStyle}" IsChecked="{Binding IsEnabled, Mode=TwoWay}" VerticalAlignment="Center"/>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -836,7 +890,7 @@
                         </ScrollViewer>
 
                         <!-- INSPECTOR DE DETALLE -->
-                        <Border x:Name="InspectorPanel" Grid.Row="2" Visibility="Collapsed" Background="#0A0B10" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="5" Padding="18,14" Margin="0,10,0,6">
+                        <Border x:Name="InspectorPanel" Grid.Row="2" Visibility="Collapsed" Background="#0A0B10" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Padding="18,14" Margin="0,10,22,6">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -852,7 +906,7 @@
                         </Border>
 
                         <!-- BARRA INFERIOR -->
-                        <Grid Grid.Row="3" Margin="0,14,0,0">
+                        <Grid Grid.Row="3" Margin="0,14,22,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
