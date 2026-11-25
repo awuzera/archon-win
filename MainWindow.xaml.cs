@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Management;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
@@ -9,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Interop;
 using System.Windows.Media.Animation;
+using Microsoft.Win32;
 using Archon.Core;
 using Archon.Models;
 
@@ -27,9 +31,22 @@ namespace Archon
             Skip
         }
 
+        private sealed class HardwareSpecRow
+        {
+            public string Label { get; set; } = string.Empty;
+            public string Value { get; set; } = string.Empty;
+        }
+
+        private sealed class HardwareSpecSection
+        {
+            public string SectionTitle { get; set; } = string.Empty;
+            public List<HardwareSpecRow> Specs { get; set; } = new();
+        }
+
         private SystemHardwareProfile _hardware = new();
         private OptimizerState _state = new();
         private List<TweakItem> _allTweaks = new();
+        private List<HardwareSpecSection>? _cachedDetailedSpecs;
         private string _activeCategory = "Apps";
         private bool _hardwareScanned = false;
         private PrepTarget _currentPrepTarget = PrepTarget.None;
@@ -48,13 +65,20 @@ namespace Archon
             base.OnSourceInitialized(e);
             try
             {
+                var workArea = SystemParameters.WorkArea;
+                if (Width > workArea.Width - 24) Width = Math.Max(980, workArea.Width - 24);
+                if (Height > workArea.Height - 24) Height = Math.Max(660, workArea.Height - 24);
+
+                Left = workArea.Left + (workArea.Width - Width) / 2;
+                Top = workArea.Top + (workArea.Height - Height) / 2;
+
                 IntPtr hwnd = new WindowInteropHelper(this).Handle;
-                int preference = 2; // DWMWCP_ROUND (esquinas redondeadas nativas en Windows 11)
+                int preference = 2; // DWMWCP_ROUND
                 DwmSetWindowAttribute(hwnd, 33, ref preference, sizeof(int));
             }
             catch
             {
-                // Ignorar en versiones anteriores de Windows
+                // Ignorar en entornos sin DWM
             }
         }
 
@@ -126,6 +150,258 @@ namespace Archon
             TxtScanButtonLabel.Text = "Ocultar componentes";
         }
 
+        private async void BtnViewAllHardware_Click(object sender, RoutedEventArgs e)
+        {
+            BtnViewAllHardware.IsEnabled = false;
+            _cachedDetailedSpecs ??= await Task.Run(BuildFullHardwareInventory);
+            FullHardwareSectionsControl.ItemsSource = _cachedDetailedSpecs;
+            BtnViewAllHardware.IsEnabled = true;
+
+            ShowView(FullHardwareView);
+            FullHardwareView.ScrollToTop();
+
+            var slideAnim = new DoubleAnimation
+            {
+                From = 28,
+                To = 0,
+                Duration = TimeSpan.FromMilliseconds(260),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+            FullHardwareSlideTransform.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty, slideAnim);
+        }
+
+        private void BtnBackFromFullHardware_Click(object sender, RoutedEventArgs e)
+        {
+            ShowView(WelcomeView);
+        }
+
+        private List<HardwareSpecSection> BuildFullHardwareInventory()
+        {
+            var sections = new List<HardwareSpecSection>();
+
+            // 1. PROCESADOR
+            var cpuSpecs = new List<HardwareSpecRow>
+            {
+                new() { Label = "Modelo", Value = _hardware.CpuName },
+                new() { Label = "Arquitectura", Value = RuntimeInformation.OSArchitecture.ToString() }
+            };
+            QueryWmi("SELECT Manufacturer, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed, L2CacheSize, L3CacheSize, SocketDesignation FROM Win32_Processor", obj =>
+            {
+                AddIfValid(cpuSpecs, "Fabricante", obj["Manufacturer"]?.ToString());
+                AddIfValid(cpuSpecs, "Socket", obj["SocketDesignation"]?.ToString());
+                AddIfValid(cpuSpecs, "Núcleos físicos / Hilos", $"{obj["NumberOfCores"]} núcleos / {obj["NumberOfLogicalProcessors"]} hilos");
+                if (obj["MaxClockSpeed"] != null)
+                    cpuSpecs.Add(new HardwareSpecRow { Label = "Frecuencia base máxima", Value = $"{obj["MaxClockSpeed"]} MHz" });
+                if (obj["L2CacheSize"] != null && Convert.ToInt64(obj["L2CacheSize"]) > 0)
+                    cpuSpecs.Add(new HardwareSpecRow { Label = "Caché L2", Value = $"{Convert.ToInt64(obj["L2CacheSize"]) / 1024.0:0.#} MB" });
+                if (obj["L3CacheSize"] != null && Convert.ToInt64(obj["L3CacheSize"]) > 0)
+                    cpuSpecs.Add(new HardwareSpecRow { Label = "Caché L3", Value = $"{Convert.ToInt64(obj["L3CacheSize"]) / 1024.0:0.#} MB" });
+            });
+            sections.Add(new HardwareSpecSection { SectionTitle = "Procesador (CPU)", Specs = cpuSpecs });
+
+            // 2. PLACA BASE Y BIOS
+            var boardSpecs = new List<HardwareSpecRow>
+            {
+                new() { Label = "Placa madre", Value = _hardware.MotherboardName }
+            };
+            QueryWmi("SELECT Manufacturer, Product, Version, SerialNumber FROM Win32_BaseBoard", obj =>
+            {
+                AddIfValid(boardSpecs, "Fabricante", obj["Manufacturer"]?.ToString());
+                AddIfValid(boardSpecs, "Modelo exacto", obj["Product"]?.ToString());
+                AddIfValid(boardSpecs, "Revisión", obj["Version"]?.ToString());
+                AddIfValid(boardSpecs, "Número de serie", obj["SerialNumber"]?.ToString());
+            });
+            QueryWmi("SELECT Manufacturer, SMBIOSBIOSVersion, ReleaseDate FROM Win32_BIOS", obj =>
+            {
+                AddIfValid(boardSpecs, "Fabricante BIOS", obj["Manufacturer"]?.ToString());
+                AddIfValid(boardSpecs, "Versión BIOS / UEFI", obj["SMBIOSBIOSVersion"]?.ToString());
+                var rawDate = obj["ReleaseDate"]?.ToString();
+                if (!string.IsNullOrEmpty(rawDate) && rawDate.Length >= 8)
+                    boardSpecs.Add(new HardwareSpecRow { Label = "Fecha de firmware", Value = $"{rawDate.Substring(6, 2)}/{rawDate.Substring(4, 2)}/{rawDate.Substring(0, 4)}" });
+            });
+            try
+            {
+                using var sbKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\SecureBoot\State");
+                if (sbKey?.GetValue("UEFISecureBootEnabled") is int sbVal)
+                    boardSpecs.Add(new HardwareSpecRow { Label = "Secure Boot", Value = sbVal == 1 ? "Activado (UEFI)" : "Desactivado" });
+            }
+            catch { }
+            sections.Add(new HardwareSpecSection { SectionTitle = "Placa base y Firmware UEFI / BIOS", Specs = boardSpecs });
+
+            // 3. GRÁFICOS Y PANTALLA
+            var gpuSpecs = new List<HardwareSpecRow>();
+            int gpuIdx = 1;
+            QueryWmi("SELECT Name, AdapterCompatibility, DriverVersion, AdapterRAM, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate FROM Win32_VideoController", obj =>
+            {
+                string prefix = gpuIdx == 1 ? "GPU principal" : $"GPU #{gpuIdx}";
+                AddIfValid(gpuSpecs, prefix, obj["Name"]?.ToString());
+                AddIfValid(gpuSpecs, $"Fabricante ({prefix})", obj["AdapterCompatibility"]?.ToString());
+                AddIfValid(gpuSpecs, $"Versión de controlador ({prefix})", obj["DriverVersion"]?.ToString());
+                if (obj["AdapterRAM"] != null && Convert.ToInt64(obj["AdapterRAM"]) > 0)
+                {
+                    double gb = Convert.ToInt64(obj["AdapterRAM"]) / (1024.0 * 1024.0 * 1024.0);
+                    gpuSpecs.Add(new HardwareSpecRow { Label = $"Memoria de video ({prefix})", Value = $"{gb:0.#} GB" });
+                }
+                if (obj["CurrentHorizontalResolution"] != null && obj["CurrentVerticalResolution"] != null)
+                {
+                    string hz = obj["CurrentRefreshRate"] != null ? $" @ {obj["CurrentRefreshRate"]} Hz" : string.Empty;
+                    gpuSpecs.Add(new HardwareSpecRow { Label = $"Resolución activa ({prefix})", Value = $"{obj["CurrentHorizontalResolution"]} × {obj["CurrentVerticalResolution"]}{hz}" });
+                }
+                gpuIdx++;
+            });
+            if (gpuSpecs.Count == 0)
+                gpuSpecs.Add(new HardwareSpecRow { Label = "Tarjeta gráfica", Value = _hardware.PrimaryGpu });
+            sections.Add(new HardwareSpecSection { SectionTitle = "Gráficos y Pantalla", Specs = gpuSpecs });
+
+            // 4. MEMORIA RAM
+            var ramSpecs = new List<HardwareSpecRow>
+            {
+                new() { Label = "Memoria instalada total", Value = _hardware.TotalRamGb }
+            };
+            int dimmIdx = 1;
+            QueryWmi("SELECT DeviceLocator, BankLabel, Manufacturer, PartNumber, Capacity, Speed, ConfiguredClockSpeed, SMBIOSMemoryType FROM Win32_PhysicalMemory", obj =>
+            {
+                long capBytes = obj["Capacity"] != null ? Convert.ToInt64(obj["Capacity"]) : 0;
+                double capGb = capBytes / (1024.0 * 1024.0 * 1024.0);
+                string speed = (obj["ConfiguredClockSpeed"] ?? obj["Speed"])?.ToString() ?? "";
+                string ddrType = obj["SMBIOSMemoryType"] != null ? Convert.ToInt32(obj["SMBIOSMemoryType"]) switch
+                {
+                    24 => "DDR3",
+                    26 => "DDR4",
+                    34 => "DDR5",
+                    _ => "RAM"
+                } : "RAM";
+                string slot = obj["DeviceLocator"]?.ToString() ?? $"Slot #{dimmIdx}";
+                string maker = obj["Manufacturer"]?.ToString()?.Trim() ?? "";
+                string part = obj["PartNumber"]?.ToString()?.Trim() ?? "";
+
+                string detail = $"{capGb:0.#} GB {ddrType}";
+                if (!string.IsNullOrEmpty(speed)) detail += $" · {speed} MT/s";
+                if (!string.IsNullOrEmpty(maker) && maker != "Unknown") detail += $" · {maker}";
+                if (!string.IsNullOrEmpty(part)) detail += $" ({part})";
+
+                ramSpecs.Add(new HardwareSpecRow { Label = $"Módulo {dimmIdx} ({slot})", Value = detail });
+                dimmIdx++;
+            });
+            sections.Add(new HardwareSpecSection { SectionTitle = "Memoria RAM y Módulos DIMM", Specs = ramSpecs });
+
+            // 5. ALMACENAMIENTO Y VOLÚMENES
+            var storageSpecs = new List<HardwareSpecRow>();
+            int diskIdx = 1;
+            QueryWmi("SELECT Model, InterfaceType, MediaType, Size, SerialNumber, Status FROM Win32_DiskDrive", obj =>
+            {
+                long sizeBytes = obj["Size"] != null ? Convert.ToInt64(obj["Size"]) : 0;
+                double sizeGb = sizeBytes / (1000.0 * 1000.0 * 1000.0);
+                string model = obj["Model"]?.ToString()?.Trim() ?? $"Unidad #{diskIdx}";
+                string iface = obj["InterfaceType"]?.ToString() ?? "";
+                string status = obj["Status"]?.ToString() ?? "OK";
+                storageSpecs.Add(new HardwareSpecRow
+                {
+                    Label = $"Unidad física #{diskIdx} ({iface})",
+                    Value = $"{model} · {sizeGb:0} GB · Estado: {status}"
+                });
+                diskIdx++;
+            });
+
+            foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady))
+            {
+                double totalGb = drive.TotalSize / (1024.0 * 1024.0 * 1024.0);
+                double freeGb = drive.AvailableFreeSpace / (1024.0 * 1024.0 * 1024.0);
+                string volLabel = string.IsNullOrWhiteSpace(drive.VolumeLabel) ? "Local" : drive.VolumeLabel;
+                storageSpecs.Add(new HardwareSpecRow
+                {
+                    Label = $"Partición {drive.Name.TrimEnd('\\')} ({volLabel})",
+                    Value = $"{drive.DriveFormat} · {freeGb:0.#} GB libres de {totalGb:0.#} GB"
+                });
+            }
+            sections.Add(new HardwareSpecSection { SectionTitle = "Almacenamiento y Particiones", Specs = storageSpecs });
+
+            // 6. RED Y CONECTIVIDAD
+            var netSpecs = new List<HardwareSpecRow>();
+            try
+            {
+                foreach (var nic in NetworkInterface.GetAllNetworkInterfaces()
+                    .Where(n => n.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
+                                n.NetworkInterfaceType != NetworkInterfaceType.Tunnel))
+                {
+                    var ipProps = nic.GetIPProperties();
+                    var ipv4 = ipProps.UnicastAddresses
+                        .FirstOrDefault(a => a.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)?.Address.ToString();
+                    string speedStr = nic.Speed > 0 ? $"{nic.Speed / 1_000_000} Mbps" : "Sin enlace";
+                    string statusStr = nic.OperationalStatus == OperationalStatus.Up ? "Conectado" : "Desconectado";
+                    string info = $"{nic.Description} · {statusStr} ({speedStr})";
+                    if (!string.IsNullOrEmpty(ipv4)) info += $" · IP: {ipv4}";
+
+                    netSpecs.Add(new HardwareSpecRow { Label = nic.Name, Value = info });
+                }
+            }
+            catch { }
+            if (netSpecs.Count > 0)
+                sections.Add(new HardwareSpecSection { SectionTitle = "Adaptadores de Red", Specs = netSpecs });
+
+            // 7. AUDIO Y CONTROLADORAS USB
+            var peripheralSpecs = new List<HardwareSpecRow>();
+            QueryWmi("SELECT Name, Manufacturer FROM Win32_SoundDevice", obj =>
+            {
+                AddIfValid(peripheralSpecs, "Dispositivo de audio", obj["Name"]?.ToString());
+            });
+            QueryWmi("SELECT Name FROM Win32_USBController", obj =>
+            {
+                AddIfValid(peripheralSpecs, "Controladora USB", obj["Name"]?.ToString());
+            });
+            if (peripheralSpecs.Count > 0)
+                sections.Add(new HardwareSpecSection { SectionTitle = "Audio y Controladoras USB", Specs = peripheralSpecs });
+
+            // 8. SISTEMA OPERATIVO Y ENTORNO
+            var osSpecs = new List<HardwareSpecRow>
+            {
+                new() { Label = "Edición de Windows", Value = _hardware.WindowsVersion },
+                new() { Label = "Nombre del equipo", Value = Environment.MachineName },
+                new() { Label = "Usuario activo", Value = Environment.UserName },
+                new() { Label = "Versión del kernel NT", Value = Environment.OSVersion.Version.ToString() }
+            };
+            TimeSpan uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
+            osSpecs.Add(new HardwareSpecRow
+            {
+                Label = "Tiempo activo del sistema",
+                Value = $"{(int)uptime.TotalHours} h {uptime.Minutes} min"
+            });
+            sections.Add(new HardwareSpecSection { SectionTitle = "Sistema Operativo y Entorno", Specs = osSpecs });
+
+            return sections;
+        }
+
+        private static void QueryWmi(string query, Action<ManagementObject> handle)
+        {
+            try
+            {
+                using var searcher = new ManagementObjectSearcher(query);
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    using (obj)
+                    {
+                        handle(obj);
+                    }
+                }
+            }
+            catch
+            {
+                // Ignorar clases WMI no soportadas por el hardware
+            }
+        }
+
+        private static void AddIfValid(List<HardwareSpecRow> rows, string label, string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return;
+            string clean = value.Trim();
+            if (clean.Equals("To be filled by O.E.M.", StringComparison.OrdinalIgnoreCase) ||
+                clean.Equals("Default string", StringComparison.OrdinalIgnoreCase) ||
+                clean.Equals("None", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            rows.Add(new HardwareSpecRow { Label = label, Value = clean });
+        }
+
         private void BtnStartStepZero_Click(object sender, RoutedEventArgs e)
         {
             ClosePrepModal();
@@ -152,6 +428,7 @@ namespace Archon
         {
             bool isWelcome = target == WelcomeView;
             WelcomeView.Visibility = isWelcome ? Visibility.Visible : Visibility.Collapsed;
+            FullHardwareView.Visibility = target == FullHardwareView ? Visibility.Visible : Visibility.Collapsed;
             StepZeroView.Visibility = target == StepZeroView ? Visibility.Visible : Visibility.Collapsed;
             MainOptimizerView.Visibility = target == MainOptimizerView ? Visibility.Visible : Visibility.Collapsed;
 
@@ -245,7 +522,7 @@ namespace Archon
             }
 
             int steps = targetPercent - start;
-            int delayPerStep = Math.Max(18, durationMs / steps);
+            int delayPerStep = Math.Max(32, durationMs / steps);
 
             for (int p = start + 1; p <= targetPercent; p++)
             {
@@ -279,15 +556,15 @@ namespace Archon
             await SmoothProgressToAsync(
                 "ETAPA 2 DE 3 · POLÍTICA DE CONTROLADORES",
                 "Bloqueando instalación automática de paquetes genéricos desde Windows Update...",
-                64,
-                1100);
+                66,
+                2700);
             StepZeroOrchestrator.SetWindowsUpdateDriverBlock(true);
 
             await SmoothProgressToAsync(
                 "ETAPA 3 DE 3 · ENTORNO LIMPIO",
-                "Eliminando servicios residuales y programando reanudación tras reinicio...",
-                92,
-                1100);
+                "Eliminando servicios residuales de fabricante y programando reanudación tras reinicio...",
+                95,
+                2700);
             _state.PendingPostRebootInstall = true;
             StepZeroOrchestrator.SaveState(_state);
             StepZeroOrchestrator.RegisterPostRebootResume();
@@ -296,8 +573,8 @@ namespace Archon
                 "PROCESO COMPLETADO",
                 "Listo para reiniciar y completar la limpieza de controladores.",
                 100,
-                550);
-            await Task.Delay(500);
+                650);
+            await Task.Delay(1100);
 
             ClosePrepModal();
             ToggleStepZeroButtons(true);
@@ -312,7 +589,7 @@ namespace Archon
             if (!await EnsureMandatoryRestorePointAsync(useModal: false)) return;
 
             UpdateProgressState(string.Empty, "Respaldo preventivo verificado. Abriendo panel de ajustes...", 100);
-            await Task.Delay(350);
+            await Task.Delay(400);
 
             _state.StepZeroCompleted = true;
             StepZeroOrchestrator.SaveState(_state);
@@ -327,9 +604,9 @@ namespace Archon
                 {
                     await SmoothProgressToAsync(
                         "ETAPA 1 DE 3 · RESPALDO PREVENTIVO",
-                        "Verificando punto de restauración preventivo existente...",
-                        32,
-                        850);
+                        "Verificando integridad del punto de restauración preventivo...",
+                        34,
+                        2500);
                 }
                 else
                 {
@@ -344,8 +621,8 @@ namespace Archon
                 _ = SmoothProgressToAsync(
                     "ETAPA 1 DE 3 · RESPALDO PREVENTIVO",
                     "Creando punto de restauración preventivo en el sistema...",
-                    28,
-                    1200);
+                    30,
+                    2600);
             }
             else
             {
@@ -357,7 +634,7 @@ namespace Archon
             if (!ok)
             {
                 UpdateProgressState("ERROR DE RESPALDO", "No se pudo crear el punto de restauración. Verificá que el servicio VSS esté activo.", 0);
-                await Task.Delay(900);
+                await Task.Delay(1200);
                 ClosePrepModal();
                 ToggleStepZeroButtons(true);
                 return false;
@@ -372,7 +649,7 @@ namespace Archon
                     "ETAPA 1 DE 3 · RESPALDO PREVENTIVO",
                     "Punto de restauración guardado correctamente.",
                     35,
-                    400);
+                    650);
             }
             else
             {
@@ -393,16 +670,16 @@ namespace Archon
                 await SmoothProgressToAsync(
                     "ETAPA 2 DE 3 · CHIPSET Y PLACA BASE",
                     "Preparando perfil limpio de controladores de Chipset AMD...",
-                    62,
-                    1050);
+                    66,
+                    2700);
             }
             else
             {
                 await SmoothProgressToAsync(
                     "ETAPA 2 DE 3 · CHIPSET Y PLACA BASE",
-                    "Verificando controladores base del sistema...",
-                    62,
-                    900);
+                    "Verificando controladores base y buses del sistema...",
+                    66,
+                    2600);
             }
 
             if (_hardware.HasNvidiaGpu)
@@ -410,24 +687,24 @@ namespace Archon
                 await SmoothProgressToAsync(
                     "ETAPA 3 DE 3 · CONTROLADOR GRÁFICO",
                     "Configurando controlador NVIDIA sin telemetría ni paneles extra...",
-                    92,
-                    1150);
+                    95,
+                    2800);
             }
             else if (_hardware.HasAmdGpu)
             {
                 await SmoothProgressToAsync(
                     "ETAPA 3 DE 3 · CONTROLADOR GRÁFICO",
                     "Configurando controlador gráfico AMD Radeon limpio...",
-                    92,
-                    1150);
+                    95,
+                    2800);
             }
             else
             {
                 await SmoothProgressToAsync(
                     "ETAPA 3 DE 3 · CONTROLADOR GRÁFICO",
                     "Ajustando perfil gráfico del sistema...",
-                    92,
-                    950);
+                    95,
+                    2600);
             }
 
             StepZeroOrchestrator.SetWindowsUpdateDriverBlock(false);
@@ -439,8 +716,8 @@ namespace Archon
                 "PROCESO COMPLETADO",
                 finalInlineMessage,
                 100,
-                500);
-            await Task.Delay(500);
+                650);
+            await Task.Delay(1100);
 
             ClosePrepModal();
             ToggleStepZeroButtons(true);
@@ -471,7 +748,6 @@ namespace Archon
 
             var appsList = new List<TweakItem>
             {
-                // GAMING Y COMUNICACIÓN
                 CreateAppItem(
                     "Steam",
                     "Gaming y Comunicación",
@@ -488,7 +764,6 @@ namespace Archon
                     "#5865F2",
                     "M19.3,5.3 A16.5,16.5 0 0,0 15.2,4 L14.7,5 A15,15 0 0,0 9.3,5 L8.8,4 A16.5,16.5 0 0,0 4.7,5.3 C2.1,9.2 1.4,13 1.8,16.7 A16.7,16.7 0 0,0 6.8,19.2 L7.9,17.4 A10.7,10.7 0 0,1 6.2,16.6 L6.6,16.3 A11.8,11.8 0 0,0 17.4,16.3 L17.8,16.6 A10.7,10.7 0 0,1 16.1,17.4 L17.2,19.2 A16.7,16.7 0 0,0 22.2,16.7 C22.7,12.4 21.4,8.6 19.3,5.3 Z M8.7,14.3 C7.7,14.3 6.9,13.4 6.9,12.3 C6.9,11.2 7.7,10.3 8.7,10.3 C9.7,10.3 10.5,11.2 10.5,12.3 C10.5,13.4 9.7,14.3 8.7,14.3 Z M15.3,14.3 C14.3,14.3 13.5,13.4 13.5,12.3 C13.5,11.2 14.3,10.3 15.3,10.3 C16.3,10.3 17.1,11.2 17.1,12.3 C17.1,13.4 16.3,14.3 15.3,14.3 Z"),
 
-                // MULTIMEDIA Y STREAMING
                 CreateAppItem(
                     "VLC Media Player",
                     "Multimedia y Streaming",
@@ -513,7 +788,6 @@ namespace Archon
                     "#94A3B8",
                     "M12,2 A10,10 0 1,0 22,12 A10,10 0 0,0 12,2 Z M12,5.5 A3.5,3.5 0 0,1 15.2,10.4 A3.5,3.5 0 0,1 10.5,8.8 A3.5,3.5 0 0,1 12,5.5 Z M7.2,14.2 A3.5,3.5 0 0,1 10.2,9.1 A3.5,3.5 0 0,1 11.2,14.1 A3.5,3.5 0 0,1 7.2,14.2 Z M16.8,14.2 A3.5,3.5 0 0,1 12.8,14.1 A3.5,3.5 0 0,1 13.8,9.1 A3.5,3.5 0 0,1 16.8,14.2 Z"),
 
-                // NAVEGACIÓN Y UTILIDADES
                 CreateAppItem(
                     "Brave Browser",
                     "Navegación y Utilidades",
