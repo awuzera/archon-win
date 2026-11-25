@@ -17,6 +17,20 @@ namespace Archon.Models
 
     public class TweakItem : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private bool _isDetailsOpen;
+        public bool IsDetailsOpen
+        {
+            get => _isDetailsOpen;
+            set
+            {
+                if (_isDetailsOpen != value)
+                {
+                    _isDetailsOpen = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDetailsOpen)));
+                }
+            }
+        }
         public string GroupName { get; set; } = string.Empty;
         public string IconGeometry { get; set; } = string.Empty;
         public string IconColor { get; set; } = "#3B82F6";

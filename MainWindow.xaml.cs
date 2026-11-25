@@ -27,8 +27,7 @@ namespace Archon
         {
             None,
             Fresh,
-            Clean,
-            Skip
+            Clean
         }
 
         private sealed class HardwareSpecRow
@@ -179,7 +178,98 @@ namespace Archon
         {
             var sections = new List<HardwareSpecSection>();
 
-            // 1. PROCESADOR
+            // 1. SEGURIDAD Y AJUSTES DE BIOS PARA GAMING (TPM 2.0, SECURE BOOT, UEFI, VIRTUALIZACIÓN)
+            var biosGamingSpecs = new List<HardwareSpecRow>();
+
+            // TPM 2.0
+            string tpmStatus = "No detectado o desactivado en BIOS";
+            try
+            {
+                using var tpmSearcher = new ManagementObjectSearcher(@"root\CIMV2\Security\MicrosoftTpm", "SELECT IsActivated_InitialValue, IsEnabled_InitialValue, SpecVersion FROM Win32_Tpm");
+                foreach (ManagementObject tpm in tpmSearcher.Get())
+                {
+                    using (tpm)
+                    {
+                        bool enabled = tpm["IsEnabled_InitialValue"] is bool e && e;
+                        bool activated = tpm["IsActivated_InitialValue"] is bool a && a;
+                        string rawSpec = tpm["SpecVersion"]?.ToString() ?? "";
+                        string ver = rawSpec.Split(',').FirstOrDefault()?.Trim() ?? "2.0";
+
+                        if (enabled && activated)
+                            tpmStatus = $"Activado y listo (TPM {ver})";
+                        else if (enabled)
+                            tpmStatus = $"Habilitado, pendiente de activación (TPM {ver})";
+                        else
+                            tpmStatus = $"Desactivado en BIOS (TPM {ver})";
+                    }
+                }
+            }
+            catch
+            {
+                // Fallback por registro si el namespace WMI requiere permisos adicionales
+                try
+                {
+                    using var tpmKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\TPM\WMI");
+                    if (tpmKey != null)
+                        tpmStatus = "Detectado en el sistema (TPM 2.0)";
+                }
+                catch { }
+            }
+            biosGamingSpecs.Add(new HardwareSpecRow { Label = "Módulo TPM (Anticheat / Win 11)", Value = tpmStatus });
+
+            // Secure Boot
+            string secureBootStatus = "No disponible (Modo Legacy)";
+            try
+            {
+                using var sbKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\SecureBoot\State");
+                if (sbKey?.GetValue("UEFISecureBootEnabled") is int sbVal)
+                    secureBootStatus = sbVal == 1 ? "Activado (UEFI)" : "Desactivado en BIOS";
+            }
+            catch { }
+            biosGamingSpecs.Add(new HardwareSpecRow { Label = "Arranque Seguro (Secure Boot)", Value = secureBootStatus });
+
+            // Modo Firmware (UEFI vs Legacy)
+            string firmwareMode = Directory.Exists(@"C:\Windows\Panther") && File.Exists(@"C:\Windows\System32\winload.efi")
+                ? "UEFI"
+                : "UEFI / Legacy";
+            try
+            {
+                using var sbKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\SecureBoot\State");
+                if (sbKey != null) firmwareMode = "UEFI Nativo";
+            }
+            catch { }
+            biosGamingSpecs.Add(new HardwareSpecRow { Label = "Modo de arranque del BIOS", Value = firmwareMode });
+
+            // Virtualización (AMD SVM / Intel VT-x)
+            bool? virtEnabled = null;
+            QueryWmi("SELECT VirtualizationFirmwareEnabled FROM Win32_Processor", obj =>
+            {
+                if (obj["VirtualizationFirmwareEnabled"] is bool v)
+                    virtEnabled = v;
+            });
+            if (virtEnabled.HasValue)
+            {
+                biosGamingSpecs.Add(new HardwareSpecRow
+                {
+                    Label = "Virtualización por hardware (SVM / VT-x)",
+                    Value = virtEnabled.Value ? "Activada en BIOS" : "Desactivada en BIOS"
+                });
+            }
+
+            // Aislamiento del núcleo (HVCI / Core Isolation)
+            string hvciStatus = "Desactivado (Óptimo para FPS en juegos)";
+            try
+            {
+                using var hvciKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity");
+                if (hvciKey?.GetValue("Enabled") is int hvciVal && hvciVal == 1)
+                    hvciStatus = "Activado (Puede reducir rendimiento en juegos)";
+            }
+            catch { }
+            biosGamingSpecs.Add(new HardwareSpecRow { Label = "Integridad de memoria (Core Isolation)", Value = hvciStatus });
+
+            sections.Add(new HardwareSpecSection { SectionTitle = "Seguridad y Ajustes de BIOS (Gaming)", Specs = biosGamingSpecs });
+
+            // 2. PROCESADOR
             var cpuSpecs = new List<HardwareSpecRow>
             {
                 new() { Label = "Modelo", Value = _hardware.CpuName },
@@ -199,7 +289,7 @@ namespace Archon
             });
             sections.Add(new HardwareSpecSection { SectionTitle = "Procesador (CPU)", Specs = cpuSpecs });
 
-            // 2. PLACA BASE Y BIOS
+            // 3. PLACA BASE Y BIOS
             var boardSpecs = new List<HardwareSpecRow>
             {
                 new() { Label = "Placa madre", Value = _hardware.MotherboardName }
@@ -219,16 +309,9 @@ namespace Archon
                 if (!string.IsNullOrEmpty(rawDate) && rawDate.Length >= 8)
                     boardSpecs.Add(new HardwareSpecRow { Label = "Fecha de firmware", Value = $"{rawDate.Substring(6, 2)}/{rawDate.Substring(4, 2)}/{rawDate.Substring(0, 4)}" });
             });
-            try
-            {
-                using var sbKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\SecureBoot\State");
-                if (sbKey?.GetValue("UEFISecureBootEnabled") is int sbVal)
-                    boardSpecs.Add(new HardwareSpecRow { Label = "Secure Boot", Value = sbVal == 1 ? "Activado (UEFI)" : "Desactivado" });
-            }
-            catch { }
             sections.Add(new HardwareSpecSection { SectionTitle = "Placa base y Firmware UEFI / BIOS", Specs = boardSpecs });
 
-            // 3. GRÁFICOS Y PANTALLA
+            // 4. GRÁFICOS Y PANTALLA
             var gpuSpecs = new List<HardwareSpecRow>();
             int gpuIdx = 1;
             QueryWmi("SELECT Name, AdapterCompatibility, DriverVersion, AdapterRAM, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate FROM Win32_VideoController", obj =>
@@ -253,7 +336,7 @@ namespace Archon
                 gpuSpecs.Add(new HardwareSpecRow { Label = "Tarjeta gráfica", Value = _hardware.PrimaryGpu });
             sections.Add(new HardwareSpecSection { SectionTitle = "Gráficos y Pantalla", Specs = gpuSpecs });
 
-            // 4. MEMORIA RAM
+            // 5. MEMORIA RAM
             var ramSpecs = new List<HardwareSpecRow>
             {
                 new() { Label = "Memoria instalada total", Value = _hardware.TotalRamGb }
@@ -285,7 +368,7 @@ namespace Archon
             });
             sections.Add(new HardwareSpecSection { SectionTitle = "Memoria RAM y Módulos DIMM", Specs = ramSpecs });
 
-            // 5. ALMACENAMIENTO Y VOLÚMENES
+            // 6. ALMACENAMIENTO Y VOLÚMENES
             var storageSpecs = new List<HardwareSpecRow>();
             int diskIdx = 1;
             QueryWmi("SELECT Model, InterfaceType, MediaType, Size, SerialNumber, Status FROM Win32_DiskDrive", obj =>
@@ -316,7 +399,7 @@ namespace Archon
             }
             sections.Add(new HardwareSpecSection { SectionTitle = "Almacenamiento y Particiones", Specs = storageSpecs });
 
-            // 6. RED Y CONECTIVIDAD
+            // 7. RED Y CONECTIVIDAD
             var netSpecs = new List<HardwareSpecRow>();
             try
             {
@@ -339,7 +422,7 @@ namespace Archon
             if (netSpecs.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = "Adaptadores de Red", Specs = netSpecs });
 
-            // 7. AUDIO Y CONTROLADORAS USB
+            // 8. AUDIO Y CONTROLADORAS USB
             var peripheralSpecs = new List<HardwareSpecRow>();
             QueryWmi("SELECT Name, Manufacturer FROM Win32_SoundDevice", obj =>
             {
@@ -352,7 +435,7 @@ namespace Archon
             if (peripheralSpecs.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = "Audio y Controladoras USB", Specs = peripheralSpecs });
 
-            // 8. SISTEMA OPERATIVO Y ENTORNO
+            // 9. SISTEMA OPERATIVO Y ENTORNO
             var osSpecs = new List<HardwareSpecRow>
             {
                 new() { Label = "Edición de Windows", Value = _hardware.WindowsVersion },
@@ -466,7 +549,6 @@ namespace Archon
             _currentPrepTarget = PrepTarget.None;
             ProgressPanelFresh.Visibility = Visibility.Collapsed;
             ProgressPanelClean.Visibility = Visibility.Collapsed;
-            ProgressPanelSkip.Visibility = Visibility.Collapsed;
         }
 
         private void UpdateProgressState(string stepTag, string message, int percent, bool updateInline = true)
@@ -487,7 +569,6 @@ namespace Archon
 
             ProgressPanelFresh.Visibility = _currentPrepTarget == PrepTarget.Fresh ? Visibility.Visible : Visibility.Collapsed;
             ProgressPanelClean.Visibility = _currentPrepTarget == PrepTarget.Clean ? Visibility.Visible : Visibility.Collapsed;
-            ProgressPanelSkip.Visibility = _currentPrepTarget == PrepTarget.Skip ? Visibility.Visible : Visibility.Collapsed;
 
             switch (_currentPrepTarget)
             {
@@ -501,12 +582,6 @@ namespace Archon
                     TxtStatusClean.Text = message;
                     TxtPercentClean.Text = pctText;
                     ProgressClean.Value = percent;
-                    break;
-
-                case PrepTarget.Skip:
-                    TxtStatusSkip.Text = message;
-                    TxtPercentSkip.Text = pctText;
-                    ProgressSkip.Value = percent;
                     break;
             }
         }
@@ -583,51 +658,42 @@ namespace Archon
         private async void BtnSkipDrivers_Click(object sender, RoutedEventArgs e)
         {
             ResetInlineProgressPanels();
-            _currentPrepTarget = PrepTarget.Skip;
             ToggleStepZeroButtons(false);
 
-            if (!await EnsureMandatoryRestorePointAsync(useModal: false)) return;
-
-            UpdateProgressState(string.Empty, "Respaldo preventivo verificado. Abriendo panel de ajustes...", 100);
-            await Task.Delay(400);
+            if (!_state.RestorePointCreated)
+            {
+                bool ok = await RestorePointManager.CreateMandatoryRestorePointAsync();
+                if (!ok)
+                {
+                    ToggleStepZeroButtons(true);
+                    return;
+                }
+                _state.RestorePointCreated = true;
+            }
 
             _state.StepZeroCompleted = true;
             StepZeroOrchestrator.SaveState(_state);
+            ToggleStepZeroButtons(true);
             UnlockMainOptimizer();
         }
 
-        private async Task<bool> EnsureMandatoryRestorePointAsync(bool useModal = true)
+        private async Task<bool> EnsureMandatoryRestorePointAsync()
         {
             if (_state.RestorePointCreated)
             {
-                if (useModal)
-                {
-                    await SmoothProgressToAsync(
-                        "ETAPA 1 DE 3 · RESPALDO PREVENTIVO",
-                        "Verificando integridad del punto de restauración preventivo...",
-                        34,
-                        2500);
-                }
-                else
-                {
-                    UpdateProgressState(string.Empty, "Punto de restauración preventivo verificado.", 45);
-                    await Task.Delay(250);
-                }
+                await SmoothProgressToAsync(
+                    "ETAPA 1 DE 3 · RESPALDO PREVENTIVO",
+                    "Verificando integridad del punto de restauración preventivo...",
+                    34,
+                    2500);
                 return true;
             }
 
-            if (useModal)
-            {
-                _ = SmoothProgressToAsync(
-                    "ETAPA 1 DE 3 · RESPALDO PREVENTIVO",
-                    "Creando punto de restauración preventivo en el sistema...",
-                    30,
-                    2600);
-            }
-            else
-            {
-                UpdateProgressState(string.Empty, "Creando punto de restauración preventivo en el sistema...", 25);
-            }
+            _ = SmoothProgressToAsync(
+                "ETAPA 1 DE 3 · RESPALDO PREVENTIVO",
+                "Creando punto de restauración preventivo en el sistema...",
+                30,
+                2600);
 
             bool ok = await RestorePointManager.CreateMandatoryRestorePointAsync();
 
@@ -643,19 +709,11 @@ namespace Archon
             _state.RestorePointCreated = true;
             StepZeroOrchestrator.SaveState(_state);
 
-            if (useModal)
-            {
-                await SmoothProgressToAsync(
-                    "ETAPA 1 DE 3 · RESPALDO PREVENTIVO",
-                    "Punto de restauración guardado correctamente.",
-                    35,
-                    650);
-            }
-            else
-            {
-                UpdateProgressState(string.Empty, "Punto de restauración guardado correctamente.", 50);
-                await Task.Delay(250);
-            }
+            await SmoothProgressToAsync(
+                "ETAPA 1 DE 3 · RESPALDO PREVENTIVO",
+                "Punto de restauración guardado correctamente.",
+                35,
+                650);
 
             return true;
         }
@@ -904,6 +962,9 @@ namespace Archon
             _activeCategory = clickedBtn.Tag?.ToString() ?? "Apps";
             TxtSearch.Text = string.Empty;
 
+            foreach (var tweak in _allTweaks)
+                tweak.IsDetailsOpen = false;
+
             foreach (var child in SidebarMenu.Children)
             {
                 if (child is Button btn && btn != BtnBackToStepZero)
@@ -920,16 +981,16 @@ namespace Archon
 
         private void BtnInfo_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is TweakItem item)
+            if (sender is Button btn && btn.Tag is TweakItem clickedItem)
             {
-                TxtInspectorTitle.Text = item.Title;
-                TxtInspectorDesc.Text = item.Description;
-                TxtInspectorTech.Text = $"Comando / Registro: {item.TechnicalDetail}";
-                InspectorPanel.Visibility = Visibility.Visible;
+                bool targetState = !clickedItem.IsDetailsOpen;
+                foreach (var tweak in _allTweaks)
+                {
+                    tweak.IsDetailsOpen = false;
+                }
+                clickedItem.IsDetailsOpen = targetState;
             }
         }
-
-        private void BtnCloseInspector_Click(object sender, RoutedEventArgs e) => InspectorPanel.Visibility = Visibility.Collapsed;
 
         private async void BtnApplyChanges_Click(object sender, RoutedEventArgs e)
         {

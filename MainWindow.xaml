@@ -17,28 +17,43 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-        <SolidColorBrush x:Key="BgCardBlack" Color="#09090D"/>
-        <SolidColorBrush x:Key="BgCardHover" Color="#11131C"/>
-        <SolidColorBrush x:Key="BorderDark" Color="#1C1E28"/>
-        <SolidColorBrush x:Key="BorderHover" Color="#2C3C59"/>
+        <SolidColorBrush x:Key="BgCardBlack" Color="#090A0F"/>
+        <SolidColorBrush x:Key="BgCardHover" Color="#11141E"/>
+        <SolidColorBrush x:Key="BorderDark" Color="#1C1F2B"/>
+        <SolidColorBrush x:Key="BorderHover" Color="#2F4263"/>
         <SolidColorBrush x:Key="AccentPrimary" Color="#1B4985"/>
         <SolidColorBrush x:Key="AccentPrimaryHover" Color="#2359A1"/>
-        <SolidColorBrush x:Key="AccentLine" Color="#3474C6"/>
-        <SolidColorBrush x:Key="TextSecondary" Color="#D0D0DA"/>
-        <SolidColorBrush x:Key="TextMuted" Color="#9696A4"/>
+        <SolidColorBrush x:Key="AccentLine" Color="#3B82F6"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#D4D6E0"/>
+        <SolidColorBrush x:Key="TextMuted" Color="#A6ACBE"/>
 
-        <!-- ILUMINACIÓN DE FONDO FLUIDA -->
+        <!-- ILUMINACIÓN AMBIENTAL DE FONDO MÁS VISIBLE Y FLUIDA -->
         <Storyboard x:Key="AmbientGlowStoryboard" RepeatBehavior="Forever">
             <DoubleAnimation Storyboard.TargetName="AuroraTopTransform"
                              Storyboard.TargetProperty="X"
-                             From="-130" To="130" Duration="0:0:12" AutoReverse="True">
+                             From="-170" To="170" Duration="0:0:11" AutoReverse="True">
                 <DoubleAnimation.EasingFunction>
                     <SineEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation Storyboard.TargetName="AuroraTop"
                              Storyboard.TargetProperty="Opacity"
-                             From="0.65" To="1.0" Duration="0:0:7" AutoReverse="True">
+                             From="0.72" To="1.0" Duration="0:0:6.5" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+            <DoubleAnimation Storyboard.TargetName="AuroraCenterTransform"
+                             Storyboard.TargetProperty="Y"
+                             From="-55" To="55" Duration="0:0:9" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="AuroraCenter"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0.55" To="0.95" Duration="0:0:7.5" AutoReverse="True">
                 <DoubleAnimation.EasingFunction>
                     <SineEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
@@ -46,14 +61,14 @@
 
             <DoubleAnimation Storyboard.TargetName="AuroraBottomTransform"
                              Storyboard.TargetProperty="X"
-                             From="120" To="-120" Duration="0:0:14" AutoReverse="True">
+                             From="160" To="-160" Duration="0:0:13" AutoReverse="True">
                 <DoubleAnimation.EasingFunction>
                     <SineEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation Storyboard.TargetName="AuroraBottom"
                              Storyboard.TargetProperty="Opacity"
-                             From="0.90" To="0.50" Duration="0:0:8.5" AutoReverse="True">
+                             From="0.95" To="0.60" Duration="0:0:8" AutoReverse="True">
                 <DoubleAnimation.EasingFunction>
                     <SineEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
@@ -167,9 +182,8 @@
             </Setter>
         </Style>
 
-        <!-- BOTÓN PRINCIPAL -->
+        <!-- BOTÓN PRINCIPAL CON ACABADO TRANSLÚCIDO Y BRILLO SUTIL (NO SÓLIDO PLANO) -->
         <Style x:Key="PrimaryButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="Padding" Value="26,13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -178,14 +192,29 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}"
-                                BorderBrush="#2863B0" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="border" BorderBrush="#3B79CC" BorderThickness="1" CornerRadius="7" Padding="{TemplateBinding Padding}">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#CC235EB0" Offset="0.0"/>
+                                    <GradientStop Color="#D9163E78" Offset="0.55"/>
+                                    <GradientStop Color="#E6102F5C" Offset="1.0"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentPrimaryHover}"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#5C9BF0"/>
+                                <Setter TargetName="border" Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#E02D6EC9" Offset="0.0"/>
+                                            <GradientStop Color="#EB1D4E94" Offset="0.55"/>
+                                            <GradientStop Color="#F2153B73" Offset="1.0"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="border" Property="Opacity" Value="0.45"/>
@@ -198,7 +227,7 @@
 
         <!-- PANEL / BOTÓN OSCURO DE SUPERFICIE -->
         <Style x:Key="SoftCardButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource BgCardBlack}"/>
+            <Setter Property="Background" Value="#B80B0D14"/>
             <Setter Property="Foreground" Value="#F5F5F8"/>
             <Setter Property="Padding" Value="22,15"/>
             <Setter Property="FontSize" Value="15.5"/>
@@ -208,13 +237,13 @@
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" Background="{TemplateBinding Background}"
                                 BorderBrush="{StaticResource BorderDark}" BorderThickness="1"
-                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                CornerRadius="7" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{StaticResource BgCardHover}"/>
+                                <Setter TargetName="border" Property="Background" Value="#D9131724"/>
                                 <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource BorderHover}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
@@ -311,9 +340,9 @@
     <Border BorderBrush="#1A1C26" BorderThickness="1" CornerRadius="8">
         <Border.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#06070A" Offset="0"/>
-                <GradientStop Color="#080B12" Offset="0.5"/>
-                <GradientStop Color="#06070A" Offset="1"/>
+                <GradientStop Color="#06070B" Offset="0"/>
+                <GradientStop Color="#090D17" Offset="0.5"/>
+                <GradientStop Color="#06070B" Offset="1"/>
             </LinearGradientBrush>
         </Border.Background>
 
@@ -323,15 +352,17 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- BARRA SUPERIOR CON EMBLEMA DE ARQUITECTURA / OPTIMIZACIÓN -->
+            <!-- BARRA SUPERIOR CON NUEVO EMBLEMA AERODINÁMICO -->
             <Border Grid.Row="0" Background="#050507" BorderBrush="#12141C" BorderThickness="0,0,0,1" CornerRadius="8,8,0,0">
                 <Grid>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="22,0,0,0">
-                        <Viewbox Width="20" Height="22" Margin="0,0,10,0">
-                            <Canvas Width="48" Height="52">
-                                <Polygon Points="24,3 44,14.5 44,37.5 24,49 4,37.5 4,14.5" Fill="#0A0E17" Stroke="#3474C6" StrokeThickness="3.2" StrokeLineJoin="Round"/>
-                                <Path Data="M15,34 L24,15 L33,34" Stroke="#FFFFFF" StrokeThickness="3.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                <Polygon Points="24,25 28,29 24,33 20,29" Fill="#3474C6"/>
+                        <Viewbox Width="22" Height="22" Margin="0,0,10,0">
+                            <Canvas Width="64" Height="64">
+                                <Path Data="M10,50 C14,26 26,12 32,8 C38,12 50,26 54,50 C44,41 38,38 32,38 C26,38 20,41 10,50 Z"
+                                      Fill="#13294B" Stroke="#3B82F6" StrokeThickness="3.2" StrokeLineJoin="Round"/>
+                                <Path Data="M20,46 L32,20 L44,46"
+                                      Stroke="#FFFFFF" StrokeThickness="3.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                <Ellipse Canvas.Left="28.5" Canvas.Top="45" Width="7" Height="7" Fill="#3B82F6"/>
                             </Canvas>
                         </Viewbox>
                         <TextBlock Text="Archon" FontWeight="SemiBold" FontSize="15" Foreground="#F5F5F8" VerticalAlignment="Center"/>
@@ -348,32 +379,45 @@
             <!-- CONTENEDOR PRINCIPAL -->
             <Grid Grid.Row="1">
 
-                <!-- ILUMINACIÓN DE FONDO FLUIDA -->
+                <!-- ILUMINACIÓN AMBIENTAL DE FONDO MÁS VISIBLE -->
                 <Grid x:Name="AmbientGlowLayer" IsHitTestVisible="False" ClipToBounds="True">
-                    <Rectangle x:Name="AuroraTop" Width="1480" Height="700" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="-100,-200,-100,0">
+                    <Rectangle x:Name="AuroraTop" Width="1560" Height="720" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="-140,-180,-140,0">
                         <Rectangle.RenderTransform>
                             <TranslateTransform x:Name="AuroraTopTransform" X="0" Y="0"/>
                         </Rectangle.RenderTransform>
                         <Rectangle.Fill>
-                            <RadialGradientBrush Center="0.5,0.35" GradientOrigin="0.5,0.35" RadiusX="0.55" RadiusY="0.65">
-                                <GradientStop Color="#361B4985" Offset="0.0"/>
-                                <GradientStop Color="#201B4985" Offset="0.35"/>
-                                <GradientStop Color="#0D1B4985" Offset="0.68"/>
+                            <RadialGradientBrush Center="0.5,0.35" GradientOrigin="0.5,0.35" RadiusX="0.58" RadiusY="0.68">
+                                <GradientStop Color="#661D57A6" Offset="0.0"/>
+                                <GradientStop Color="#3B184585" Offset="0.36"/>
+                                <GradientStop Color="#1611305E" Offset="0.70"/>
+                                <GradientStop Color="#0011305E" Offset="1.0"/>
+                            </RadialGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+
+                    <Rectangle x:Name="AuroraCenter" Width="1200" Height="600" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Rectangle.RenderTransform>
+                            <TranslateTransform x:Name="AuroraCenterTransform" X="0" Y="0"/>
+                        </Rectangle.RenderTransform>
+                        <Rectangle.Fill>
+                            <RadialGradientBrush Center="0.5,0.5" GradientOrigin="0.5,0.5" RadiusX="0.52" RadiusY="0.55">
+                                <GradientStop Color="#382563EB" Offset="0.0"/>
+                                <GradientStop Color="#1A1B4985" Offset="0.45"/>
                                 <GradientStop Color="#001B4985" Offset="1.0"/>
                             </RadialGradientBrush>
                         </Rectangle.Fill>
                     </Rectangle>
 
-                    <Rectangle x:Name="AuroraBottom" Width="1480" Height="680" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="-100,0,-100,-240">
+                    <Rectangle x:Name="AuroraBottom" Width="1560" Height="700" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="-140,0,-140,-210">
                         <Rectangle.RenderTransform>
                             <TranslateTransform x:Name="AuroraBottomTransform" X="0" Y="0"/>
                         </Rectangle.RenderTransform>
                         <Rectangle.Fill>
-                            <RadialGradientBrush Center="0.5,0.65" GradientOrigin="0.5,0.65" RadiusX="0.58" RadiusY="0.65">
-                                <GradientStop Color="#2B163C6E" Offset="0.0"/>
-                                <GradientStop Color="#16163C6E" Offset="0.42"/>
-                                <GradientStop Color="#07163C6E" Offset="0.72"/>
-                                <GradientStop Color="#00163C6E" Offset="1.0"/>
+                            <RadialGradientBrush Center="0.5,0.65" GradientOrigin="0.5,0.65" RadiusX="0.60" RadiusY="0.68">
+                                <GradientStop Color="#5219498A" Offset="0.0"/>
+                                <GradientStop Color="#2B143A6E" Offset="0.42"/>
+                                <GradientStop Color="#100F2A52" Offset="0.74"/>
+                                <GradientStop Color="#000F2A52" Offset="1.0"/>
                             </RadialGradientBrush>
                         </Rectangle.Fill>
                     </Rectangle>
@@ -392,8 +436,8 @@
                             </EventTrigger>
                         </StackPanel.Triggers>
 
-                        <!-- EMBLEMA GEOMÉTRICO DE OPTIMIZADOR -->
-                        <Border x:Name="WelcomeLogoContainer" Width="88" Height="92" HorizontalAlignment="Center" Margin="0,0,0,6" Background="Transparent" Cursor="Hand">
+                        <!-- NUEVO EMBLEMA AERODINÁMICO DE ARCHON -->
+                        <Border x:Name="WelcomeLogoContainer" Width="92" Height="92" HorizontalAlignment="Center" Margin="0,0,0,6" Background="Transparent" Cursor="Hand">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
@@ -425,23 +469,29 @@
                                 </Style>
                             </Border.Style>
 
-                            <Viewbox Width="84" Height="88">
-                                <Canvas Width="84" Height="88">
-                                    <!-- Marco hexagonal exterior -->
-                                    <Polygon Points="42,4 76,23.5 76,64.5 42,84 8,64.5 8,23.5"
-                                             Fill="#080B13" Stroke="#3474C6" StrokeThickness="2.6" StrokeLineJoin="Round"/>
-                                    <!-- Bisel interior técnico -->
-                                    <Polygon Points="42,11 69,26.5 69,61.5 42,77 15,61.5 15,26.5"
-                                             Fill="Transparent" Stroke="#1E365C" StrokeThickness="1.2" StrokeLineJoin="Round"/>
-                                    <!-- Trazo principal de arquitectura 'A' -->
-                                    <Path Data="M25,58 L42,23 L59,58"
-                                          Stroke="#FFFFFF" StrokeThickness="3.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                    <!-- Chevrón de impulso interno -->
-                                    <Path Data="M31,47 L42,35 L53,47"
-                                          Stroke="#4B8CE0" StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                    <!-- Núcleo central de telemetría -->
-                                    <Polygon Points="42,46 47.5,51.5 42,57 36.5,51.5" Fill="#1B4985" Stroke="#6CA6F0" StrokeThickness="1.3"/>
-                                    <Ellipse Canvas.Left="40.3" Canvas.Top="49.8" Width="3.4" Height="3.4" Fill="#FFFFFF"/>
+                            <Viewbox Width="88" Height="88">
+                                <Canvas Width="96" Height="96">
+                                    <!-- Halo orbital sutil -->
+                                    <Ellipse Canvas.Left="8" Canvas.Top="8" Width="80" Height="80" Stroke="#1D355E" StrokeThickness="1.3"/>
+                                    <!-- Silueta principal de doble ala ascendente -->
+                                    <Path Data="M16,74 C21,39 38,18 48,12 C58,18 75,39 80,74 C65,61 56,56 48,56 C40,56 31,61 16,74 Z"
+                                          Stroke="#3B82F6" StrokeThickness="2.6" StrokeLineJoin="Round">
+                                        <Path.Fill>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#2B4B8CE0" Offset="0.0"/>
+                                                <GradientStop Color="#1214284D" Offset="1.0"/>
+                                            </LinearGradientBrush>
+                                        </Path.Fill>
+                                    </Path>
+                                    <!-- Trazo interno de precisión -->
+                                    <Path Data="M30,66 L48,29 L66,66"
+                                          Stroke="#FFFFFF" StrokeThickness="3.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                    <!-- Puente transversal sutil -->
+                                    <Path Data="M36,53 C42,49 54,49 60,53"
+                                          Stroke="#6CA6F0" StrokeThickness="2.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    <!-- Nodo central luminoso -->
+                                    <Ellipse Canvas.Left="43" Canvas.Top="64" Width="10" Height="10" Fill="#1B4985" Stroke="#5D9BE6" StrokeThickness="1.6"/>
+                                    <Ellipse Canvas.Left="46.2" Canvas.Top="67.2" Width="3.6" Height="3.6" Fill="#FFFFFF"/>
                                 </Canvas>
                             </Viewbox>
                         </Border>
@@ -463,15 +513,15 @@
                             <Button x:Name="BtnScanHardware" Style="{StaticResource SoftCardButtonStyle}" Padding="24,14" Click="BtnScanHardware_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <Path Data="M9,2 V5 M15,2 V5 M9,19 V22 M15,19 V22 M2,9 H5 M2,15 H5 M19,9 H22 M19,15 H22 M6,5 H18 A1,1 0 0 1 19,6 V18 A1,1 0 0 1 18,19 H6 A1,1 0 0 1 5,18 V6 A1,1 0 0 1 6,5 Z M9,9 H15 V15 H9 Z"
-                                          Stroke="#D0D0DA" StrokeThickness="1.7" Width="17" Height="17" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                          Stroke="#E2E5F0" StrokeThickness="1.7" Width="17" Height="17" Stretch="Uniform" Margin="0,0,10,0" VerticalAlignment="Center"/>
                                     <TextBlock x:Name="TxtScanButtonLabel" Text="Ver mis componentes" FontSize="15.5" FontWeight="Medium" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>
 
-                        <!-- PANEL INTERACTIVO DE HARDWARE CON BOTÓN "VER MÁS" -->
-                        <Border x:Name="HardwareListPanel" Visibility="Collapsed" MinWidth="660" Background="{StaticResource BgCardBlack}"
-                                BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Padding="26,22">
+                        <!-- PANEL INTERACTIVO DE HARDWARE CON ETIQUETAS MÁS RESALTADAS -->
+                        <Border x:Name="HardwareListPanel" Visibility="Collapsed" MinWidth="660" Background="#CC090A0F"
+                                BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="7" Padding="26,22">
                             <StackPanel>
                                 <Grid Margin="0,0,0,18">
                                     <Grid.ColumnDefinitions>
@@ -479,11 +529,11 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBlock Grid.Column="0" Text="Componentes detectados" FontSize="16.5" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="0" Text="Componentes detectados" FontSize="17" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
 
                                     <Button Grid.Column="1" x:Name="BtnViewAllHardware" Style="{StaticResource GhostButtonStyle}" Padding="10,5" Click="BtnViewAllHardware_Click">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="Ver más" FontSize="14" FontWeight="SemiBold" Foreground="#5D9BE6" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Ver más" FontSize="14.5" FontWeight="SemiBold" Foreground="#5D9BE6" VerticalAlignment="Center"/>
                                             <Path Data="M5,12 L19,12 M13,6 L19,12 L13,18" Stroke="#5D9BE6" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="14" Height="14" Stretch="Uniform" Margin="6,1,0,0" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -491,68 +541,68 @@
 
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="175"/>
+                                        <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Procesador" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtCpuValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="0" Text="Procesador" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtCpuValue" Text="Detectando..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                                 </Grid>
-                                <Separator Background="#1B1C26" Margin="0,0,0,12"/>
+                                <Separator Background="#1B1E2B" Margin="0,0,0,12"/>
 
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="175"/>
+                                        <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Placa madre" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtMotherValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="0" Text="Placa madre" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtMotherValue" Text="Detectando..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                                 </Grid>
-                                <Separator Background="#1B1C26" Margin="0,0,0,12"/>
+                                <Separator Background="#1B1E2B" Margin="0,0,0,12"/>
 
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="175"/>
+                                        <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Tarjeta gráfica" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtGpuValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="0" Text="Tarjeta gráfica" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtGpuValue" Text="Detectando..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                                 </Grid>
-                                <Separator Background="#1B1C26" Margin="0,0,0,12"/>
+                                <Separator Background="#1B1E2B" Margin="0,0,0,12"/>
 
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="175"/>
+                                        <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Memoria RAM" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtRamValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="0" Text="Memoria RAM" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtRamValue" Text="Detectando..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                                 </Grid>
-                                <Separator Background="#1B1C26" Margin="0,0,0,12"/>
+                                <Separator Background="#1B1E2B" Margin="0,0,0,12"/>
 
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="175"/>
+                                        <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Almacenamiento" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtStorageValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="0" Text="Almacenamiento" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtStorageValue" Text="Detectando..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                                 </Grid>
-                                <Separator Background="#1B1C26" Margin="0,0,0,12"/>
+                                <Separator Background="#1B1E2B" Margin="0,0,0,12"/>
 
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="175"/>
+                                        <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Sistema operativo" FontSize="14.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtOsValue" Text="Detectando..." FontSize="14.5" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="0" Text="Sistema operativo" FontSize="15" FontWeight="Medium" Foreground="#CBD2E3" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" x:Name="TxtOsValue" Text="Detectando..." FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- VISTA 1B: INVENTARIO COMPLETO DE HARDWARE ("VER MÁS") -->
+                <!-- VISTA 1B: INVENTARIO COMPLETO DE HARDWARE ("VER MÁS") CON LETRA MÁS GRANDE Y CLARA -->
                 <ScrollViewer x:Name="FullHardwareView" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel x:Name="FullHardwareContainer" Width="1080" HorizontalAlignment="Center" Margin="28,18,28,48">
                         <StackPanel.RenderTransform>
@@ -562,37 +612,37 @@
                         <Button x:Name="BtnBackFromFullHardware" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left" Margin="-10,0,0,14" Click="BtnBackFromFullHardware_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="M19,12 L5,12 M11,6 L5,12 L11,18"
-                                      Stroke="#D0D0DA" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                      Stroke="#E4E7F2" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                                       Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Volver al inicio" FontSize="14.5" FontWeight="Medium" Foreground="#E4E4EC" VerticalAlignment="Center"/>
+                                <TextBlock Text="Volver al inicio" FontSize="15" FontWeight="Medium" Foreground="#EEF1FA" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
-                        <TextBlock Text="Especificaciones completas del equipo" FontSize="28" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
-                        <TextBlock Text="Inventario detallado de todos los componentes físicos, buses, memoria, almacenamiento, red y entorno de Windows."
-                                   FontSize="15.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,22"/>
+                        <TextBlock Text="Especificaciones completas del equipo" FontSize="29" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+                        <TextBlock Text="Inventario detallado de hardware, estado de TPM 2.0 y opciones de BIOS para gaming, memoria, discos, red y entorno de Windows."
+                                   FontSize="16" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,24"/>
 
                         <ItemsControl x:Name="FullHardwareSectionsControl">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{StaticResource BgCardBlack}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Padding="24,18" Margin="0,0,0,14">
+                                    <Border Background="#D9090A0F" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="7" Padding="26,20" Margin="0,0,0,16">
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                                                <Border Width="3" Height="16" CornerRadius="1.5" Background="#3474C6" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding SectionTitle}" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                                <Border Width="4" Height="18" CornerRadius="2" Background="#3B82F6" Margin="0,0,11,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding SectionTitle}" FontSize="18.5" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
                                             </StackPanel>
 
                                             <ItemsControl ItemsSource="{Binding Specs}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Border BorderBrush="#14161F" BorderThickness="0,0,0,1" Padding="0,9">
+                                                        <Border BorderBrush="#161924" BorderThickness="0,0,0,1" Padding="0,12">
                                                             <Grid>
                                                                 <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="260"/>
+                                                                    <ColumnDefinition Width="310"/>
                                                                     <ColumnDefinition Width="*"/>
                                                                 </Grid.ColumnDefinitions>
-                                                                <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="14" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                                                                <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="14.5" Foreground="#F2F2F7" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                                                <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="16" FontWeight="Medium" Foreground="#CED5E6" VerticalAlignment="Center"/>
+                                                                <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="16.5" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                                             </Grid>
                                                         </Border>
                                                     </DataTemplate>
@@ -714,7 +764,7 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- BLOQUE SEPARADO: CONTINUACIÓN DIRECTA -->
+                        <!-- BLOQUE SEPARADO: CONTINUACIÓN DIRECTA (SIN BARRA AZUL DEBAJO) -->
                         <Separator Background="#1C1E28" Margin="0,28,0,22"/>
 
                         <TextBlock Text="¿Ya contás con tus controladores limpios y configurados?"
@@ -739,21 +789,6 @@
                                 </StackPanel>
                             </Grid>
                         </Button>
-
-                        <!-- BARRA DESPLEGABLE DE OPCIÓN 3 -->
-                        <Border x:Name="ProgressPanelSkip" Visibility="Collapsed" Background="#07080C" BorderBrush="#1C1E28" BorderThickness="1,0,1,1" CornerRadius="0,0,6,6" Padding="28,15">
-                            <StackPanel>
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" x:Name="TxtStatusSkip" Text="Creando punto de restauración preventivo..." FontSize="14" Foreground="#E4E4EC" TextWrapping="Wrap" Margin="0,0,16,0"/>
-                                    <TextBlock Grid.Column="1" x:Name="TxtPercentSkip" Text="0%" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF"/>
-                                </Grid>
-                                <ProgressBar x:Name="ProgressSkip" Minimum="0" Maximum="100" Value="0"/>
-                            </StackPanel>
-                        </Border>
 
                         <!-- SECCIÓN INFERIOR: ¿POR QUÉ HACEMOS ESTE PASO? -->
                         <Separator Background="#1C1E28" Margin="0,32,0,26"/>
@@ -802,51 +837,40 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- HUD FLOTANTE MINIMALISTA CON ANILLO DOBLE DE TELEMETRÍA -->
+                <!-- HUD FLOTANTE MINIMALISTA CON ANILLO DOBLE DE TELEMETRÍA CENTRADO -->
                 <Grid x:Name="PrepModalOverlay" Visibility="Collapsed" Background="#C8050609">
                     <StackPanel Width="560" HorizontalAlignment="Center" VerticalAlignment="Center">
 
-                        <!-- INDICADOR CIRCULAR LIMPIO (SIN LOGO ENCIMA) -->
                         <Grid Width="104" Height="104" HorizontalAlignment="Center" Margin="0,0,0,24">
-                            <!-- Pista exterior -->
                             <Ellipse Width="104" Height="104" Stroke="#182236" StrokeThickness="2.2"/>
-                            <!-- Arco principal horario -->
                             <Path Data="M52,2 A50,50 0 0,1 102,52" Stroke="#3B82F6" StrokeThickness="2.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
                                 <Path.RenderTransform>
                                     <RotateTransform x:Name="LoadingRingRotate" Angle="0"/>
                                 </Path.RenderTransform>
                             </Path>
 
-                            <!-- Pista interior -->
                             <Ellipse Width="74" Height="74" Stroke="#121A29" StrokeThickness="1.6"/>
-                            <!-- Arco secundario antihorario -->
                             <Path Data="M52,89 A37,37 0 0,1 15,52" Stroke="#255EA8" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
                                 <Path.RenderTransform>
                                     <RotateTransform x:Name="LoadingInnerRingRotate" Angle="0"/>
                                 </Path.RenderTransform>
                             </Path>
 
-                            <!-- Núcleo geométrico minimalista -->
-                            <Polygon Points="52,43 61,52 52,61 43,52" Fill="#0C1424" Stroke="#4B8CE0" StrokeThickness="1.8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            <Ellipse Width="6" Height="6" Fill="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Ellipse Width="8" Height="8" Fill="#3B82F6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Grid>
 
-                        <!-- ETIQUETA DE ETAPA -->
                         <TextBlock x:Name="TxtModalStepTag" Text="ETAPA 1 DE 3 · RESPALDO DEL SISTEMA"
                                    FontSize="12.5" FontWeight="SemiBold" Foreground="#5D9BE6"
                                    HorizontalAlignment="Center" Margin="0,0,0,8"/>
 
-                        <!-- TÍTULO DE ACCIÓN -->
                         <TextBlock x:Name="TxtModalTitle" Text="Preparando sistema"
                                    FontSize="25" FontWeight="SemiBold" Foreground="#FFFFFF"
                                    HorizontalAlignment="Center" Margin="0,0,0,10"/>
 
-                        <!-- MENSAJE DE ESTADO ACTUAL -->
                         <TextBlock x:Name="TxtModalMessage" Text="Creando punto de restauración preventivo en el sistema..."
                                    FontSize="15.5" Foreground="{StaticResource TextSecondary}"
                                    HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,28"/>
 
-                        <!-- BARRA DE PROGRESO + PORCENTAJE EN BLANCO -->
                         <Grid Margin="0,0,0,9">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -891,11 +915,10 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <!-- BUSCADOR -->
-                        <Border Grid.Row="0" Background="{StaticResource BgCardBlack}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Margin="0,0,22,16">
+                        <Border Grid.Row="0" Background="#CC090A0F" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Margin="0,0,22,16">
                             <Grid>
                                 <TextBox x:Name="TxtSearch" Background="Transparent" Foreground="#FFFFFF"
                                          CaretBrush="#FFFFFF" BorderThickness="0"
@@ -916,7 +939,7 @@
                             </Grid>
                         </Border>
 
-                        <!-- LISTA AGRUPADA CON ÍCONOS Y PADDING SEPARADO DEL SCROLLBAR -->
+                        <!-- LISTA AGRUPADA CON ACORDEÓN DE INFORMACIÓN DEBAJO DE CADA TARJETA -->
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
                             <ItemsControl x:Name="TweaksItemsControl">
                                 <ItemsControl.GroupStyle>
@@ -924,7 +947,7 @@
                                         <GroupStyle.HeaderTemplate>
                                             <DataTemplate>
                                                 <StackPanel Margin="2,8,0,10">
-                                                    <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" Foreground="#8898B5"/>
+                                                    <TextBlock Text="{Binding Name}" FontSize="14.5" FontWeight="SemiBold" Foreground="#98A9C7"/>
                                                 </StackPanel>
                                             </DataTemplate>
                                         </GroupStyle.HeaderTemplate>
@@ -938,54 +961,54 @@
 
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="{StaticResource BgCardBlack}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Padding="20,15" Margin="0,0,0,9">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
+                                        <Border Background="#D9090A0F" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,9">
+                                            <StackPanel>
+                                                <!-- FILA PRINCIPAL -->
+                                                <Grid Margin="20,15">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
 
-                                                <Border Grid.Column="0" Visibility="{Binding HasIcon, Converter={StaticResource BoolToVis}}"
-                                                        Width="36" Height="36" CornerRadius="6" Background="#10131C" BorderBrush="#1F2433" BorderThickness="1"
-                                                        Margin="0,0,15,0" VerticalAlignment="Center">
-                                                    <Path Data="{Binding IconGeometry}" Fill="{Binding IconColor}"
-                                                          Width="19" Height="19" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    <Border Grid.Column="0" Visibility="{Binding HasIcon, Converter={StaticResource BoolToVis}}"
+                                                            Width="36" Height="36" CornerRadius="6" Background="#10131C" BorderBrush="#1F2433" BorderThickness="1"
+                                                            Margin="0,0,15,0" VerticalAlignment="Center">
+                                                        <Path Data="{Binding IconGeometry}" Fill="{Binding IconColor}"
+                                                              Width="19" Height="19" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+
+                                                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="15.5" FontWeight="Medium" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap"/>
+
+                                                    <Button Grid.Column="2" Style="{StaticResource GhostButtonStyle}" Padding="10,6" Margin="10,0" Tag="{Binding}" Click="BtnInfo_Click">
+                                                        <TextBlock Text="ⓘ" FontSize="16" Foreground="#A6ACBE"/>
+                                                    </Button>
+
+                                                    <CheckBox Grid.Column="3" Style="{StaticResource ModernSwitchStyle}" IsChecked="{Binding IsEnabled, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                                </Grid>
+
+                                                <!-- PANEL DESPLEGABLE INLINE DEBAJO DE ESTE ÍTEM -->
+                                                <Border Visibility="{Binding IsDetailsOpen, Converter={StaticResource BoolToVis}}"
+                                                        Background="#0D1019" BorderBrush="#1C2334" BorderThickness="0,1,0,0"
+                                                        CornerRadius="0,0,6,6" Padding="20,14">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Description}" FontSize="14.5" Foreground="#E4E8F2" TextWrapping="Wrap" LineHeight="21" Margin="0,0,0,7"/>
+                                                        <TextBlock FontSize="13.5" Foreground="#A6B0C6" TextWrapping="Wrap">
+                                                            <Run Text="Detalle técnico: " FontWeight="SemiBold" Foreground="#5D9BE6"/>
+                                                            <Run Text="{Binding TechnicalDetail}"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
                                                 </Border>
-
-                                                <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="15.5" FontWeight="Medium" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap"/>
-
-                                                <Button Grid.Column="2" Style="{StaticResource GhostButtonStyle}" Padding="10,6" Margin="10,0" Tag="{Binding}" Click="BtnInfo_Click">
-                                                    <TextBlock Text="ⓘ" FontSize="15.5" Foreground="{StaticResource TextMuted}"/>
-                                                </Button>
-
-                                                <CheckBox Grid.Column="3" Style="{StaticResource ModernSwitchStyle}" IsChecked="{Binding IsEnabled, Mode=TwoWay}" VerticalAlignment="Center"/>
-                                            </Grid>
+                                            </StackPanel>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
 
-                        <!-- INSPECTOR DE DETALLE -->
-                        <Border x:Name="InspectorPanel" Grid.Row="2" Visibility="Collapsed" Background="#0A0B10" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Padding="20,15" Margin="0,10,22,6">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock x:Name="TxtInspectorTitle" FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
-                                    <TextBlock x:Name="TxtInspectorDesc" FontSize="14.5" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,6"/>
-                                    <TextBlock x:Name="TxtInspectorTech" FontSize="13.5" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
-                                </StackPanel>
-                                <Button Grid.Column="1" Content="Cerrar" Style="{StaticResource GhostButtonStyle}" VerticalAlignment="Top" Margin="12,0,0,0" Click="BtnCloseInspector_Click"/>
-                            </Grid>
-                        </Border>
-
                         <!-- BARRA INFERIOR -->
-                        <Grid Grid.Row="3" Margin="0,16,22,0">
+                        <Grid Grid.Row="2" Margin="0,16,22,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
