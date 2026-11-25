@@ -186,7 +186,6 @@ namespace Archon
                 ? T("Account", "Cuenta", "アカウント", "Аккаунт")
                 : _signedInUser;
 
-            // Welcome View
             TxtWelcomeSubtitle.Text = T("Welcome", "Bienvenido", "ようこそ", "Добро пожаловать");
             TxtStartButtonLabel.Text = T("Get Started", "Comenzar", "開始する", "Начать");
             TxtScanButtonLabel.Text = HardwareListPanel.Visibility == Visibility.Visible
@@ -202,11 +201,9 @@ namespace Archon
             TxtLblStorage.Text = T("Storage", "Almacenamiento", "ストレージ", "Накопитель");
             TxtLblOs.Text = T("Operating system", "Sistema operativo", "OS", "Операционная система");
 
-            // Full Hardware View
             TxtBackHomeLabel.Text = T("Back to home", "Volver al inicio", "ホームに戻る", "На главную");
             TxtFullSpecsTitle.Text = T("Full system specifications", "Especificaciones completas del equipo", "システム完全仕様", "Полные характеристики системы");
 
-            // Preparation View
             TxtHomeNavLabel.Text = T("Home", "Inicio", "ホーム", "Главная");
             TxtPrepTitle.Text = T("System preparation", "Preparación del sistema", "システム準備", "Подготовка системы");
             TxtPrepSubtitle.Text = T(
@@ -261,10 +258,8 @@ namespace Archon
                 "各調整の目的を確認でき、ワンクリックでWindowsの初期状態に戻せます。",
                 "Для каждого параметра можно прочитать описание и вернуть исходные настройки в один клик.");
 
-            // Loading Modal
             TxtModalProcessingLabel.Text = T("Processing configuration", "Procesando configuración", "設定を処理中", "Обработка конфигурации");
 
-            // Account Modal
             TxtAccountModalTitle.Text = T("Archon Account", "Cuenta de Archon", "Archon アカウント", "Аккаунт Archon");
             TxtAccountModalDesc.Text = T(
                 "Sign in to sync your optimization profiles, app presets, and cloud backups across Windows installations.",
@@ -275,7 +270,6 @@ namespace Archon
             BtnAccountSignOut.Content = T("Sign out", "Cerrar sesión", "ログアウト", "Выйти");
             BtnAccountSave.Content = T("Continue", "Guardar sesión", "続行", "Продолжить");
 
-            // Main Optimizer
             TxtNavPrep.Text = T("Preparation", "Preparación", "準備", "Подготовка");
             BtnCatApps.Content = T("Apps", "Apps", "アプリ", "Приложения");
             BtnCatGaming.Content = T("Gaming & Power", "Gaming y Energía", "ゲーム・電源", "Игры и питание");
@@ -379,7 +373,6 @@ namespace Archon
         {
             var sections = new List<HardwareSpecSection>();
 
-            // 1. SEGURIDAD Y AJUSTES DE BIOS PARA GAMING
             var biosGamingSpecs = new List<HardwareSpecRow>();
 
             string tpmStatus = "No detectado / Desactivado en BIOS";
@@ -390,8 +383,8 @@ namespace Archon
                 {
                     using (tpm)
                     {
-                        bool enabled = tpm["IsEnabled_InitialValue"] is bool e && e;
-                        bool activated = tpm["IsActivated_InitialValue"] is bool a && a;
+                        bool enabled = tpm["IsEnabled_InitialValue"] is bool enVal && enVal;
+                        bool activated = tpm["IsActivated_InitialValue"] is bool acVal && acVal;
                         string rawSpec = tpm["SpecVersion"]?.ToString() ?? "";
                         string ver = rawSpec.Split(',').FirstOrDefault()?.Trim() ?? "2.0";
 
@@ -462,7 +455,6 @@ namespace Archon
 
             sections.Add(new HardwareSpecSection { SectionTitle = "BIOS & Gaming", Specs = biosGamingSpecs });
 
-            // 2. PROCESADOR
             var cpuSpecs = new List<HardwareSpecRow>
             {
                 new() { Label = "Modelo", Value = _hardware.CpuName },
@@ -482,7 +474,6 @@ namespace Archon
             });
             sections.Add(new HardwareSpecSection { SectionTitle = "Procesador (CPU)", Specs = cpuSpecs });
 
-            // 3. PLACA BASE Y BIOS
             var boardSpecs = new List<HardwareSpecRow>
             {
                 new() { Label = "Placa madre", Value = _hardware.MotherboardName }
@@ -504,7 +495,6 @@ namespace Archon
             });
             sections.Add(new HardwareSpecSection { SectionTitle = "Placa base y Firmware", Specs = boardSpecs });
 
-            // 4. GRÁFICOS Y PANTALLA
             var gpuSpecs = new List<HardwareSpecRow>();
             int gpuIdx = 1;
             QueryWmi("SELECT Name, AdapterCompatibility, DriverVersion, AdapterRAM, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate FROM Win32_VideoController", obj =>
@@ -529,7 +519,6 @@ namespace Archon
                 gpuSpecs.Add(new HardwareSpecRow { Label = "Tarjeta gráfica", Value = _hardware.PrimaryGpu });
             sections.Add(new HardwareSpecSection { SectionTitle = "Gráficos y Pantalla", Specs = gpuSpecs });
 
-            // 5. MEMORIA RAM
             var ramSpecs = new List<HardwareSpecRow>
             {
                 new() { Label = "RAM total", Value = _hardware.TotalRamGb }
@@ -561,7 +550,6 @@ namespace Archon
             });
             sections.Add(new HardwareSpecSection { SectionTitle = "Memoria RAM", Specs = ramSpecs });
 
-            // 6. ALMACENAMIENTO
             var storageSpecs = new List<HardwareSpecRow>();
             int diskIdx = 1;
             QueryWmi("SELECT Model, InterfaceType, Size, Status FROM Win32_DiskDrive", obj =>
@@ -592,7 +580,6 @@ namespace Archon
             }
             sections.Add(new HardwareSpecSection { SectionTitle = "Almacenamiento", Specs = storageSpecs });
 
-            // 7. RED
             var netSpecs = new List<HardwareSpecRow>();
             try
             {
@@ -615,7 +602,6 @@ namespace Archon
             if (netSpecs.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = "Red", Specs = netSpecs });
 
-            // 8. AUDIO Y USB
             var peripheralSpecs = new List<HardwareSpecRow>();
             QueryWmi("SELECT Name FROM Win32_SoundDevice", obj =>
             {
@@ -628,7 +614,6 @@ namespace Archon
             if (peripheralSpecs.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = "Audio y USB", Specs = peripheralSpecs });
 
-            // 9. SISTEMA
             var osSpecs = new List<HardwareSpecRow>
             {
                 new() { Label = "Windows", Value = _hardware.WindowsVersion },
@@ -1015,7 +1000,6 @@ namespace Archon
 
             var appsList = new List<TweakItem>
             {
-                // NAVEGADORES
                 CreateAppItem("Google Chrome", grpBrowsers, "Google.Chrome",
                     T("Popular Chromium-based web browser with Google account sync. Recommended if you rely on Google services across devices.",
                       "Navegador web rápido con sincronización de cuenta de Google. Recomendado si usás servicios de Google en varios dispositivos.",
@@ -1083,7 +1067,6 @@ namespace Archon
                       "広告・トラッカーブロックを標準搭載したChromiumブラウザ。",
                       "Браузер на базе Chromium со встроенной блокировкой рекламы."),
 
-                // COMUNICACIONES
                 CreateAppItem("Discord", grpComms, "Discord.Discord",
                     T("Voice, video, and community chat platform. Essential for gaming sessions and screen sharing.",
                       "Plataforma de voz, video y chat para comunidades y partidas. Recomendado para jugar en grupo y compartir pantalla.",
@@ -1126,7 +1109,6 @@ namespace Archon
                       "オンライン会議・ウェビナー用クライアント。",
                       "Клиент для видеовстреч и вебинаров."),
 
-                // DESARROLLO E IA
                 CreateAppItem("GitHub Desktop", grpDev, "GitHub.GitHubDesktop",
                     T("Visual Git client to manage repositories, branches, and commits without using the command line.",
                       "Cliente visual para gestionar repositorios, ramas y commits de Git sin depender de la consola.",
@@ -1175,7 +1157,6 @@ namespace Archon
                       "ローカル環境で大規模言語モデルを実行するツール。",
                       "Инструмент для локального запуска языковых моделей ИИ."),
 
-                // DOCUMENTOS Y NOTAS
                 CreateAppItem("Joplin", grpDocs, "Joplin.Joplin",
                     T("Open-source Markdown note-taking and to-do app with end-to-end encryption and offline notebooks.",
                       "Aplicación libre de notas en Markdown con cifrado, libretas organizadas y acceso sin conexión.",
@@ -1206,7 +1187,6 @@ namespace Archon
                       "瞬時に起動する超軽量PDF・電子書籍ビューア。",
                       "Сверхлегкая программа для мгновенного открытия PDF и книг."),
 
-                // JUEGOS Y LAUNCHERS
                 CreateAppItem("Steam", grpGames, "Valve.Steam",
                     T("Primary PC gaming storefront, library manager, and multiplayer platform.",
                       "Plataforma principal de videojuegos en PC, biblioteca y gestión de partidas.",
@@ -1249,7 +1229,6 @@ namespace Archon
                       "WoWやOverwatch、Diablo用のBlizzard公式ランチャー。",
                       "Лаунчер Blizzard для WoW, Overwatch и Diablo."),
 
-                // HERRAMIENTAS MICROSOFT Y MULTIMEDIA
                 CreateAppItem("Microsoft PowerToys", grpMsMedia, "Microsoft.PowerToys",
                     T("Official Microsoft utilities suite adding FancyZones window tiling, color picker, and quick launcher.",
                       "Paquete oficial de utilidades de Microsoft con organizador de ventanas, selector de color y búsqueda rápida.",
@@ -1292,7 +1271,6 @@ namespace Archon
                       "モデリングやアニメーション制作ができるオープンソース3Dソフト。",
                       "Открытый пакет для 3D-моделирования и рендеринга."),
 
-                // UTILIDADES
                 CreateAppItem("Google Drive", grpUtils, "Google.GoogleDrive",
                     T("Desktop sync client to access Google Drive files directly from Windows File Explorer.",
                       "Cliente de sincronización para acceder a tus archivos de Google Drive desde el Explorador de Windows.",
@@ -1432,7 +1410,6 @@ namespace Archon
         {
             if (sender is Button btn && btn.Tag is TweakItem clickedItem)
             {
-                // Permite abrir múltiples detalles simultáneamente sin cerrar los demás
                 clickedItem.IsDetailsOpen = !clickedItem.IsDetailsOpen;
             }
         }
