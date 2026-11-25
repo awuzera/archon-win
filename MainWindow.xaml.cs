@@ -46,6 +46,7 @@ namespace Archon
             {
                 TxtStepZeroStatus.Text = "Base preparada previamente. Podés volver a ejecutar una opción o continuar al panel.";
                 StepZeroProgress.Value = 100;
+                TxtStepZeroPercent.Text = "100%";
             }
         }
 
@@ -101,6 +102,7 @@ namespace Archon
             ToggleStepZeroButtons(true);
             StepZeroProgress.IsIndeterminate = false;
             StepZeroProgress.Value = _state.StepZeroCompleted ? 100 : 0;
+            TxtStepZeroPercent.Text = _state.StepZeroCompleted ? "100%" : "0%";
             TxtStepZeroStatus.Text = _state.StepZeroCompleted
                 ? "Base preparada previamente. Podés volver a ejecutar una opción o continuar al panel."
                 : "Listo para comenzar";
@@ -128,10 +130,12 @@ namespace Archon
 
             TxtStepZeroStatus.Text = "Bloqueando drivers automáticos de Windows Update...";
             StepZeroProgress.Value = 40;
+            TxtStepZeroPercent.Text = "40%";
             StepZeroOrchestrator.SetWindowsUpdateDriverBlock(true);
 
             TxtStepZeroStatus.Text = "Programando reanudación automática tras reinicio...";
             StepZeroProgress.Value = 75;
+            TxtStepZeroPercent.Text = "75%";
 
             _state.PendingPostRebootInstall = true;
             StepZeroOrchestrator.SaveState(_state);
@@ -139,6 +143,7 @@ namespace Archon
 
             TxtStepZeroStatus.Text = "Listo para reiniciar y completar la limpieza de controladores.";
             StepZeroProgress.Value = 100;
+            TxtStepZeroPercent.Text = "100%";
             ToggleStepZeroButtons(true);
         }
 
@@ -159,6 +164,7 @@ namespace Archon
 
             TxtStepZeroStatus.Text = "Creando punto de restauración preventivo...";
             StepZeroProgress.IsIndeterminate = true;
+            TxtStepZeroPercent.Text = "...";
 
             bool ok = await RestorePointManager.CreateMandatoryRestorePointAsync();
             StepZeroProgress.IsIndeterminate = false;
@@ -166,6 +172,7 @@ namespace Archon
             if (!ok)
             {
                 TxtStepZeroStatus.Text = "No se pudo crear el punto de restauración. Verificá que el servicio VSS esté habilitado.";
+                TxtStepZeroPercent.Text = "0%";
                 ToggleStepZeroButtons(true);
                 return false;
             }
@@ -173,6 +180,7 @@ namespace Archon
             _state.RestorePointCreated = true;
             StepZeroOrchestrator.SaveState(_state);
             StepZeroProgress.Value = 30;
+            TxtStepZeroPercent.Text = "30%";
             return true;
         }
 
@@ -185,6 +193,7 @@ namespace Archon
             {
                 TxtStepZeroStatus.Text = "Preparando instalación limpia de Chipset AMD...";
                 StepZeroProgress.Value = 55;
+                TxtStepZeroPercent.Text = "55%";
                 await Task.Delay(800);
             }
 
@@ -192,12 +201,14 @@ namespace Archon
             {
                 TxtStepZeroStatus.Text = "Aplicando perfil limpio sin telemetría para NVIDIA...";
                 StepZeroProgress.Value = 80;
+                TxtStepZeroPercent.Text = "80%";
                 await Task.Delay(800);
             }
             else if (_hardware.HasAmdGpu)
             {
                 TxtStepZeroStatus.Text = "Instalando controlador gráfico AMD Radeon...";
                 StepZeroProgress.Value = 80;
+                TxtStepZeroPercent.Text = "80%";
                 await Task.Delay(800);
             }
 
@@ -207,6 +218,7 @@ namespace Archon
             StepZeroOrchestrator.SaveState(_state);
 
             StepZeroProgress.Value = 100;
+            TxtStepZeroPercent.Text = "100%";
             TxtStepZeroStatus.Text = "Base preparada. Abriendo panel de ajustes...";
             await Task.Delay(500);
 
