@@ -1349,7 +1349,7 @@ namespace Archon
                     T("Instant local file search engine indexing NTFS drives in milliseconds.",
                       "Buscador instantáneo de archivos locales en discos NTFS en milisegundos.",
                       "NTFSドライブ内のファイルを瞬時に検索できる超高速検索ツール。",
-                      "Мгновенный поиск файлов на локальных дисках.")
+                      "Мгновенный поиск файлов на локальных дисках."))
             };
 
             _allTweaks = appsList.Concat(baseTweaks).ToList();
