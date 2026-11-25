@@ -17,7 +17,6 @@ namespace Archon.Models
 
     public class TweakItem : INotifyPropertyChanged
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
         private bool _isDetailsOpen;
         public bool IsDetailsOpen
         {
