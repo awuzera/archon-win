@@ -53,6 +53,7 @@ namespace Archon
         private SystemHardwareProfile _hardware = new();
         private OptimizerState _state = new();
         private List<TweakItem> _allTweaks = new();
+        private readonly Dictionary<TweakItem, bool> _initialTweakStates = new();
         private List<HardwareSpecSection>? _cachedDetailedSpecs;
         private string _activeCategory = "Apps";
         private AppLang _currentLang = AppLang.EN;
@@ -126,6 +127,9 @@ namespace Archon
                 OpenPrepModal(T("Completing system preparation", "Completando preparación del sistema", "システム準備を完了しています", "Завершение подготовки системы"));
                 await ExecuteDriverInstallationPipelineAsync(
                     T("Cleanup finished. Base 100% ready.", "Limpieza finalizada. Base lista al 100%.", "クリーンアップが完了しました。", "Очистка завершена. Система готова на 100%."));
+                _state.PendingPostRebootInstall = false;
+                _state.StepZeroCompleted = true;
+                StepZeroOrchestrator.SaveState(_state);
             }
         }
 
@@ -175,7 +179,12 @@ namespace Archon
 
             if (_allTweaks.Count > 0)
             {
-                InitOptimizerCatalog();
+                var checkedKeys = _allTweaks
+                    .Where(t => t.IsEnabled)
+                    .Select(t => $"{t.Category}::{t.Title}")
+                    .ToHashSet();
+
+                InitOptimizerCatalog(checkedKeys);
             }
         }
 
@@ -302,7 +311,8 @@ namespace Archon
 
         private void BtnAccountSave_Click(object sender, RoutedEventArgs e)
         {
-            _signedInUser = TxtAccountInput.Text.Trim();
+            string input = TxtAccountInput.Text.Trim();
+            _signedInUser = input.Length > 120 ? input[..120] : input;
             SaveProfilePrefs();
             ApplyLanguageStrings();
             AccountModalOverlay.Visibility = Visibility.Collapsed;
@@ -390,8 +400,8 @@ namespace Archon
                 {
                     using (tpm)
                     {
-                        bool enabled = tpm["IsEnabled_InitialValue"] is bool e && e;
-                        bool activated = tpm["IsActivated_InitialValue"] is bool a && a;
+                        bool enabled = tpm["IsEnabled_InitialValue"] is bool enVal && enVal;
+                        bool activated = tpm["IsActivated_InitialValue"] is bool acVal && acVal;
                         string rawSpec = tpm["SpecVersion"]?.ToString() ?? "";
                         string ver = rawSpec.Split(',').FirstOrDefault()?.Trim() ?? "2.0";
 
@@ -417,22 +427,22 @@ namespace Archon
             biosGamingSpecs.Add(new HardwareSpecRow { Label = "TPM (Anticheat / Win 11)", Value = tpmStatus });
 
             string secureBootStatus = "No disponible (Legacy)";
+            bool hasSecureBootKey = false;
             try
             {
                 using var sbKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\SecureBoot\State");
-                if (sbKey?.GetValue("UEFISecureBootEnabled") is int sbVal)
-                    secureBootStatus = sbVal == 1 ? "Activado (UEFI)" : "Desactivado en BIOS";
+                if (sbKey != null)
+                {
+                    hasSecureBootKey = true;
+                    if (sbKey.GetValue("UEFISecureBootEnabled") is int sbVal)
+                        secureBootStatus = sbVal == 1 ? "Activado (UEFI)" : "Desactivado en BIOS";
+                }
             }
             catch { }
             biosGamingSpecs.Add(new HardwareSpecRow { Label = "Secure Boot", Value = secureBootStatus });
 
             string firmwareMode = File.Exists(@"C:\Windows\System32\winload.efi") ? "UEFI" : "Legacy";
-            try
-            {
-                using var sbKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\SecureBoot\State");
-                if (sbKey != null) firmwareMode = "UEFI Nativo";
-            }
-            catch { }
+            if (hasSecureBootKey) firmwareMode = "UEFI Nativo";
             biosGamingSpecs.Add(new HardwareSpecRow { Label = "Modo BIOS", Value = firmwareMode });
 
             bool? virtEnabled = null;
@@ -586,7 +596,7 @@ namespace Archon
                 string volLabel = string.IsNullOrWhiteSpace(drive.VolumeLabel) ? "Local" : drive.VolumeLabel;
                 storageSpecs.Add(new HardwareSpecRow
                 {
-                    Label = $"Partición {drive.Name.TrimEnd('\\')} ({volLabel})",
+                    Label = $"Partición {drive.Name.TrimEnd('\')} ({volLabel})",
                     Value = $"{drive.DriveFormat} · {freeGb:0.#} GB libres / {totalGb:0.#} GB"
                 });
             }
@@ -879,7 +889,7 @@ namespace Archon
                 return true;
             }
 
-            _ = SmoothProgressToAsync(
+            await SmoothProgressToAsync(
                 T("STAGE 1 OF 3 · PREVENTIVE BACKUP", "ETAPA 1 DE 3 · RESPALDO PREVENTIVO", "ステージ 1/3 · バックアップ", "ЭТАП 1 ИЗ 3 · РЕЗЕРВНАЯ КОПИЯ"),
                 T("Creating preventive system restore point...", "Creando punto de restauración preventivo en el sistema...", "システム復元ポイントを作成中...", "Создание точки восстановления..."),
                 30,
@@ -990,7 +1000,7 @@ namespace Archon
             BtnSkipDrivers.IsEnabled = enabled;
         }
 
-        private void InitOptimizerCatalog()
+        private void InitOptimizerCatalog(HashSet<string>? preservedCheckedKeys = null)
         {
             var baseTweaks = TweakCatalog.GetAllTweaks()
                 .Where(t => !string.Equals(t.Category, "Instalador Día 0", StringComparison.OrdinalIgnoreCase) &&
@@ -1343,7 +1353,29 @@ namespace Archon
             };
 
             _allTweaks = appsList.Concat(baseTweaks).ToList();
+
+            if (preservedCheckedKeys != null && preservedCheckedKeys.Count > 0)
+            {
+                foreach (var item in _allTweaks)
+                {
+                    if (preservedCheckedKeys.Contains($"{item.Category}::{item.Title}"))
+                    {
+                        item.IsEnabled = true;
+                    }
+                }
+            }
+
+            CaptureInitialTweakStates();
             RefreshDisplayedTweaks();
+        }
+
+        private void CaptureInitialTweakStates()
+        {
+            _initialTweakStates.Clear();
+            foreach (var tweak in _allTweaks)
+            {
+                _initialTweakStates[tweak] = tweak.IsEnabled;
+            }
         }
 
         private static TweakItem CreateAppItem(string name, string groupName, string wingetId, string description, string iconColor, string iconGeometry)
@@ -1432,7 +1464,6 @@ namespace Archon
         {
             if (sender is Button btn && btn.Tag is TweakItem clickedItem)
             {
-                // Permite abrir múltiples detalles simultáneamente sin cerrar los demás
                 clickedItem.IsDetailsOpen = !clickedItem.IsDetailsOpen;
             }
         }
@@ -1440,16 +1471,24 @@ namespace Archon
         private async void BtnApplyChanges_Click(object sender, RoutedEventArgs e)
         {
             TxtActionFeedback.Text = T("Applying changes...", "Aplicando cambios...", "変更を適用中...", "Применение изменений...");
+            var snapshot = _allTweaks.ToList();
+
             await Task.Run(() =>
             {
-                foreach (var tweak in _allTweaks)
+                foreach (var tweak in snapshot)
                 {
+                    bool previous = _initialTweakStates.TryGetValue(tweak, out var prevVal) && prevVal;
+                    if (tweak.IsEnabled == previous)
+                        continue;
+
                     if (tweak.IsEnabled)
                         tweak.ApplyAction?.Invoke();
                     else
                         tweak.RevertAction?.Invoke();
                 }
             });
+
+            CaptureInitialTweakStates();
             TxtActionFeedback.Text = T("Changes applied with backup", "Cambios aplicados con respaldo", "バックアップ付きで変更を適用しました", "Изменения применены с резервной копией");
         }
 
