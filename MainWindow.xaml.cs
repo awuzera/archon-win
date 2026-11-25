@@ -701,7 +701,7 @@ namespace Archon
                 }
                 catch { }
 
-                return (gpuPct, Math.Min(100, diskPct), diskMbSec, cpuClock, tempC);
+                return (gpuPct, diskPct: Math.Min(100, diskPct), diskMbSec, cpuClock, tempC);
             });
 
             TxtPerfCpuPct.Text = $"{cpuPct:0}%";
@@ -1024,14 +1024,12 @@ namespace Archon
                     item.Category = "Apps";
                     if (item.Id == "install_vcredist")
                     {
-                        item.HasIcon = true;
                         item.IconColor = "#7C3AED";
                         item.IconGeometry = "M4,4 H11 V11 H4 Z M13,4 H20 V11 H13 Z M4,13 H11 V20 H4 Z M13,13 H20 V20 H13 Z";
                         _appSubGroups[item.Id] = "Runtimes & Essentials";
                     }
                     else if (item.Id == "install_directx")
                     {
-                        item.HasIcon = true;
                         item.IconColor = "#16A34A";
                         item.IconGeometry = "M4,4 L12,12 L4,20 M20,4 L12,12 L20,20";
                         _appSubGroups[item.Id] = "Runtimes & Essentials";
@@ -1163,7 +1161,6 @@ namespace Archon
                     Risk = TweakRisk.Seguro,
                     Description = app.desc,
                     TechnicalDetail = $"winget install --id {app.pkg} -e --silent",
-                    HasIcon = true,
                     IconColor = app.color,
                     IconGeometry = app.svg,
                     ApplyAction = () => RegistryEngine.RunCommandHidden("winget.exe",
