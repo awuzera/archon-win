@@ -50,7 +50,6 @@ namespace Archon
 
             return _defaultGroupProvider();
         }
-    }
 
     public partial class MainWindow : Window
     {
@@ -164,7 +163,6 @@ namespace Archon
             {
                 ApplyLanguage(langCode);
             }
-        }
 
         private void ApplyLanguage(string lang)
         {
@@ -236,7 +234,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                 _activeOptimizationProfile = profileName;
                 TxtActiveProfileName.Text = profileName;
             }
-        }
 
         private void BtnOpenMyProfile_Click(object sender, RoutedEventArgs e)
         {
@@ -308,7 +305,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                 RefreshAccountUI();
                 TxtProfileFeedback.Text = _currentLang == "ES" ? "Foto de perfil cargada." : "Profile photo loaded.";
             }
-        }
 
         private void BtnSaveProfileChanges_Click(object sender, RoutedEventArgs e)
         {
@@ -344,7 +340,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
         }
 
         private void SetAccountModalMode(bool register)
-        private void SetAccountModalMode(bool register)
         {
             _isRegisterMode = register;
             BtnTabSignIn.Style = (Style)FindResource(register ? "SoftCardButtonStyle" : "PrimaryButtonStyle");
@@ -353,12 +348,10 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
         }
 
         private void BtnCloseAccountModal_Click(object sender, RoutedEventArgs e)
-        private void BtnCloseAccountModal_Click(object sender, RoutedEventArgs e)
         {
             AccountModalOverlay.Visibility = Visibility.Collapsed;
         }
 
-        private void BtnAccountSave_Click(object sender, RoutedEventArgs e)
         private void BtnAccountSave_Click(object sender, RoutedEventArgs e)
         {
             string chosenName = _isRegisterMode && !string.IsNullOrWhiteSpace(TxtRegisterDisplayName.Text)
@@ -374,7 +367,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
         }
 
         private void BtnAccountSignOut_Click(object sender, RoutedEventArgs e)
-        private void BtnAccountSignOut_Click(object sender, RoutedEventArgs e)
         {
             _signedInUser = null;
             _avatarImagePath = null;
@@ -389,7 +381,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                 SettingsAndProfileView.Visibility = Visibility.Collapsed;
                 WelcomeView.Visibility = Visibility.Visible;
             }
-        }
 
         private void RefreshAccountUI()
         {
@@ -466,7 +457,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                 BloatAlertBox.Visibility = Visibility.Visible;
                 TxtDetectedBloatList.Text = string.Join(" · ", profile.DetectedBloatware);
             }
-        }
 
         private async void BtnViewAllHardware_Click(object sender, RoutedEventArgs e)
         {
@@ -496,7 +486,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                 deepSpinner?.Stop();
                 FullHardwareLoadingPanel.Visibility = Visibility.Collapsed;
             }
-        }
 
         private void BtnBackFromFullHardware_Click(object sender, RoutedEventArgs e)
         {
@@ -528,7 +517,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     cpuRows.Add(new HardwareSpecRow { Label = isEs ? "Virtualización firmware" : "Firmware virtualization", Value = obj["VirtualizationFirmwareEnabled"]?.ToString() ?? "--" });
                     break;
                 }
-            }
             catch { }
             if (cpuRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Procesador (CPU)" : "Processor (CPU)", Specs = cpuRows });
@@ -553,7 +541,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     gpuRows.Add(new HardwareSpecRow { Label = $"{prefix}{(isEs ? "Estado" : "Status")}", Value = obj["Status"]?.ToString() ?? "--" });
                     idx++;
                 }
-            }
             catch { }
             if (gpuRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Tarjeta Gráfica (GPU)" : "Graphics (GPU)", Specs = gpuRows });
@@ -576,7 +563,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     moboRows.Add(new HardwareSpecRow { Label = "BIOS", Value = $"{obj["Manufacturer"]} · {obj["SMBIOSBIOSVersion"]}" });
                     break;
                 }
-            }
             catch { }
             if (moboRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Placa Base y BIOS" : "Motherboard & BIOS", Specs = moboRows });
@@ -598,7 +584,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     ramRows.Add(new HardwareSpecRow { Label = loc, Value = $"{gb} GB @ {speed} MHz · {mfg} ({part})" });
                     slot++;
                 }
-            }
             catch { }
             if (ramRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Memoria RAM (Módulos)" : "Memory Modules (RAM)", Specs = ramRows });
@@ -619,7 +604,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                         Value = $"{cap} · {obj["InterfaceType"]} · {obj["Partitions"]} part."
                     });
                 }
-            }
             catch { }
             if (diskRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Almacenamiento (Unidades)" : "Storage Drives", Specs = diskRows });
@@ -646,7 +630,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     sysRows.Add(new HardwareSpecRow { Label = isEs ? "Velocidad de enlace" : "Link speed", Value = speedMbps > 0 ? $"{speedMbps} Mbps" : "--" });
                     sysRows.Add(new HardwareSpecRow { Label = "MAC Address", Value = activeNic.GetPhysicalAddress().ToString() });
                 }
-            }
             catch { }
             if (sysRows.Count > 0)
                 sections.Add(new HardwareSpecSection { SectionTitle = isEs ? "Red y Sistema Operativo" : "Network & Operating System", Specs = sysRows });
@@ -715,7 +698,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                         }
                         break;
                     }
-                }
                 catch { }
 
                 try
@@ -729,8 +711,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                             _cachedRamSpeed = $"{spd} MHz";
                             break;
                         }
-                    }
-                }
                 catch { }
 
                 try
@@ -789,7 +769,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                             cpuClock = clk;
                         break;
                     }
-                }
                 catch { }
 
                 try
@@ -802,8 +781,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                             tempC = Math.Round((rawTenths / 10.0) - 273.15, 1);
                             break;
                         }
-                    }
-                }
                 catch { }
 
                 try
@@ -816,7 +793,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                             diskMbSec = bps / (1024.0 * 1024.0);
                         break;
                     }
-                }
                 catch { }
 
                 try
@@ -907,7 +883,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     pts.Add(new Point(x, y));
                     idx++;
                 }
-            }
 
             line.Points = pts;
         }
@@ -974,7 +949,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     recv += stats.BytesReceived;
                     sent += stats.BytesSent;
                 }
-            }
             catch { }
 
             DateTime now = DateTime.UtcNow;
@@ -1135,7 +1109,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                 TxtModalPercent.Text = $"{i}%";
                 await Task.Delay(delay);
             }
-        }
 
         private void EnterMainOptimizerView()
         {
@@ -1280,7 +1253,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
                     if (item.IsDetailsOpen)
                         item.IsDetailsOpen = false;
                 }
-            }
 
             _currentCategory = newCategory;
 
@@ -1304,7 +1276,6 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
             {
                 item.IsDetailsOpen = !item.IsDetailsOpen;
             }
-        }
 
         private void TweakSwitch_Click(object sender, RoutedEventArgs e)
         {
@@ -1391,5 +1362,4 @@ BtnSubTabProfile.Content = isEs ? "Mi Perfil" : "My Profile";
 
 
 
-}
 }
